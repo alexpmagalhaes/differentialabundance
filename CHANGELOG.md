@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#420](https://github.com/nf-core/differentialabundance/pull/420)] - Add missing nf-tests to nf-core modules. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
+- [[#380](https://github.com/nf-core/differentialabundance/pull/380)] - Replace local filter_diff_table module with nf-core one, and create nf-tests for tabular_to_gsea_chip. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#358](https://github.com/nf-core/differentialabundance/pull/358)] - Added software version check in nf-tests and gene biotype column check in `.Rmd` ([@atrigila](https://github.com/atrigila), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#354](https://github.com/nf-core/differentialabundance/pull/354)] - Warning message within the R Markdown report to control when genes don't have annotation data ([@alanmmobbs93](https://github.com/alanmmobbs93)). Review by [@WackerO](https://github.com/WackerO) and [@pinin4fjords](https://github.com/pinin4fjords).
 - [[#345](https://github.com/nf-core/differentialabundance/pull/345)] - Plot differentially expressed genes by gene biotype ([@atrigila](https://github.com/atrigila), review by [@grst](https://github.com/grst))
 - [[#343](https://github.com/nf-core/differentialabundance/pull/343)] - Add pipeline-level nf-tests ([@atrigila](https://github.com/atrigila), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@nschcolnicov](https://github.com/nschcolnicov))
 - [[#286](https://github.com/nf-core/differentialabundance/pull/286)] - Integration of limma voom for rnaseq data ([@KamilMaliszArdigen](https://github.com/KamilMaliszArdigen), review by [@pinin4fjords](https://github.com/pinin4fjords))
-- [[#380](https://github.com/nf-core/differentialabundance/pull/380)] - Replace local filter_diff_table module with nf-core one, and create nf-tests for tabular_to_gsea_chip. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 
 ### Fixed
 
