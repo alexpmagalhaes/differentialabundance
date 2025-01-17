@@ -22,17 +22,17 @@
                     },
                     "custom/matrixfilter": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
                         "installed_by": ["modules"]
                     },
                     "custom/tabulartogseacls": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
                         "installed_by": ["modules"]
                     },
                     "custom/tabulartogseagct": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
                         "installed_by": ["modules"]
                     },
                     "deseq2/differential": {
