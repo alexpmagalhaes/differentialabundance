@@ -70,6 +70,8 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ALLOGRAFT_REJECTION.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.tsv",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.html",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APOPTOSIS.html",
@@ -90,8 +92,6 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_FATTY_ACID_METABOLISM.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.tsv",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.html",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL6_JAK_STAT3_SIGNALING.html",
@@ -185,6 +185,7 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ADIPOGENESIS.tsv:md5,6dcf05651f6b0386fe089eaa421c3127",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ALLOGRAFT_REJECTION.tsv:md5,e9dd4c2530785273c996dbf8e989e4cb",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.tsv:md5,ed31e69bedf9bfdef793db64f60e0e3d",
+                "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.tsv:md5,0742906e4fbdd02a37151f55ee2db847",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.tsv:md5,b7ffdef669d6e8a7d6065b0ee4d94f08",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APOPTOSIS.tsv:md5,6ce114c47b7c57eb2713e7b193b42561",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_BILE_ACID_METABOLISM.tsv:md5,802fc042c26bdcabe683df4597c0086e",
@@ -195,7 +196,6 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ESTROGEN_RESPONSE_EARLY.tsv:md5,695b5bd61210e9fd4e76993cee00c63d",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_FATTY_ACID_METABOLISM.tsv:md5,cb069d05610994d1e43ea84de165bcd0",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.tsv:md5,09eba22af78006f69a9d0cb1bee27331",
-                "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.tsv:md5,08c50f431cee394c0280f41345a07d96",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.tsv:md5,38824ee08434a02049cf7f57c43545d5",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL6_JAK_STAT3_SIGNALING.tsv:md5,ab80e349a52b1b17d350d488d552f2b6",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_INFLAMMATORY_RESPONSE.tsv:md5,99983d81cd0ee6bc9c5e078ea311147c",
@@ -219,6 +219,8 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_WNT_BETA_CATENIN_SIGNALING.tsv:md5,4f11dba4f7cbc92f589bef27c182d91d",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,a619edb7acb1a0208389f7faf35eb30c",
                 "phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.gene_set_sizes.tsv:md5,77b53b0ca686ede9fe15ca448340f9f5",
+                "phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.gsea_report_for_lesional.tsv:md5,b974346db7e24087ba4345a7693118e4",
+                "phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.gsea_report_for_uninvolved.tsv:md5,0b7059fdccf5fc9be4b5a9f6f9e74759",
                 "phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.ranked_gene_list_lesional_versus_uninvolved.tsv:md5,72dfaeff534ba9a2b32f63524e835dc4",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,892774f9d56ba10c8646736b7f777ecc",
@@ -239,6 +241,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2025-01-17T18:30:08.816356215"
+        "timestamp": "2025-01-17T21:26:18.10395946"
     }
 }

@@ -853,7 +853,6 @@
                     "fa_icon": "fas fa-angle-up"
                 },
                 "gsea_rnd_seed": {
-                    "type": "string",
                     "default": "timestamp",
                     "description": "Seed for permutation",
                     "help_text": "Seed used to generate a random number for phenotype and gene_set  permutations: timestamp (default), 149, or user input. The specific seed value (149) generates consistent results, which is useful when testing software.",
