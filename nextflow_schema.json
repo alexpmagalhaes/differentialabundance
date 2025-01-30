@@ -10,7 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["study_name", "study_type", "input", "contrasts", "outdir", "study_abundance_type"],
+            "required": ["study_name", "study_type", "input", "outdir", "study_abundance_type"],
             "properties": {
                 "study_name": {
                     "type": "string",
@@ -43,6 +43,16 @@
                     "description": "A CSV file describing sample contrasts",
                     "help_text": "This file is used to define groups of samples from 'input' to compare.  It must contain at least the columns 'variable', 'reference', 'target' and 'blocking', where 'variable' is a column in the input sample sheet, 'reference' and 'target' are values in that column, and blocking is a colon-separated list of additional 'blocking' variables (can be an empty string)",
                     "pattern": "^\\S+\\.(csv|tsv)$",
+                    "format": "file-path",
+                    "mimetype": "text/csv",
+                    "fa_icon": "fas fa-adjust"
+                },
+                "contrasts_yml": {
+                    "type": "string",
+                    "description": "A YAML file describing sample contrasts",
+                    "help_text": "This file defines sample contrasts for differential abundance analysis, with each contrast specifying an `id`, a `comparison` list (variable, reference, target), and optional `blocking_factors`.",
+                    "pattern": "^\\S+\\.(yaml|yml)$",
+                    "schema": "assets/schema_contrasts.json",
                     "format": "file-path",
                     "mimetype": "text/csv",
                     "fa_icon": "fas fa-adjust"

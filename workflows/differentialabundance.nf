@@ -1,6 +1,6 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
+    HANDLE INPUT PARAMETERS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -56,13 +56,13 @@ if (params.study_type == 'affy_array') {
 }
 
 // Check optional parameters
-if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = [[],[]] }
-if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = [[],[]] }
+if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
+if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
 def run_gene_set_analysis = params.gsea_run || params.gprofiler2_run
 
+ch_gene_sets = Channel.of([[]])
 if (run_gene_set_analysis) {
-    ch_gene_sets = Channel.of([])    // For methods that can run without gene sets
     if (params.gene_sets_files) {
         gene_sets_files = params.gene_sets_files.split(",")
         ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
@@ -74,12 +74,36 @@ if (run_gene_set_analysis) {
     } else if (params.gprofiler2_run) {
         if (!params.gprofiler2_token && !params.gprofiler2_organism) {
             error("To run gprofiler2, please provide a run token, GMT file or organism!")
-        } else {
-            ch_gene_sets = [[]]     // For gprofiler2 which calls ch_gene_sets.first()
         }
     }
 }
 
+// Define tool channel
+// For the moment, it allows a single combination of tools, but this will be changed with
+// the toolsheet and introduction of multi-tool logic.
+if (params.study_type == 'affy_array' ||
+    params.study_type == 'geo_soft_file' ||
+    params.study_type == 'maxquant' ||
+    (params.study_type == 'rnaseq' && params.differential_use_limma)
+    ) {
+        tools_differential = ['method': 'limma']
+    } else {
+        tools_differential = ['method': 'deseq2']
+    }
+tools_differential += [
+    'fc_threshold': params.differential_min_fold_change,
+    'stat_threshold': params.differential_max_qval
+]
+tools_functional = []
+if (params.gsea_run) {
+    tools_functional = ['method': 'gsea', 'input_type': 'norm']
+}
+if (params.gprofiler2_run) {
+    tools_functional = ['method': 'gprofiler2', 'input_type': 'filtered']
+}
+ch_tools = Channel.of([tools_differential, tools_functional])
+
+// report related files
 report_file = file(params.report_file, checkIfExists: true)
 logo_file = file(params.logo_file, checkIfExists: true)
 css_file = file(params.css_file, checkIfExists: true)
@@ -98,8 +122,6 @@ citations_file = file(params.citations_file, checkIfExists: true)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { TABULAR_TO_GSEA_CHIP           } from '../modules/local/tabulartogseachip'
-include { CUSTOM_FILTERDIFFERENTIALTABLE } from '../modules/nf-core/custom/filterdifferentialtable/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,15 +138,8 @@ include { SHINYNGS_APP                                      } from '../modules/n
 include { SHINYNGS_STATICEXPLORATORY as PLOT_EXPLORATORY    } from '../modules/nf-core/shinyngs/staticexploratory/main'
 include { SHINYNGS_STATICDIFFERENTIAL as PLOT_DIFFERENTIAL  } from '../modules/nf-core/shinyngs/staticdifferential/main'
 include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/nf-core/shinyngs/validatefomcomponents/main'
-include { DESEQ2_DIFFERENTIAL as DESEQ2_NORM                } from '../modules/nf-core/deseq2/differential/main'
-include { DESEQ2_DIFFERENTIAL                               } from '../modules/nf-core/deseq2/differential/main'
-include { LIMMA_DIFFERENTIAL                                } from '../modules/nf-core/limma/differential/main'
 include { CUSTOM_MATRIXFILTER                               } from '../modules/nf-core/custom/matrixfilter/main'
 include { ATLASGENEANNOTATIONMANIPULATION_GTF2FEATUREANNOTATION as GTF_TO_TABLE } from '../modules/nf-core/atlasgeneannotationmanipulation/gtf2featureannotation/main'
-include { GSEA_GSEA                                         } from '../modules/nf-core/gsea/gsea/main'
-include { GPROFILER2_GOST                                   } from '../modules/nf-core/gprofiler2/gost/main'
-include { CUSTOM_TABULARTOGSEAGCT                           } from '../modules/nf-core/custom/tabulartogseagct/main'
-include { CUSTOM_TABULARTOGSEACLS                           } from '../modules/nf-core/custom/tabulartogseacls/main'
 include { RMARKDOWNNOTEBOOK                                 } from '../modules/nf-core/rmarkdownnotebook/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_RAW                  } from '../modules/nf-core/affy/justrma/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_NORM                 } from '../modules/nf-core/affy/justrma/main'
@@ -133,6 +148,26 @@ include { GEOQUERY_GETGEO                                   } from '../modules/n
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { IMMUNEDECONV                                      } from '../modules/nf-core/immunedeconv/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+
+//
+// SUBWORKFLOW: Installed directly from nf-core/modules
+//
+include { ABUNDANCE_DIFFERENTIAL_FILTER                     } from '../subworkflows/nf-core/abundance_differential_filter/main'
+include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkflows/nf-core/differential_functional_enrichment/main'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    DEFINE FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+def replace_meta_method_id (channel, new_id) {
+    return channel.map { it ->
+        def meta = it[0] - ['method': it[0].method]
+        meta[new_id] = it[0].method
+        [ meta, it[1..it.size()-1] ].flatten()
+    }
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,7 +181,38 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_versions = Channel.empty()
     // Channel for the contrasts file
-    ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
+    if (params.contrasts_yml && params.contrasts) {
+        error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
+    }
+    if (!(params.contrasts_yml || params.contrasts)) {
+        error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
+    }
+
+    // SUPPORT BOTH YAML AND CSV CONTRASTS FILE
+    if (params.contrasts_yml) {
+        //yaml contrasts file processing
+        ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts_yml)]])
+        ch_contrast_variables = ch_contrasts_file
+            .map { entry ->
+                def yaml_file = entry[1]
+                def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
+                yaml_data.contrasts.collect { contrast ->
+                    tuple('id': contrast.comparison[0])
+                }
+            }
+            .flatten()
+            .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
+    } else if (params.contrasts) {
+        //csv contrasts file processing
+        ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
+        ch_contrast_variables = ch_contrasts_file
+            .splitCsv(header:true, sep:(params.contrasts.endsWith('csv') ? ',' : '\t'))
+            .map{ it.tail().first() }
+            .map{
+                tuple('id': it.variable)
+            }
+            .unique()
+    }
 
     // If we have affy array data in the form of CEL files we'll be deriving
     // matrix and annotation from them
@@ -186,14 +252,6 @@ workflow DIFFERENTIALABUNDANCE {
 
         // We'll be running Proteus once per unique contrast variable to generate plots
         // TODO: there should probably be a separate plotting module in proteus to simplify this
-
-        ch_contrast_variables = ch_contrasts_file
-            .splitCsv(header:true, sep:(params.contrasts.endsWith('csv') ? ',' : '\t'))
-            .map{ it.tail().first() }
-            .map{
-                tuple('id': it.variable)
-            }
-            .unique()   // uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
 
         // Run proteus to import protein abundances
         PROTEUS(
@@ -337,172 +395,99 @@ workflow DIFFERENTIALABUNDANCE {
         VALIDATOR.out.sample_meta
     )
 
+    // ========================================================================
+    // Differential analysis
+    // ========================================================================
+
     // Prepare inputs for differential processes
 
-    ch_samples_and_matrix = VALIDATOR.out.sample_meta
-        .join(CUSTOM_MATRIXFILTER.out.filtered)     // -> meta, samplesheet, filtered matrix
-        .first()
-
-    if (params.study_type == 'affy_array' ||
-        params.study_type == 'geo_soft_file' ||
-        params.study_type == 'maxquant' ||
-        (params.study_type == 'rnaseq' && params.differential_use_limma)
-        ) {
-
-        LIMMA_DIFFERENTIAL (
-            ch_contrasts,
-            ch_samples_and_matrix
-        )
-        ch_differential = LIMMA_DIFFERENTIAL.out.results
-        ch_model = LIMMA_DIFFERENTIAL.out.model
-
-        ch_versions = ch_versions
-            .mix(LIMMA_DIFFERENTIAL.out.versions)
-
-        if (params.study_type == 'rnaseq') {
-            ch_norm = LIMMA_DIFFERENTIAL.out.normalised_counts.first()
+    ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
+        .combine(ch_tools)
+        .map { meta, matrix, tools_differential, tools_functional ->
+            [
+                meta,
+                matrix,
+                tools_differential.method,
+                tools_differential.fc_threshold,
+                tools_differential.stat_threshold
+            ]
         }
 
-        ch_processed_matrices = ch_norm
-            .map{ it.tail() }
-            .first()
+    // Run differential analysis
 
-    } else {
-        DESEQ2_NORM (
-            ch_contrasts.first(),
-            ch_samples_and_matrix,
-            ch_control_features,
-            ch_transcript_lengths
-        )
-
-        // Run the DESeq differential module, which doesn't take the feature
-        // annotations
-
-        DESEQ2_DIFFERENTIAL (
-            ch_contrasts,
-            ch_samples_and_matrix,
-            ch_control_features,
-            ch_transcript_lengths
-        )
-
-        // Let's make the simplifying assumption that the processed matrices from
-        // the DESeq runs are the same across contrasts. We run the DESeq process
-        // with matrices once for each contrast because DESeqDataSetFromMatrix()
-        // takes the model, and the model can vary between contrasts if the
-        // blocking factors included differ. But the normalised and
-        // variance-stabilised matrices are not (IIUC) impacted by the model.
-
-        ch_norm = DESEQ2_NORM.out.normalised_counts
-        ch_differential = DESEQ2_DIFFERENTIAL.out.results
-        ch_model = DESEQ2_DIFFERENTIAL.out.model
-
-        ch_versions = ch_versions
-            .mix(DESEQ2_DIFFERENTIAL.out.versions)
-
-        ch_processed_matrices = ch_norm
-        if ('rlog' in params.deseq2_vs_method){
-            ch_processed_matrices = ch_processed_matrices.join(DESEQ2_NORM.out.rlog_counts)
-        }
-        if ('vst' in params.deseq2_vs_method){
-            ch_processed_matrices = ch_processed_matrices.join(DESEQ2_NORM.out.vst_counts)
-        }
-        ch_processed_matrices = ch_processed_matrices
-            .map{ it.tail() }
-    }
-
-    // We'll use a local module to filter the differential tables and create output files that contain only differential features
-    ch_logfc = Channel.value([ params.differential_fc_column, params.differential_min_fold_change ])
-    ch_padj = Channel.value([ params.differential_qval_column, params.differential_max_qval ])
-
-    CUSTOM_FILTERDIFFERENTIALTABLE(
-        ch_differential,
-        ch_logfc.map{it[0]},
-        ch_logfc.map{it[1]},
-        ch_padj.map{it[0]},
-        ch_padj.map{it[1]}
+    ABUNDANCE_DIFFERENTIAL_FILTER(
+        ch_differential_input,
+        VALIDATOR.out.sample_meta,
+        ch_transcript_lengths,
+        ch_control_features,
+        ch_contrasts
     )
 
-    // Run a gene set analysis where directed
+    // collect differential results
+    // meta.method would be replaced by meta.method_differential
 
-    // Currently, we're letting GSEA work on the expression data. In future we
-    // will allow use of GSEA preranked instead, which will work with the fold
-    // changes/ p values from DESeq2
+    ch_differential_results = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, 'method_differential')
+    ch_differential_results_filtered = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, 'method_differential')
+    ch_differential_norm = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, 'method_differential')
+    ch_differential_model = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, 'method_differential')
+    rlog_counts = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.rlog_counts.filter{ it != null}, 'method_differential')
+    vst_counts = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.vst_counts.filter{ it != null}, 'method_differential')
 
-    if (params.gsea_run){
+    ch_versions = ch_versions
+        .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
 
-        // For GSEA, we need to convert normalised counts to a GCT format for
-        // input, and process the sample sheet to generate class definitions
-        // (CLS) for the variable used in each contrast
+    if (params.study_type == 'rnaseq') ch_norm = ch_differential_norm
 
-        CUSTOM_TABULARTOGSEAGCT ( ch_norm )
+    // ========================================================================
+    // Functional analysis
+    // ========================================================================
 
-        // TODO: update CUSTOM_TABULARTOGSEACLS for value channel input per new
-        // guidlines (rather than meta usage employed here)
+    // Prepare background file - for the moment it is only needed for gprofiler2
 
-        ch_contrasts_and_samples = ch_contrasts
-            .map{it[0]} // revert back to contrasts meta map
-            .combine( VALIDATOR.out.sample_meta.map { it[1] } )
-
-        CUSTOM_TABULARTOGSEACLS(ch_contrasts_and_samples)
-
-        TABULAR_TO_GSEA_CHIP(
-            VALIDATOR.out.feature_meta.map{ it[1] },
-            [params.features_id_col, params.features_name_col]
-        )
-
-        // The normalised matrix does not always have a contrast meta, so we
-        // need a combine rather than a join here
-        // Also add file name to metamap for easy access from modules.config
-
-        ch_gsea_inputs = CUSTOM_TABULARTOGSEAGCT.out.gct
-            .map{ it.tail() }
-            .combine(CUSTOM_TABULARTOGSEACLS.out.cls)
-            .map{ tuple(it[1], it[0], it[2]) }
-            .combine(ch_gene_sets)
-
-        GSEA_GSEA(
-            ch_gsea_inputs,
-            ch_gsea_inputs.map{ tuple(it[0].reference, it[0].target) }, // *
-            TABULAR_TO_GSEA_CHIP.out.chip.first()
-        )
-
-        // * Note: GSEA module currently uses a value channel for the mandatory
-        // non-file arguments used to define contrasts, hence the indicated
-        // usage of map to perform that transformation. An active subject of
-        // debate
-
-        ch_gsea_results = GSEA_GSEA.out.report_tsvs_ref
-            .join(GSEA_GSEA.out.report_tsvs_target)
-
-        // Record GSEA versions
-        ch_versions = ch_versions
-            .mix(TABULAR_TO_GSEA_CHIP.out.versions)
-            .mix(GSEA_GSEA.out.versions)
-    }
-
+    ch_background = Channel.of([[]])
     if (params.gprofiler2_run) {
-
-        // For gprofiler2, use only features that are considered differential
-        ch_filtered_diff = CUSTOM_FILTERDIFFERENTIALTABLE.out.filtered
-
-        if (!params.gprofiler2_background_file) {
-            // If deactivated, use empty list as "background"
-            ch_background = []
-        } else if (params.gprofiler2_background_file == "auto") {
+        if (params.gprofiler2_background_file == "auto") {
             // If auto, use input matrix as background
             ch_background = CUSTOM_MATRIXFILTER.out.filtered.map{it.tail()}.first()
         } else {
             ch_background = Channel.from(file(params.gprofiler2_background_file, checkIfExists: true))
         }
-
-        // For gprofiler2, token and organism have priority and will override a gene_sets file
-
-        GPROFILER2_GOST(
-            ch_filtered_diff,
-            ch_gene_sets.first(),
-            ch_background
-        )
     }
+
+    // Prepare input for functional analysis
+
+    ch_functional_input = ch_differential_results_filtered.combine(ch_tools.filter{it[1].input_type == 'filtered'})
+        .mix(ch_norm.combine(ch_tools.filter{it[1].input_type == 'norm'}))
+        .combine(ch_gene_sets)
+        .combine(ch_background)
+        .map { meta, input, tools_differential, tools_functional, gene_sets, background ->
+            if (!('method_differential' in meta) || (meta.method_differential == tools_differential.method)) {
+                return [meta, input, gene_sets, background, tools_functional.method]
+            }
+        }
+
+    // Run functional analysis
+
+    DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
+        ch_functional_input,
+        ch_contrasts,
+        VALIDATOR.out.sample_meta,
+        VALIDATOR.out.feature_meta.combine(Channel.of([params.features_id_col, params.features_name_col]))
+    )
+
+    // Prepare the results for downstream analysis
+
+    ch_gsea_results = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report, 'method_functional')
+    gprofiler2_plot_html = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html, 'method_functional')
+    gprofiler2_all_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, 'method_functional')
+    gprofiler2_sub_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, 'method_functional')
+
+    ch_versions = ch_versions
+        .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
+
+    // ========================================================================
+    // Plot figures
+    // ========================================================================
 
     // The exploratory plots are made by coloring by every unique variable used
     // to define contrasts
@@ -515,31 +500,51 @@ workflow DIFFERENTIALABUNDANCE {
 
     // For geoquery we've done no matrix processing and been supplied with the
     // normalised matrix, which can be passed through to downstream analysis
-
     if (params.study_type == "geo_soft_file") {
-        ch_mat = ch_norm
+        ch_mat = ch_norm.combine( Channel.of([[],[],[]]) )
     } else {
+        ch_processed_matrices = ch_norm
+            .combine( rlog_counts.ifEmpty([[],[]]) )
+            .combine( vst_counts.ifEmpty([[],[]]) )
+            .map { meta, norm, meta_rlog, rlog, meta_vst, vst ->
+                def matrices = [meta, norm]
+                if (meta_rlog == [] || meta == meta_rlog) matrices += [rlog]
+                if (meta_vst == [] || meta == meta_vst) matrices += [vst]
+                return matrices   // meta, norm, rlog, vst
+            }
         ch_mat = ch_raw.combine(ch_processed_matrices)
+            .map { meta_exp, raw, meta_norm, norm, rlog, vst ->
+                if (meta_norm.subMap(meta_exp.keySet()) == meta_exp) {
+                    return [meta_norm, raw, norm, rlog, vst]
+                }
+            }
     }
 
-    ch_all_matrices = VALIDATOR.out.sample_meta                // meta, samples
+    ch_all_matrices = VALIDATOR.out.sample_meta                 // meta, samples
         .join(VALIDATOR.out.feature_meta)                       // meta, samples, features
-        .join(ch_mat)                                           // meta, samples, features, raw, norm (or just norm)
-        .map{
-            tuple(it[0], it[1], it[2], it[3..it.size()-1])
+        .combine(ch_mat)
+        .map { meta_exp, samples, features, meta_mat, raw, norm, rlog, vst ->
+            if (meta_mat.subMap(meta_exp.keySet()) == meta_exp) {
+                def processed_matrices = [raw]
+                if (norm != []) processed_matrices += [norm]
+                if (rlog != []) processed_matrices += [rlog]
+                if (vst != []) processed_matrices += [vst]
+                return [meta_mat, samples, features, processed_matrices]
+            }
         }
-        .first()
+
+    // Exploratory analysis
 
     PLOT_EXPLORATORY(
         ch_contrast_variables
             .combine(ch_all_matrices.map{ it.tail() })
     )
 
-    // Differential analysis using the results of DESeq2
+    // Differential analysis
 
     PLOT_DIFFERENTIAL(
-        ch_differential,
-        ch_all_matrices
+        ch_differential_results,
+        ch_all_matrices.first()
     )
 
     // Gather software versions
@@ -549,9 +554,11 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(PLOT_EXPLORATORY.out.versions)
         .mix(PLOT_DIFFERENTIAL.out.versions)
 
-    //
+    // ========================================================================
+    // Generate report
+    // ========================================================================
+
     // Collate and save software versions
-    //
 
     ch_collated_versions = softwareVersionsToYAML(ch_versions)
         .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'collated_versions.yml', sort: true, newLine: true)
@@ -573,8 +580,8 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_logo_file)
         .combine(ch_css_file)
         .combine(ch_citations_file)
-        .combine(ch_differential.map{it[1]}.toList())
-        .combine(ch_model.map{it[1]}.toList())
+        .combine(ch_differential_results.map{it[1]}.toList())
+        .combine(ch_differential_model.map{it[1]}.toList())
 
     if (params.gsea_run){
         ch_report_input_files = ch_report_input_files
@@ -585,10 +592,9 @@ workflow DIFFERENTIALABUNDANCE {
 
     if (params.gprofiler2_run){
         ch_report_input_files = ch_report_input_files
-            .combine(GPROFILER2_GOST.out.plot_html.map{it[1]}.flatMap().toList())
-            .combine(GPROFILER2_GOST.out.all_enrich.map{it[1]}.flatMap().toList())
-            .combine(GPROFILER2_GOST.out.sub_enrich.map{it[1]}.flatMap().toList())
-        GPROFILER2_GOST.out.plot_html
+            .combine(gprofiler2_plot_html.map{it[1]}.flatMap().toList())
+            .combine(gprofiler2_all_enrich.map{it[1]}.flatMap().toList())
+            .combine(gprofiler2_sub_enrich.map{it[1]}.flatMap().toList())
     }
 
     // Run IMMUNEDECONV
@@ -609,15 +615,15 @@ workflow DIFFERENTIALABUNDANCE {
         // Make a new contrasts file from the differential metas to guarantee the
         // same order as the differential results
 
-        ch_app_differential = ch_differential.first().map{it[0].keySet().tail().join(',')}
+        ch_app_differential = ch_differential_results.first().map{it[0].keySet().tail().join(',')}
             .concat(
-                ch_differential.map{it[0].values().tail().join(',')}
+                ch_differential_results.map{it[0].values().tail().join(',')}
             )
             .collectFile(name: 'contrasts.csv', newLine: true, sort: false)
             .map{
                 tuple(exp_meta, it)
             }
-            .combine(ch_differential.map{it[1]}.collect().map{[it]})
+            .combine(ch_differential_results.map{it[1]}.collect().map{[it]})
 
         SHINYNGS_APP(
             ch_all_matrices,     // meta, samples, features, [  matrices ]
@@ -663,6 +669,7 @@ workflow DIFFERENTIALABUNDANCE {
             params.findAll{ k,v -> k.matches(params_pattern) } +
             [report_file_names, it.collect{ f -> f.name}].transpose().collectEntries()
         }
+
     // Render the final report
     RMARKDOWNNOTEBOOK(
         ch_report_file,

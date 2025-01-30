@@ -128,8 +128,12 @@ Full list of features metadata are available on GEO platform pages.
 
 ## Contrasts file
 
+The contrasts file references the observations file to define groups of samples to compare. It can be provided in **either** CSV/TSV or YAML format using the parameters `--contrasts` or `--contrasts_yml`, respectively.
+
+### CSV contrasts file
+
 ```bash
---contrasts '[path to contrasts file]'
+--contrasts '[path to CSV contrasts file]'
 ```
 
 The contrasts file references the observations file to define groups of samples to compare. For example, based on the sample sheet above we could define contrasts like:
@@ -153,6 +157,36 @@ You can optionally supply:
 - `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a semicolon-delimited list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be exluded prior to analysis of a given contrast.
 
 The file can be tab or comma separated.
+
+### YAML contrasts file format
+
+```bash
+--contrasts_yml '[path to YAML contrasts file]'
+```
+
+Based on the sample sheet above we could define YAML contrasts like:
+
+```yaml
+contrasts:
+  - id: condition_control_treated
+    comparison: ["condition", "control", "treated"]
+  - id: condition_control_treated_blockrep
+    comparison: ["condition", "control", "treated"]
+    blocking_factors: ["replicate"]
+```
+
+The necessary fields in order are:
+
+- `id` - an arbitrary identifier, will be used to name contrast-wise output files
+- `comparison`(respectively):
+- - `variable` - which column from the observations information will be used to define groups
+- - `reference` - the base/ reference level for the comparison. If features have higher values in this group than target they will generate negative fold changes
+- - `target` - the target/ non-reference level for the comparison. If features have higher values in this group than the reference they will generate positive fold changes
+
+You can optionally supply:
+
+- `blocking_factors` - Any additional variables (also observation columns) that should be modelled alongside the contrast variable
+- `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be excluded prior to analysis of a given contrast.
 
 ## Feature annotations
 
@@ -327,7 +361,7 @@ The typical command for running the pipeline is as follows:
 nextflow run nf-core/differentialabundance \
     [-profile rnaseq OR -profile rnaseq_limma OR -profile affy] \
     --input samplesheet.csv \
-    --contrasts contrasts.csv \
+    --contrasts contrasts.yaml \
     [--matrix assay_matrix.tsv OR --affy_cel_files_archive cel_files.tar] \
     [--gtf mouse.gtf OR --features features.tsv] \
     --outdir <OUTDIR>  \

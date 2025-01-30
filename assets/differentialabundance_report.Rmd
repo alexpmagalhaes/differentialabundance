@@ -42,7 +42,7 @@ params:
     raw_matrix: null                                            # e.g. 0_salmon.merged.gene_counts_length_scaled.tsv
     normalised_matrix: null
     variance_stabilised_matrix: null                            # e.g. test_files/3_treatment-WT-P23H.vst.tsv
-    contrasts_file: null                                        # e.g. GSE156533.contrasts.csv
+    contrasts_file: null                                        # e.g. GSE156533.contrasts.yaml
     differential_table: file.csv
     proteus_measurecol_prefix: NULL
     proteus_norm_function: NULL
