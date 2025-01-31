@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#431](https://github.com/nf-core/differentialabundance/pull/431)] - Add differential and functional subworkflows. ([@suzannejin](https://github.com/suzannejin), co-authored by [@bjlang](https://github.com/bjlang) and [@caraiz2001](https://github.com/caraiz2001), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#421](https://github.com/nf-core/differentialabundance/pull/421)] - Add immunedeconv module ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#380](https://github.com/nf-core/differentialabundance/pull/380)] - Replace local filter_diff_table module with nf-core one, and create nf-tests for tabular_to_gsea_chip. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#358](https://github.com/nf-core/differentialabundance/pull/358)] - Added software version check in nf-tests and gene biotype column check in `.Rmd` ([@atrigila](https://github.com/atrigila), review by [@pinin4fjords](https://github.com/pinin4fjords))
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [[#431](https://github.com/nf-core/differentialabundance/pull/431)] - Replace the calls to differential and functional analysis modules by subworkflows. ([@suzannejin](https://github.com/suzannejin), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#410](https://github.com/nf-core/differentialabundance/pull/410)] - Update contrasts file format to allow yaml ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#374](https://github.com/nf-core/differentialabundance/pull/374)] - Update all modules and subworkflows ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#348](https://github.com/nf-core/differentialabundance/pull/348)] - Update test_full profile matrix file and indentation of profiles in nextflow.config ([@nschcolnicov](https://github.com/nschcolnicov), review by [@WackerO](https://github.com/WackerO) and [@pinin4fjords](https://github.com/pinin4fjords))
