@@ -125,6 +125,18 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     ch_model = DESEQ2_DIFFERENTIAL.out.model
         .mix(LIMMA_DIFFERENTIAL.out.model)
 
+    ch_variance_stabilised_matrix = DESEQ2_NORM.out.rlog_counts.ifEmpty([[],[]])
+        .combine(DESEQ2_NORM.out.vst_counts.ifEmpty([[],[]]))
+        .map { meta_rlog, rlog, meta_vst, vst ->
+            if (meta_rlog == meta_vst && meta_rlog != []) {
+                return [meta_rlog, [rlog, vst]]
+            } else if (meta_rlog != [] && meta_vst == []) {
+                return [meta_rlog, [rlog]]
+            } else if (meta_rlog == [] && meta_vst != []) {
+                return [meta_vst, [vst]]
+            }
+        }
+
     ch_versions = DESEQ2_DIFFERENTIAL.out.versions
         .mix(LIMMA_DIFFERENTIAL.out.versions)
         .mix(PROPR_PROPD.out.versions)
@@ -180,8 +192,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
 
     // other
     normalised_matrix          = ch_normalised_matrix
-    rlog_counts                = DESEQ2_NORM.out.rlog_counts
-    vst_counts                 = DESEQ2_NORM.out.vst_counts
+    variance_stabilised_matrix = ch_variance_stabilised_matrix
     model                      = ch_model
     versions                   = ch_versions
 }

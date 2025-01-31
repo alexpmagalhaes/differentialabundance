@@ -161,11 +161,15 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def replace_meta_method_id (channel, new_id) {
+def replace_meta_method_id (channel, new_id, only_one=true) {
     return channel.map { it ->
         def meta = it[0] - ['method': it[0].method]
         meta[new_id] = it[0].method
-        [ meta, it[1..it.size()-1] ].flatten()
+        if (only_one) {
+            return [meta, it[1]]
+        } else {
+            return [ meta, it[1..it.size()-1] ].flatten()
+        }
     }
 }
 
@@ -428,10 +432,9 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_differential_results = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, 'method_differential')
     ch_differential_results_filtered = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, 'method_differential')
-    ch_differential_norm = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, 'method_differential')
     ch_differential_model = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, 'method_differential')
-    rlog_counts = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.rlog_counts.filter{ it != null}, 'method_differential')
-    vst_counts = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.vst_counts.filter{ it != null}, 'method_differential')
+    ch_differential_norm = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, 'method_differential')
+    ch_differential_var = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}, 'method_differential')
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -477,7 +480,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare the results for downstream analysis
 
-    ch_gsea_results = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report, 'method_functional')
+    ch_gsea_results = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report, 'method_functional', false)
     gprofiler2_plot_html = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html, 'method_functional')
     gprofiler2_all_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, 'method_functional')
     gprofiler2_sub_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, 'method_functional')
@@ -501,35 +504,27 @@ workflow DIFFERENTIALABUNDANCE {
     // For geoquery we've done no matrix processing and been supplied with the
     // normalised matrix, which can be passed through to downstream analysis
     if (params.study_type == "geo_soft_file") {
-        ch_mat = ch_norm.combine( Channel.of([[],[],[]]) )
+        ch_mat = ch_norm.map {meta, norm -> [meta, [norm]]}
     } else {
-        ch_processed_matrices = ch_norm
-            .combine( rlog_counts.ifEmpty([[],[]]) )
-            .combine( vst_counts.ifEmpty([[],[]]) )
-            .map { meta, norm, meta_rlog, rlog, meta_vst, vst ->
-                def matrices = [meta, norm]
-                if (meta_rlog == [] || meta == meta_rlog) matrices += [rlog]
-                if (meta_vst == [] || meta == meta_vst) matrices += [vst]
-                return matrices   // meta, norm, rlog, vst
-            }
-        ch_mat = ch_raw.combine(ch_processed_matrices)
-            .map { meta_exp, raw, meta_norm, norm, rlog, vst ->
-                if (meta_norm.subMap(meta_exp.keySet()) == meta_exp) {
-                    return [meta_norm, raw, norm, rlog, vst]
-                }
+        ch_mat = ch_raw
+            .combine(ch_norm)
+            .combine( ch_differential_var.ifEmpty([[],[]]) )
+            .map { meta_exp, raw, meta_norm, norm, meta_var, matrices ->
+                def matrices_new = [raw, norm] + matrices
+                if ((meta_norm.subMap(meta_exp.keySet()) == meta_exp) &&
+                    (meta_var == [] || meta_norm == meta_var)
+                    ) {
+                        return [meta_norm, matrices_new]
+                    }
             }
     }
 
     ch_all_matrices = VALIDATOR.out.sample_meta                 // meta, samples
         .join(VALIDATOR.out.feature_meta)                       // meta, samples, features
         .combine(ch_mat)
-        .map { meta_exp, samples, features, meta_mat, raw, norm, rlog, vst ->
+        .map { meta_exp, samples, features, meta_mat, matrices ->
             if (meta_mat.subMap(meta_exp.keySet()) == meta_exp) {
-                def processed_matrices = [raw]
-                if (norm != []) processed_matrices += [norm]
-                if (rlog != []) processed_matrices += [rlog]
-                if (vst != []) processed_matrices += [vst]
-                return [meta_mat, samples, features, processed_matrices]
+                return [meta_mat, samples, features, matrices]
             }
         }
 
