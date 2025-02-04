@@ -145,20 +145,29 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    DEFINE FUNCTIONS
+    DEFINE MAP CRITERIAS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def replace_meta_method_id (channel, new_id, only_one=true) {
-    return channel.map { it ->
-        def meta = it[0] - ['method': it[0].method]
-        meta[new_id] = it[0].method
-        if (only_one) {
-            return [meta, it[1]]
-        } else {
-            return [ meta, it[1..it.size()-1] ].flatten()
-        }
-    }
+// When running differential and functional subworkflows, the method used
+// to produce a given output is stored in the metadata 'method'.
+// To avoid metadata overlapping, these criterias are used to replace
+// 'method' by 'method_differential' or 'method_functional' afterwards.
+
+def methodCriteriaDifferential = { it ->
+    def meta = it[0] - ['method': it[0].method]
+    meta['method_differential'] = it[0].method
+    return [meta, it[1]]
+}
+def methodCriteriaFunctional = { it ->
+    def meta = it[0] - ['method': it[0].method]
+    meta['method_functional'] = it[0].method
+    return [meta, it[1]]
+}
+def methodCriteriaFunctionalFlatten = { it ->
+    def meta = it[0] - ['method': it[0].method]
+    meta['method_functional'] = it[0].method
+    return [meta, it[1..it.size()-1]].flatten()
 }
 
 /*
@@ -418,11 +427,11 @@ workflow DIFFERENTIALABUNDANCE {
     // collect differential results
     // meta.method would be replaced by meta.method_differential
 
-    ch_differential_results = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, 'method_differential')
-    ch_differential_results_filtered = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, 'method_differential')
-    ch_differential_model = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, 'method_differential')
-    ch_differential_norm = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, 'method_differential')
-    ch_differential_var = replace_meta_method_id(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}, 'method_differential')
+    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise.map(methodCriteriaDifferential)
+    ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered.map(methodCriteriaDifferential)
+    ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model.map(methodCriteriaDifferential)
+    ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix.map(methodCriteriaDifferential)
+    ch_differential_var = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}.map(methodCriteriaDifferential)
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -468,10 +477,10 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare the results for downstream analysis
 
-    ch_gsea_results = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report, 'method_functional', false)
-    gprofiler2_plot_html = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html, 'method_functional')
-    gprofiler2_all_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, 'method_functional')
-    gprofiler2_sub_enrich = replace_meta_method_id(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, 'method_functional')
+    ch_gsea_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report.map(methodCriteriaFunctionalFlatten)
+    gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html.map(methodCriteriaFunctional)
+    gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich.map(methodCriteriaFunctional)
+    gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich.map(methodCriteriaFunctional)
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
