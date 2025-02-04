@@ -79,28 +79,16 @@ if (run_gene_set_analysis) {
 }
 
 // Define tool channel
-// For the moment, it allows a single combination of tools, but this will be changed with
-// the toolsheet and introduction of multi-tool logic.
-if (params.study_type == 'affy_array' ||
-    params.study_type == 'geo_soft_file' ||
-    params.study_type == 'maxquant' ||
-    (params.study_type == 'rnaseq' && params.differential_use_limma)
-    ) {
-        tools_differential = ['method': 'limma']
-    } else {
-        tools_differential = ['method': 'deseq2']
-    }
-tools_differential += [
-    'fc_threshold': params.differential_min_fold_change,
-    'stat_threshold': params.differential_max_qval
+tools_differential = [
+    method       : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
+                    (params.study_type == 'rnaseq' && params.differential_use_limma))
+                    ? 'limma' : 'deseq2',
+    fc_threshold : params.differential_min_fold_change,
+    stat_threshold: params.differential_max_qval
 ]
-tools_functional = []
-if (params.gsea_run) {
-    tools_functional = ['method': 'gsea', 'input_type': 'norm']
-}
-if (params.gprofiler2_run) {
-    tools_functional = ['method': 'gprofiler2', 'input_type': 'filtered']
-}
+tools_functional = params.gprofiler2_run ?
+    [method: 'gprofiler2', input_type: 'filtered'] :
+    (params.gsea_run ? [method: 'gsea', input_type: 'norm'] : [])
 ch_tools = Channel.of([tools_differential, tools_functional])
 
 // report related files
