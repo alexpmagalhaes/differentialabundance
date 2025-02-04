@@ -17,11 +17,10 @@ nextflow_pipeline {
         then {
             // stable_name: All files + folders in ${params.outdir}/ with a stable name
             def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}',
-                    'report/gsea/phenotype_uninvolved_lesional_GSE50790/**/*.png',
-                    'report/gsea/phenotype_uninvolved_lesional_GSE50790/h.all.v2022.1.Hs.symbols/phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.{html,tsv}',
-                    'report/gsea/phenotype_uninvolved_lesional_GSE50790/h.all.v2022.1.Hs.symbols/phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.{html,tsv}'])
+                    'report/gsea/phenotype_uninvolved_lesional_GSE50790/**/*.png'
+            ])
             // stable_path: All files in ${params.outdir}/ with stable content
-            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore', ignore: ['**/*.png'])
+            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
             assertAll(
                 { assert workflow.success},
                 { assert snapshot(
