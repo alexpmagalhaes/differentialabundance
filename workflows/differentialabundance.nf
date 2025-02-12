@@ -431,7 +431,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered.map(methodCriteriaDifferential)
     ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model.map(methodCriteriaDifferential)
     ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix.map(methodCriteriaDifferential)
-    ch_differential_var = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}.map(methodCriteriaDifferential)
+    ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}.map(methodCriteriaDifferential)
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -456,11 +456,18 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare input for functional analysis
 
+    // Some gene set methods require normalised matrices, some do not. We must pass inputs
+    // to the functional enrichment subworkflow pairing the correct matrix with the correct method
     ch_functional_input = ch_differential_results_filtered.combine(ch_tools.filter{it[1].input_type == 'filtered'})
         .mix(ch_norm.combine(ch_tools.filter{it[1].input_type == 'norm'}))
         .combine(ch_gene_sets)
         .combine(ch_background)
         .map { meta, input, tools_diff, tools_func, gene_sets, background ->
+            // ch_tools controls the combination of tool_diff and tool_func, eg. deseq2+gsea, limma+gprofiler2
+            // Here we match the combinations based on the meta values,
+            // so if method_differential in the data meta is equal to the diff method in the tools meta, we keep it.
+            // On the other hand, when working with arrays, this pipeline uses ch_norm data coming from VALIDATOR.out
+            // here no method_differential is in data meta.
             if (!('method_differential' in meta) || (meta.method_differential == tools_diff.method)) {
                 return [meta, input, gene_sets, background, tools_func.method]
             }
@@ -503,11 +510,14 @@ workflow DIFFERENTIALABUNDANCE {
     if (params.study_type == "geo_soft_file") {
         ch_mat = ch_norm.map {meta, norm -> [meta, [norm]]}
     } else {
+        // otherwise, the pipeline would produce normalized counts through methods like DESEQ2_NORM and LIMMA_NORM
+        // in the case of DESEQ2_NORM, it could optionally also generate variance stabilised matrices
+        // here we combine the raw matrices with all these matrices, if generated
         ch_mat = ch_raw
             .combine(ch_norm)
-            .combine( ch_differential_var.ifEmpty([[],[]]) )
-            .map { meta_exp, raw, meta_norm, norm, meta_var, matrices ->
-                def matrices_new = [raw, norm] + matrices
+            .combine( ch_differential_varstab.ifEmpty([[],[]]) )
+            .map { meta_exp, raw, meta_norm, norm, meta_var, vs ->
+                def matrices_new = [raw, norm] + vs  // note that this list of matrices will always include raw and normalised matrices. And optionally variance stabilised matrices.
                 if ((meta_norm.subMap(meta_exp.keySet()) == meta_exp) &&
                     (meta_var == [] || meta_norm == meta_var)
                     ) {
@@ -516,9 +526,9 @@ workflow DIFFERENTIALABUNDANCE {
             }
     }
 
-    ch_all_matrices = VALIDATOR.out.sample_meta                 // meta, samples
-        .join(VALIDATOR.out.feature_meta)                       // meta, samples, features
-        .combine(ch_mat)
+    ch_all_matrices = VALIDATOR.out.sample_meta                 // meta_exp, samples
+        .join(VALIDATOR.out.feature_meta)                       // meta_exp, samples, features
+        .combine(ch_mat)                                        // meta_mat, list of matrices (raw, norm, variance stabilized)  // see above
         .map { meta_exp, samples, features, meta_mat, matrices ->
             if (meta_mat.subMap(meta_exp.keySet()) == meta_exp) {
                 return [meta_mat, samples, features, matrices]
