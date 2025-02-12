@@ -404,13 +404,13 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
         .combine(ch_tools)
-        .map { meta, matrix, tools_differential, tools_functional ->
+        .map { meta, matrix, tools_diff, tools_func ->
             [
                 meta,
                 matrix,
-                tools_differential.method,
-                tools_differential.fc_threshold,
-                tools_differential.stat_threshold
+                tools_diff.method,
+                tools_diff.fc_threshold,
+                tools_diff.stat_threshold
             ]
         }
 
@@ -460,9 +460,9 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(ch_norm.combine(ch_tools.filter{it[1].input_type == 'norm'}))
         .combine(ch_gene_sets)
         .combine(ch_background)
-        .map { meta, input, tools_differential, tools_functional, gene_sets, background ->
-            if (!('method_differential' in meta) || (meta.method_differential == tools_differential.method)) {
-                return [meta, input, gene_sets, background, tools_functional.method]
+        .map { meta, input, tools_diff, tools_func, gene_sets, background ->
+            if (!('method_differential' in meta) || (meta.method_differential == tools_diff.method)) {
+                return [meta, input, gene_sets, background, tools_func.method]
             }
         }
 
