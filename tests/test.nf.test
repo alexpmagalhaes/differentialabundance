@@ -6,7 +6,7 @@ nextflow_pipeline {
     tag "test"
     tag "pipeline"
 
-    test("Test profile - yml contrasts") {
+    test("Test profile - CSV contrasts") {
 
         when {
             params {
@@ -40,7 +40,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir        = "$outputDir"
-                contrasts     = "https://github.com/nf-core/test-datasets/raw/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml"
+                contrasts_yml     = "https://github.com/nf-core/test-datasets/raw/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml"
             }
         }
 
