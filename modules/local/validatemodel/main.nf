@@ -1,4 +1,4 @@
-process VALIDATE_MODEL {
+process VALIDATE_YML_MODEL {
     tag "${models_yml}"
     label 'process_single'
 

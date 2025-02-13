@@ -196,7 +196,7 @@
                     "r-plotly": "4.10.2",
                     "bioconductor-limma": "3.54.0"
                 },
-                "VALIDATE_MODEL": {
+                "VALIDATE_YML_MODEL": {
                     "r-base": "4.4.2",
                     "tidyverse": "2.0.0",
                     "optparse": "1.7.5",

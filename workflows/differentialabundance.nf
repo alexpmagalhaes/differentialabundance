@@ -133,7 +133,7 @@ include { PROTEUS_READPROTEINGROUPS as PROTEUS              } from '../modules/n
 include { GEOQUERY_GETGEO                                   } from '../modules/nf-core/geoquery/getgeo/main'
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { VALIDATE_MODEL                                    } from '../modules/local/validatemodel/main'
+include { VALIDATE_YML_MODEL                                    } from '../modules/local/validatemodel/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,13 +153,13 @@ workflow DIFFERENTIALABUNDANCE {
     // Run module to validate models from yml file
     if ( params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml") ) {
 
-        VALIDATE_MODEL (
+        VALIDATE_YML_MODEL (
             ch_input,
             ch_contrasts_file
         )
 
         ch_versions = ch_versions
-            .mix(VALIDATE_MODEL.out.versions)
+            .mix(VALIDATE_YML_MODEL.out.versions)
     }
 
     // If we have affy array data in the form of CEL files we'll be deriving

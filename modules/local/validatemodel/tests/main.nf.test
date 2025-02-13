@@ -1,8 +1,8 @@
 nextflow_process {
 
-    name "Test Process VALIDATE_MODEL"
+    name "Test Process VALIDATE_YML_MODEL"
     script "../main.nf"
-    process "VALIDATE_MODEL"
+    process "VALIDATE_YML_MODEL"
     config "./nextflow.config"
 
     tag "modules"
