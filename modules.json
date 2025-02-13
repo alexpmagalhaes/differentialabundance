@@ -27,12 +27,12 @@
                     },
                     "custom/tabulartogseacls": {
                         "branch": "master",
-                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "custom/tabulartogseagct": {
                         "branch": "master",
-                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "deseq2/differential": {
@@ -47,7 +47,7 @@
                     },
                     "gprofiler2/gost": {
                         "branch": "master",
-                        "git_sha": "135782adb38530bd563e598f1a40287a3907658b",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "gsea/gsea": {
