@@ -2,4 +2,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bioconda::r-shinyngs=2.1.0
+  - bioconda::r-immunedeconv=2.1.2

@@ -8,11 +8,10 @@
                     "bioconductor-limma": "3.58.1"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "PROTEUS": {
                     "r-base": "4.2.1",
@@ -21,8 +20,7 @@
                     "bioconductor-limma": "3.54.0"
                 },
                 "VALIDATOR": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -129,20 +127,20 @@
                 "volcano.png:md5,2497d3bd1e925d358b5856a21209f4bc",
                 "volcano.png:md5,1b28d0983a895d0619c470553a1be47f",
                 "volcano.png:md5,198730d78767da2e46ce6e1d25f52e64",
-                "versions.yml:md5,b20728a34a3537e339078bbeaababee9",
+                "versions.yml:md5,3b79bd76b788bcfe6a346b1d0d2dba36",
                 "boxplot.png:md5,17074b29c8babf56c5b884c13429c81e",
-                "density.png:md5,245843935e441c32d69b788d0cdd9ef8",
+                "density.png:md5,919c3d2f01bae9ba6c656f0223d2d19f",
                 "mad_correlation.png:md5,e2033c95c4c5b3d695d65158a6a246e4",
                 "pca2d.png:md5,50ff3bd8c8de40f32f078fe879c72d55",
                 "pca3d.png:md5,c3ced5600509551d5e0410019c717445",
                 "sample_dendrogram.png:md5,49bcc85503e49cb9da71e86973db3263",
                 "boxplot.png:md5,bb306103d822eecc37c29bb07674d29f",
-                "density.png:md5,a27331aa3cb96242140cba1f57a18215",
+                "density.png:md5,d5a5e915557eab1fc05a914571b27f02",
                 "mad_correlation.png:md5,e14dd0b2ab73187658b386dfc6227d37",
                 "pca2d.png:md5,ed7f1342d245d5764898b637a6530c8d",
                 "pca3d.png:md5,dcedf79d5795c48a57117a2279dd4a0e",
                 "sample_dendrogram.png:md5,bacaf55f4f5863992ce7c166cde9c5b9",
-                "versions.yml:md5,9c47cbf6f2f30c711eb57fff84ea3736",
+                "versions.yml:md5,837080c1af397890cab637f12f6c4851",
                 "normalizeMedian.normalized_dendrogram.png:md5,6bf22a6e3aba7d3c53dc80d3bbd2bb27",
                 "normalizeMedian.normalized_distributions.png:md5,39b6f96288b8cd2e7dd2d02f424d6d78",
                 "normalizeMedian.normalized_mean_variance_relationship.png:md5,4ed879017fcbe0ea8279bd362ac0d9bd",
@@ -170,9 +168,9 @@
             ]
         ],
         "meta": {
-            "nf-test": "0.9.0",
+            "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-17T12:05:41.542929323"
+        "timestamp": "2025-01-17T15:13:14.296845013"
     }
 }

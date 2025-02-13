@@ -17,18 +17,16 @@
                     "bioconductor-limma": "3.58.1"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "TABULAR_TO_GSEA_CHIP": {
                     "bash": "5.2.21 3"
                 },
                 "VALIDATOR": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -134,14 +132,14 @@
                 "treatment_mCherry_hND6_sample_number.MArrayLM.limma.rds:md5,385f960f9330a1dd6bbf4b00166bc96e",
                 "volcano.png:md5,aa3d307fc1bb3284c5a29a469dc9a75e",
                 "volcano.png:md5,e24eaad248b42383269daaa8b98895b9",
-                "versions.yml:md5,b20728a34a3537e339078bbeaababee9",
+                "versions.yml:md5,3b79bd76b788bcfe6a346b1d0d2dba36",
                 "boxplot.png:md5,fddc3f29ff4561a856cd2d58a1dfe637",
-                "density.png:md5,0ba03b26bc8cfbf79d97c604fe9d142f",
+                "density.png:md5,d7552dab8e578124da77edaeff22dccf",
                 "mad_correlation.png:md5,340df9eb381307cf4d98d79da3213e6f",
                 "pca2d.png:md5,ce23b7e9b1300fb83bd593781fc70648",
                 "pca3d.png:md5,458d2c497557113ec203fe38186f5e1c",
                 "sample_dendrogram.png:md5,eb02da7195194e0d56578df41022f9bf",
-                "versions.yml:md5,9c47cbf6f2f30c711eb57fff84ea3736",
+                "versions.yml:md5,837080c1af397890cab637f12f6c4851",
                 "treatment_mCherry_hND6_.limma.mean_difference.png:md5,88ec38c7fb92b3f52675e7c9650bfbcd",
                 "treatment_mCherry_hND6_sample_number.limma.mean_difference.png:md5,4f2ff615728c95914dc773b7d986b5e7",
                 "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,d47ccff0732fb808d25f91fd7ef15f1c",
@@ -167,7 +165,7 @@
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,2054b247acc714589b7f1e4f25a348d8",
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_list_corr_2.png:md5,7031641b539ba303c6188ce43c9ebe67",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,892774f9d56ba10c8646736b7f777ecc",
+                "versions.yml:md5,27cf350d1f743e60e64b4434cf6d4687",
                 "Mus_musculus.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
                 "treatment_mCherry_hND6_.limma.results.tsv:md5,26df55a9c0fd182977396f75337d5fc4",
                 "treatment_mCherry_hND6_.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
@@ -179,6 +177,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2025-01-17T21:31:48.481850028"
+        "timestamp": "2025-01-17T15:17:03.326723612"
     }
 }

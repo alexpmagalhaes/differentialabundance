@@ -12,15 +12,13 @@
                     "bioconductor-limma": "3.58.1"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "VALIDATOR": {
-                    "r-base": "4.3.3",
-                    "r-shinyngs": "2.0.0"
+                    "r-shinyngs": "2.1.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -73,17 +71,17 @@
                 "normalised.eset.rds:md5,ee83ece8b75d711163af9dd9300db49a",
                 "phenotype_uninvolved_lesional.MArrayLM.limma.rds:md5,eecc9b0267ce9a5d3a1330da7fbce4cc",
                 "volcano.png:md5,18e35512a52ff82be16cc14330c1ac89",
-                "versions.yml:md5,b20728a34a3537e339078bbeaababee9",
+                "versions.yml:md5,3b79bd76b788bcfe6a346b1d0d2dba36",
                 "boxplot.png:md5,4d366be0ef28c1aaabebf1529e2b9dc0",
-                "density.png:md5,09b20c49c9f479fd5c36630f86ce8384",
+                "density.png:md5,551c933a5d3dfe216dc000de19d9725f",
                 "mad_correlation.png:md5,60f9c0e924d52a569d976a3fb2c22a43",
                 "pca2d.png:md5,aad430028daa7ffa7cd6bea1c6c41d43",
                 "pca3d.png:md5,d32182b1005d696da648170f3bd9dbe8",
                 "sample_dendrogram.png:md5,b66045a3c9df5310f3241544c50f3fd1",
-                "versions.yml:md5,9c47cbf6f2f30c711eb57fff84ea3736",
+                "versions.yml:md5,837080c1af397890cab637f12f6c4851",
                 "phenotype_uninvolved_lesional.limma.mean_difference.png:md5,570bc62fbad15b7b25eaea786a416ace",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,892774f9d56ba10c8646736b7f777ecc",
+                "versions.yml:md5,27cf350d1f743e60e64b4434cf6d4687",
                 "normalised.annotation.tsv:md5,40300ae222ae35fa54daf10a1b86e830",
                 "phenotype_uninvolved_lesional.limma.results.tsv:md5,2cfa653fffb034be4b82abf306c87bc5",
                 "phenotype_uninvolved_lesional.limma.results_filtered.tsv:md5,6a198c35b193bab0b3148d147c7b08e3",
@@ -91,9 +89,9 @@
             ]
         ],
         "meta": {
-            "nf-test": "0.9.0",
+            "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-17T12:14:27.925053664"
+        "timestamp": "2025-01-17T15:18:54.261796571"
     }
 }
