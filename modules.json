@@ -27,18 +27,18 @@
                     },
                     "custom/tabulartogseachip": {
                         "branch": "master",
-                        "git_sha": "7900e49fb84969a2479ecfbeef7bcbe296513c90",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["differential_functional_enrichment"]
                     },
                     "custom/tabulartogseacls": {
                         "branch": "master",
-                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
-                        "installed_by": ["differential_functional_enrichment", "modules"]
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["differential_functional_enrichment"]
                     },
                     "custom/tabulartogseagct": {
                         "branch": "master",
-                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
-                        "installed_by": ["differential_functional_enrichment", "modules"]
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["differential_functional_enrichment"]
                     },
                     "deseq2/differential": {
                         "branch": "master",
@@ -52,13 +52,13 @@
                     },
                     "gprofiler2/gost": {
                         "branch": "master",
-                        "git_sha": "6506b7bc2a369f0c21dc4fbc5e8d2af6c3e1a90b",
-                        "installed_by": ["differential_functional_enrichment", "modules"]
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
+                        "installed_by": ["differential_functional_enrichment"]
                     },
                     "gsea/gsea": {
                         "branch": "master",
-                        "git_sha": "6506b7bc2a369f0c21dc4fbc5e8d2af6c3e1a90b",
-                        "installed_by": ["differential_functional_enrichment", "modules"]
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
+                        "installed_by": ["differential_functional_enrichment"]
                     },
                     "gunzip": {
                         "branch": "master",
@@ -72,17 +72,17 @@
                     },
                     "limma/differential": {
                         "branch": "master",
-                        "git_sha": "784b3a38aeafe9bb7e38f1369704dd5e6bcaf9f0",
-                        "installed_by": ["abundance_differential_filter", "modules"]
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["abundance_differential_filter"]
                     },
                     "propr/grea": {
                         "branch": "master",
-                        "git_sha": "138b2c45dde12b2075d6fe15a5d374b48d166d4a",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["differential_functional_enrichment"]
                     },
                     "propr/propd": {
                         "branch": "master",
-                        "git_sha": "0e9cb409c32d3ec4f0d3804588e4778971c09b7e",
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
                         "installed_by": ["abundance_differential_filter"]
                     },
                     "proteus/readproteingroups": {
@@ -131,12 +131,12 @@
                 "nf-core": {
                     "abundance_differential_filter": {
                         "branch": "master",
-                        "git_sha": "2b977a47af8a319f6ef6e7b918e7bb64babbaa04",
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
                         "installed_by": ["subworkflows"]
                     },
                     "differential_functional_enrichment": {
                         "branch": "master",
-                        "git_sha": "6506b7bc2a369f0c21dc4fbc5e8d2af6c3e1a90b",
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
                         "installed_by": ["subworkflows"]
                     },
                     "utils_nextflow_pipeline": {
