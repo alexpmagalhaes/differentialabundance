@@ -145,33 +145,6 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    DEFINE MAP CRITERIAS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-// When running differential and functional subworkflows, the method used
-// to produce a given output is stored in the metadata 'method'.
-// To avoid metadata overlapping, these criterias are used to replace
-// 'method' by 'method_differential' or 'method_functional' afterwards.
-
-def methodCriteriaDifferential = { it ->
-    def meta = it[0] - ['method': it[0].method]
-    meta['method_differential'] = it[0].method
-    return [meta, it[1]]
-}
-def methodCriteriaFunctional = { it ->
-    def meta = it[0] - ['method': it[0].method]
-    meta['method_functional'] = it[0].method
-    return [meta, it[1]]
-}
-def methodCriteriaFunctionalFlatten = { it ->
-    def meta = it[0] - ['method': it[0].method]
-    meta['method_functional'] = it[0].method
-    return [meta, it[1..it.size()-1]].flatten()
-}
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -425,13 +398,12 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // collect differential results
-    // meta.method would be replaced by meta.method_differential
 
-    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise.map(methodCriteriaDifferential)
-    ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered.map(methodCriteriaDifferential)
-    ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model.map(methodCriteriaDifferential)
-    ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix.map(methodCriteriaDifferential)
-    ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix.filter{ it != null}.map(methodCriteriaDifferential)
+    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise
+    ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered
+    ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
+    ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
+    ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -484,10 +456,10 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare the results for downstream analysis
 
-    ch_gsea_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report.map(methodCriteriaFunctionalFlatten)
-    gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html.map(methodCriteriaFunctional)
-    gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich.map(methodCriteriaFunctional)
-    gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich.map(methodCriteriaFunctional)
+    ch_gsea_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report
+    gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
+    gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich
+    gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
