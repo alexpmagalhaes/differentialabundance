@@ -34,8 +34,9 @@ On release, automated continuous integration tests run the pipeline on a full-si
 3. Run differential analysis over all contrasts specified.
 4. Optionally run a differential gene set analysis.
 5. Generate exploratory and differential analysis plots for interpretation.
-6. Optionally build and (if specified) deploy a Shiny app for fully interactive mining of results.
-7. Build an HTML report based on R markdown, with interactive plots (where possible) and tables.
+6. Run immunedeconv to estimate immune cell fractions using established deconvolution methods.
+7. Optionally build and (if specified) deploy a Shiny app for fully interactive mining of results.
+8. Build an HTML report based on R markdown, with interactive plots (where possible) and tables.
 
 ## Usage
 
@@ -47,7 +48,7 @@ RNA-seq with deseq2:
 ```bash
  nextflow run nf-core/differentialabundance \
      --input samplesheet.csv \
-     --contrasts contrasts.csv \
+     --contrasts contrasts.yaml \
      --matrix assay_matrix.tsv \
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
@@ -65,7 +66,7 @@ RNA-seq limma+voom:
 ```bash
  nextflow run nf-core/differentialabundance \
      --input samplesheet.csv \
-     --contrasts contrasts.csv \
+     --contrasts contrasts.yaml \
      --matrix assay_matrix.tsv \
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
@@ -85,7 +86,7 @@ Affymetrix microarray:
 ```bash
  nextflow run nf-core/differentialabundance \
      --input samplesheet.csv \
-     --contrasts contrasts.csv \
+     --contrasts contrasts.yaml \
      --affy_cel_files_archive cel_files.tar \
      --outdir <OUTDIR>  \
      -profile affy,<docker/singularity/podman/shifter/charliecloud/conda/institute>
@@ -137,6 +138,10 @@ We thank the many members of the nf-core community who assisted with this pipeli
 - [@mahesh-panchal](https://github.com/mahesh-panchal),
 - [@mashehu](https://github.com/mashehu),
 - [@apeltzer](https://github.com/apeltzer)
+- [@grst](https://github.com/grst)
+- [@atrigila](https://github.com/atrigila)
+- [@alanmmobbs93](https://github.com/alanmmobbs93)
+- [@nschcolnicov](https://github.com/nschcolnicov)
 
 ## Contributions and Support
 

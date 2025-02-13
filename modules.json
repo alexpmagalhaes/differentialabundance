@@ -65,6 +65,11 @@
                         "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
                         "installed_by": ["modules"]
                     },
+                    "immunedeconv": {
+                        "branch": "master",
+                        "git_sha": "e0d590dc1005b89a06b54548d4e3cdfa45e6b6f2",
+                        "installed_by": ["modules"]
+                    },
                     "limma/differential": {
                         "branch": "master",
                         "git_sha": "136f443c0a6d5c526410c7c9b73ce51ef457c341",
@@ -82,22 +87,22 @@
                     },
                     "shinyngs/app": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "90ac6ed9cb37e13b585ff5878a5b037fe0ae1eb1",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticdifferential": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "e78f2865105f2f6543e49cfbbdd040972e9536f4",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticexploratory": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "90ac6ed9cb37e13b585ff5878a5b037fe0ae1eb1",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/validatefomcomponents": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "e78f2865105f2f6543e49cfbbdd040972e9536f4",
                         "installed_by": ["modules"]
                     },
                     "untar": {
