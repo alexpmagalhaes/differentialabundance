@@ -134,7 +134,7 @@ include { GEOQUERY_GETGEO                                   } from '../modules/n
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { IMMUNEDECONV                                      } from '../modules/nf-core/immunedeconv/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { VALIDATE_YML_MODEL                                    } from '../modules/local/validatemodel/main'
+include { VALIDATE_YML_MODEL                                } from '../modules/local/validatemodel/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -169,6 +169,15 @@ workflow DIFFERENTIALABUNDANCE {
             }
             .flatten()
             .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
+
+        VALIDATE_YML_MODEL (
+            ch_input,
+            ch_contrasts_file
+        )
+
+        ch_versions = ch_versions
+            .mix(VALIDATE_YML_MODEL.out.versions)
+
     } else if (params.contrasts) {
         //csv contrasts file processing
         ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
@@ -179,19 +188,6 @@ workflow DIFFERENTIALABUNDANCE {
                 tuple('id': it.variable)
             }
             .unique()
-    }
-
-
-    // Run module to validate models from yml file
-    if ( params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml") ) {
-
-        VALIDATE_YML_MODEL (
-            ch_input,
-            ch_contrasts_file
-        )
-
-        ch_versions = ch_versions
-            .mix(VALIDATE_YML_MODEL.out.versions)
     }
 
     // If we have affy array data in the form of CEL files we'll be deriving
