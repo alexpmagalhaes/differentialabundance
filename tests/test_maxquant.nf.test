@@ -40,7 +40,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir        = "$outputDir"
-                contrasts     = "https://github.com/nf-core/test-datasets/raw/refs/heads/differentialabundance/testdata/MaxQuant_contrasts.yaml"
+                contrasts_yml     = "https://github.com/nf-core/test-datasets/raw/refs/heads/differentialabundance/testdata/MaxQuant_contrasts.yaml"
             }
         }
 
