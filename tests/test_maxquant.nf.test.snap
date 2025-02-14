@@ -50,6 +50,7 @@
                 "other/proteus/fakeBatch/raw_proteingroups.rds",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/fakebatch_fakeBatch_b1_b2",
