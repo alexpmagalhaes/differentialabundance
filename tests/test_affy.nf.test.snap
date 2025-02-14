@@ -38,6 +38,7 @@
                 "other/limma/phenotype_uninvolved_lesional.MArrayLM.limma.rds",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/phenotype_uninvolved_lesional",
@@ -232,8 +233,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.3"
+            "nextflow": "24.10.4"
         },
-        "timestamp": "2025-01-17T15:11:49.515049379"
+        "timestamp": "2025-02-10T18:11:16.985751201"
     }
 }

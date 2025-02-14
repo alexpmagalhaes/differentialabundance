@@ -41,6 +41,7 @@
                 "other/deseq2/treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/treatment_mCherry_hND6_",
@@ -190,9 +191,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.3"
+            "nextflow": "24.10.4"
         },
-        "timestamp": "2025-01-22T15:46:19.634502588"
+        "timestamp": "2025-02-10T18:04:46.581176285"
     },
     "Test profile - yml contrasts": {
         "content": [
@@ -236,6 +237,7 @@
                 "other/deseq2/treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/treatment_mCherry_hND6_",
@@ -385,8 +387,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.3"
+            "nextflow": "24.10.4"
         },
-        "timestamp": "2025-01-22T15:44:36.759568148"
+        "timestamp": "2025-02-10T18:02:10.805576537"
     }
 }
