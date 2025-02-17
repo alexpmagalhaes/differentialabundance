@@ -43,6 +43,7 @@
                 "other/proteus/fakeBatch/raw_proteingroups.rds",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/fakebatch_fakeBatch_b1_b2",
@@ -169,8 +170,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.3"
+            "nextflow": "24.10.4"
         },
-        "timestamp": "2025-01-17T15:13:14.296845013"
+        "timestamp": "2025-02-10T18:14:53.395658445"
     }
 }

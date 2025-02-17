@@ -29,6 +29,7 @@
                 "other/deseq2/treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/treatment_mCherry_hND6_",
@@ -98,8 +99,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.3"
+            "nextflow": "24.10.4"
         },
-        "timestamp": "2025-01-17T15:14:39.706638148"
+        "timestamp": "2025-02-10T18:17:05.708510465"
     }
 }
