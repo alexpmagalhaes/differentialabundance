@@ -29,6 +29,7 @@
                 "other/deseq2/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
                 "plots",
                 "plots/differential",
                 "plots/differential/treatment_mCherry_hND6__SRP254919",
