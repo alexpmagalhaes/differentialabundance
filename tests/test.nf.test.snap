@@ -180,20 +180,20 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,27cf350d1f743e60e64b4434cf6d4687",
                 "Mus_musculus.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,42ad391a5d3b2e4e7931af3088cc6400",
-                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,cd67e101a9f0edf196ee0cd8491f8774",
-                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,b41cbaacd04a25b45295f3f987ff7500",
-                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,98fa3ec0992859d2a524ecce1259f0ed",
+                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,b40bd97367cce0fc3926a722136bd936",
+                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,b5560b6ccd18f09cb514d0b328448e0a",
+                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,00303655a04cc0b3671932d6cb5011dc",
+                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,08f3bb3a6c6abcd27c096f12c15c974c",
                 "SRP254919.salmon.merged.gene_counts.top1000cov.deconvolution_results.tsv:md5,3d7ed4550a0da2f63fcfd2e74605e7a3",
                 "all.normalised_counts.tsv:md5,1d7ad0c02b483f2eff1a5b357a74d011",
-                "all.vst.tsv:md5,a08d06d3c3218619b7bd85beead467bd"
+                "all.vst.tsv:md5,2fa9f1008e3536b049ca69d48bbe8fbd"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-10T18:04:46.581176285"
+        "timestamp": "2025-02-17T20:44:50.381600148"
     },
     "Test profile - yml contrasts": {
         "content": [
@@ -376,19 +376,19 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,27cf350d1f743e60e64b4434cf6d4687",
                 "Mus_musculus.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,42ad391a5d3b2e4e7931af3088cc6400",
-                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,cd67e101a9f0edf196ee0cd8491f8774",
-                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,b41cbaacd04a25b45295f3f987ff7500",
-                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,98fa3ec0992859d2a524ecce1259f0ed",
+                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,b40bd97367cce0fc3926a722136bd936",
+                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,b5560b6ccd18f09cb514d0b328448e0a",
+                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,00303655a04cc0b3671932d6cb5011dc",
+                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,08f3bb3a6c6abcd27c096f12c15c974c",
                 "SRP254919.salmon.merged.gene_counts.top1000cov.deconvolution_results.tsv:md5,3d7ed4550a0da2f63fcfd2e74605e7a3",
                 "all.normalised_counts.tsv:md5,1d7ad0c02b483f2eff1a5b357a74d011",
-                "all.vst.tsv:md5,a08d06d3c3218619b7bd85beead467bd"
+                "all.vst.tsv:md5,2fa9f1008e3536b049ca69d48bbe8fbd"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-10T18:02:10.805576537"
+        "timestamp": "2025-02-17T20:43:03.740723556"
     }
 }
