@@ -428,18 +428,20 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare input for functional analysis
 
-    // Some gene set methods require normalised matrices, some do not. We must pass inputs
-    // to the functional enrichment subworkflow pairing the correct matrix with the correct method
+    // Some functional analysis methods act directly on the differential results, some on the normalised matrix.
+    // Here we pair the correct input type with the correct functional analysis method, through ch_tools.
     ch_functional_input = ch_differential_results_filtered.combine(ch_tools.filter{it[1].input_type == 'filtered'})
         .mix(ch_norm.combine(ch_tools.filter{it[1].input_type == 'norm'}))
         .combine(ch_gene_sets)
         .combine(ch_background)
         .map { meta, input, tools_diff, tools_func, gene_sets, background ->
-            // ch_tools controls the combination of tool_diff and tool_func, eg. deseq2+gsea, limma+gprofiler2
-            // Here we match the combinations based on the meta values,
-            // so if method_differential in the data meta is equal to the diff method in the tools meta, we keep it.
-            // On the other hand, when working with arrays, this pipeline uses ch_norm data coming from VALIDATOR.out
-            // here no method_differential is in data meta.
+            // ch_tools also controls the combination of tool_diff and tool_func, eg. deseq2+gsea, limma+gprofiler2
+            // Here we match the proper combinations based on the meta values, so if method_differential in the data
+            // meta is equal to the diff method in tools_diff, we keep it.
+            // NOTE that this is done when method_differential is present in the data meta. When the input data don't
+            // come from the differential analysis subworkflow, there is no method_differential in the meta. In this
+            // case, we don't need to match methods. This is the case when working with arrays, where ch_norm comes
+            // directly from VALIDATOR.out
             if (!('method_differential' in meta) || (meta.method_differential == tools_diff.method)) {
                 return [meta, input, gene_sets, background, tools_func.method]
             }
