@@ -14,9 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[#345](https://github.com/nf-core/differentialabundance/pull/345)] - Plot differentially expressed genes by gene biotype ([@atrigila](https://github.com/atrigila), review by [@grst](https://github.com/grst))
 - [[#343](https://github.com/nf-core/differentialabundance/pull/343)] - Add pipeline-level nf-tests ([@atrigila](https://github.com/atrigila), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@nschcolnicov](https://github.com/nschcolnicov))
 - [[#286](https://github.com/nf-core/differentialabundance/pull/286)] - Integration of limma voom for rnaseq data ([@KamilMaliszArdigen](https://github.com/KamilMaliszArdigen), review by [@pinin4fjords](https://github.com/pinin4fjords))
-- [[#380](https://github.com/nf-core/differentialabundance/pull/380)] - Replace local filter_diff_table module with nf-core one, and create nf-tests for tabular_to_gsea_chip. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
-- [[#382](https://github.com/nf-core/differentialabundance/pull/382)] - Add YAML formatted contrasts file handling. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@TODO](https://github.com/TODO))
-- [[#411](https://github.com/nf-core/differentialabundance/pull/411)] - Replace local tabulartogseachip with nf-core version. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@TODO](https://github.com/TODO))
+- [[#463](https://github.com/nf-core/differentialabundance/pull/463)] - Replace local tabulartogseachip with nf-core version. Add YML validation module. (developed by [@alanmmobbs93](https://github.com/alanmmobbs93) and [@nschcolnicov](https://github.com/nschcolnicov), review by [@grst](https://github.com/grst), [@nschcolnicov](https://github.com/nschcolnicov) and [@suzannejin](https://github.com/suzannejin))
 
 ### Fixed
 
