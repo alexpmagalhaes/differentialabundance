@@ -1,5 +1,0 @@
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - bioconda::r-shinyngs=2.0.0
