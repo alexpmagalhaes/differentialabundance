@@ -17,8 +17,8 @@
                     },
                     "custom/filterdifferentialtable": {
                         "branch": "master",
-                        "git_sha": "045f0fbb65edaff2ca5002754dfa767d93551c66",
-                        "installed_by": ["abundance_differential_filter", "modules"]
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["abundance_differential_filter"]
                     },
                     "custom/matrixfilter": {
                         "branch": "master",
@@ -32,18 +32,18 @@
                     },
                     "custom/tabulartogseacls": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["differential_functional_enrichment"]
                     },
                     "custom/tabulartogseagct": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["differential_functional_enrichment"]
                     },
                     "deseq2/differential": {
                         "branch": "master",
                         "git_sha": "9326d73af3fbe2ee90d9ce0a737461a727c5118e",
-                        "installed_by": ["modules"]
+                        "installed_by": ["abundance_differential_filter"]
                     },
                     "geoquery/getgeo": {
                         "branch": "master",
@@ -52,7 +52,7 @@
                     },
                     "gprofiler2/gost": {
                         "branch": "master",
-                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["differential_functional_enrichment"]
                     },
                     "gsea/gsea": {
@@ -136,7 +136,7 @@
                     },
                     "differential_functional_enrichment": {
                         "branch": "master",
-                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["subworkflows"]
                     },
                     "utils_nextflow_pipeline": {
