@@ -89,8 +89,6 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_FATTY_ACID_METABOLISM.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.tsv",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.html",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL6_JAK_STAT3_SIGNALING.html",
@@ -117,6 +115,8 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_NOTCH_SIGNALING.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_OXIDATIVE_PHOSPHORYLATION.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_OXIDATIVE_PHOSPHORYLATION.tsv",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.html",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PEROXISOME.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PEROXISOME.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PROTEIN_SECRETION.html",
@@ -194,7 +194,6 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ESTROGEN_RESPONSE_EARLY.tsv:md5,695b5bd61210e9fd4e76993cee00c63d",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_FATTY_ACID_METABOLISM.tsv:md5,cb069d05610994d1e43ea84de165bcd0",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_G2M_CHECKPOINT.tsv:md5,09eba22af78006f69a9d0cb1bee27331",
-                "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.tsv:md5,08c50f431cee394c0280f41345a07d96",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL2_STAT5_SIGNALING.tsv:md5,38824ee08434a02049cf7f57c43545d5",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_IL6_JAK_STAT3_SIGNALING.tsv:md5,ab80e349a52b1b17d350d488d552f2b6",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_INFLAMMATORY_RESPONSE.tsv:md5,99983d81cd0ee6bc9c5e078ea311147c",
@@ -238,6 +237,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-18T17:02:22.896886565"
+        "timestamp": "2025-02-18T20:48:02.65793176"
     }
 }
