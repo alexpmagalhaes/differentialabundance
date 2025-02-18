@@ -432,7 +432,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Here we pair the correct input type with the correct functional analysis method, through ch_tools.
     // It also considers that for non-rnaseq experiments, the normalised matrix comes directly from VALIDATOR.out
     // and therefore there is no method_differential
-    ch_functional_input = (study_type == 'rnaseq' ? 
+    ch_functional_input = (params.study_type == 'rnaseq' ? 
             ch_norm.map { meta, input -> 
                 [[method: meta.method_differential, type: 'norm'], meta, input] 
             } : 
@@ -447,7 +447,7 @@ workflow DIFFERENTIALABUNDANCE {
         )
         .cross(
             ch_tools.map { tools_diff, tools_func ->
-                (study_type != 'rnaseq' && tools_func.input_type == 'norm') ? 
+                (params.study_type != 'rnaseq' && tools_func.input_type == 'norm') ? 
                     [[type: 'norm'], tools_diff, tools_func] : 
                     [[method: tools_diff.method, type: tools_func.input_type], tools_diff, tools_func]
             }
