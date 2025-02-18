@@ -430,21 +430,35 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Some functional analysis methods act directly on the differential results, some on the normalised matrix.
     // Here we pair the correct input type with the correct functional analysis method, through ch_tools.
-    ch_functional_input = ch_differential_results_filtered.combine(ch_tools.filter{it[1].input_type == 'filtered'})
-        .mix(ch_norm.combine(ch_tools.filter{it[1].input_type == 'norm'}))
+    // It also considers that for non-rnaseq experiments, the normalised matrix comes directly from VALIDATOR.out
+    // and therefore there is no method_differential
+    ch_functional_input = (study_type == 'rnaseq' ? 
+            ch_norm.map { meta, input -> 
+                [[method: meta.method_differential, type: 'norm'], meta, input] 
+            } : 
+            ch_norm.map { meta, input -> 
+                [[type: 'norm'], meta, input] 
+            }
+        )
+        .mix(
+            ch_differential_results_filtered.map { meta, input -> 
+                [[method: meta.method_differential, type: 'filtered'], meta, input] 
+            }
+        )
+        .cross(
+            ch_tools.map { tools_diff, tools_func ->
+                (study_type != 'rnaseq' && tools_func.input_type == 'norm') ? 
+                    [[type: 'norm'], tools_diff, tools_func] : 
+                    [[method: tools_diff.method, type: tools_func.input_type], tools_diff, tools_func]
+            }
+        )
+        .map { input, tools ->
+            [input[1], input[2], tools[2].method]  // meta, input, functional analysis method
+        }
         .combine(ch_gene_sets)
         .combine(ch_background)
-        .map { meta, input, tools_diff, tools_func, gene_sets, background ->
-            // ch_tools also controls the combination of tool_diff and tool_func, eg. deseq2+gsea, limma+gprofiler2
-            // Here we match the proper combinations based on the meta values, so if method_differential in the data
-            // meta is equal to the diff method in tools_diff, we keep it.
-            // NOTE that this is done when method_differential is present in the data meta. When the input data don't
-            // come from the differential analysis subworkflow, there is no method_differential in the meta. In this
-            // case, we don't need to match methods. This is the case when working with arrays, where ch_norm comes
-            // directly from VALIDATOR.out
-            if (!('method_differential' in meta) || (meta.method_differential == tools_diff.method)) {
-                return [meta, input, gene_sets, background, tools_func.method]
-            }
+        .map { meta, input, method, gene_sets, background ->
+            [meta, input, gene_sets, background, method]
         }
 
     // Run functional analysis
