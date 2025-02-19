@@ -78,7 +78,12 @@ if (run_gene_set_analysis) {
     }
 }
 
-// Define tool channel
+// Define tool channels
+// This channel is used to decide which tools to use
+// - tools_normalization handles the specificities when using ch_norm
+// - tools_differential specifies the method and key arguments for the differential analysis
+// - tools_functional specifies the method and input type for the functional analysis
+//   the input type is required to know if the input is the normalized matrix or the filtered differential results
 tools_normalization = [method: 'validator']
 if (params.study_type == 'rnaseq') {
     tools_normalization = [method: params.differential_use_limma ? 'limma' : 'deseq2']
@@ -417,6 +422,7 @@ workflow DIFFERENTIALABUNDANCE {
         ch_norm = ch_differential_norm
     } else {
         // when the study type is not rnaseq, the normalised matrix comes directly from VALIDATOR.out
+        // we need to update the meta so that it can match with tools_norm
         ch_norm = ch_norm
             .map { meta, norm ->
                 def meta_new = meta + [method_differential: 'validator']
@@ -486,7 +492,7 @@ workflow DIFFERENTIALABUNDANCE {
         VALIDATOR.out.feature_meta.combine(Channel.of([params.features_id_col, params.features_name_col]))
     )
 
-    // Prepare the results for downstream analysis
+    // Collect functional analysis results
 
     ch_gsea_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report
     gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
@@ -538,7 +544,7 @@ workflow DIFFERENTIALABUNDANCE {
             .combine(ch_all_matrices.map{ it.tail() })
     )
 
-    // Differential analysis
+    // Plot differential analysis results
 
     PLOT_DIFFERENTIAL(
         ch_differential_results,
