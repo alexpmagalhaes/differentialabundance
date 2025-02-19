@@ -17,6 +17,6 @@ report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phe
 report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.{html,tsv}
 gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.{html,tsv}
 gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.{html,tsv}
-treatment_mCherry_hND6_.deseq2.results.tsv
-treatment_mCherry_hND6_.deseq2.results_filtered.tsv
+tables/differential/treatment_mCherry_hND6_.deseq2.results.tsv
+tables/differential/treatment_mCherry_hND6_.deseq2.results_filtered.tsv
 
