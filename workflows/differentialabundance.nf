@@ -439,15 +439,11 @@ workflow DIFFERENTIALABUNDANCE {
     }
 
     // prepare channel with normalized matrix, and variance stabilized matrices when available
-    // NOTE that only deseq2 produces variance stabilised matrices. Hence, we use filter to
-    // only add those matrices to ch_norm produced by deseq2. Whereas for other methods
-    // (currently we only have limma, but we are gonna enable more), we only need the
-    // normalised matrix
-  ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
-      .map { meta, norm, vs ->
-          def matrices = vs ? [norm] + vs : [norm]
-          [meta, matrices]
-      }
+    ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
+        .map { meta, norm, vs ->
+            def matrices = vs ? [norm] + vs : [norm]
+            [meta, matrices]
+        }
 
     // ========================================================================
     // Functional analysis
