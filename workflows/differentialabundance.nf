@@ -413,7 +413,6 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
 
     // when the study type is rnaseq, we use the normalised matrix from the differential subworkflow
-    ch_norm.view()
     if (params.study_type == 'rnaseq') {
         ch_norm = ch_differential_norm
     } else {
