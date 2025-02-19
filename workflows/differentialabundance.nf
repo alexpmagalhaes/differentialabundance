@@ -439,6 +439,7 @@ workflow DIFFERENTIALABUNDANCE {
     }
 
     // prepare channel with normalized matrix, and variance stabilized matrices when available
+    // NOTE that only deseq2 produces variance stabilised matrices. Hence, we use filter to only add those matrices to ch_norm produced by deseq2.
     ch_processed_matrices = ch_norm
         .filter { meta, norm -> meta.method_differential == 'deseq2' } // only deseq2 produce variance stabilized matrices
         .join(ch_differential_varstab)
