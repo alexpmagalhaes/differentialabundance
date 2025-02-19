@@ -443,14 +443,11 @@ workflow DIFFERENTIALABUNDANCE {
     // only add those matrices to ch_norm produced by deseq2. Whereas for other methods
     // (currently we only have limma, but we are gonna enable more), we only need the
     // normalised matrix
-    ch_processed_matrices = ch_norm
-        .filter { meta, norm -> meta.method_differential == 'deseq2' }
-        .join(ch_differential_varstab)
-        .map { meta, norm, vs -> [meta, [norm] + vs] }
-        .mix(
-            ch_norm.filter { meta, norm -> meta.method_differential != 'deseq2' }
-                .map { meta, norm -> [meta, [norm]] }
-        )
+  ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
+      .map { meta, norm, vs ->
+          def matrices = vs ? [norm] + vs : [norm]
+          [meta, matrices]
+      }
 
     // ========================================================================
     // Functional analysis
