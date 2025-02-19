@@ -407,7 +407,7 @@
     },
     "Test profile - CSV contrasts": {
         "content": [
-            23,
+            22,
             {
                 "CUSTOM_TABULARTOGSEACHIP": {
                     "gawk": "5.1.0"
@@ -430,12 +430,6 @@
                 },
                 "PLOT_EXPLORATORY": {
                     "r-shinyngs": "2.1.0"
-                },
-                "VALIDATE_YML_MODEL": {
-                    "r-base": "4.4.2",
-                    "yaml": "2.3.10",
-                    "jsonlite": "1.8.9",
-                    "tidyverse": "2.0.0"
                 },
                 "VALIDATOR": {
                     "r-shinyngs": "2.1.0"
@@ -548,11 +542,7 @@
                 "tables/immunedeconv/SRP254919.salmon.merged.gene_counts.top1000cov.deconvolution_results.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv",
-                "tables/processed_abundance/all.vst.tsv",
-                "validate",
-                "validate/designs.json",
-                "validate/pheno_table.csv",
-                "validate/versions.yml"
+                "tables/processed_abundance/all.vst.tsv"
             ],
             [
                 "treatment_mCherry_hND6_.dds.rld.rds:md5,dfe51910e230ae9cc2bc9fa5651666ba",
@@ -602,16 +592,13 @@
                 "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,98fa3ec0992859d2a524ecce1259f0ed",
                 "SRP254919.salmon.merged.gene_counts.top1000cov.deconvolution_results.tsv:md5,3d7ed4550a0da2f63fcfd2e74605e7a3",
                 "all.normalised_counts.tsv:md5,1d7ad0c02b483f2eff1a5b357a74d011",
-                "all.vst.tsv:md5,a08d06d3c3218619b7bd85beead467bd",
-                "designs.json:md5,088d536fdff430dc12f4f8b0395a9636",
-                "pheno_table.csv:md5,4969fce19ad1ea5b3cf124f4dcc6a403",
-                "versions.yml:md5,a89c962483109045376386236ce1466f"
+                "all.vst.tsv:md5,a08d06d3c3218619b7bd85beead467bd"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-19T16:37:23.661799618"
+        "timestamp": "2025-02-19T19:19:57.942509548"
     }
 }
