@@ -451,10 +451,9 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare input for functional analysis
 
-    // Some functional analysis methods act directly on the differential results, some on the normalised matrix.
-    // Here we pair the correct input type with the correct functional analysis method, through ch_tools.
-    // It also considers that for non-rnaseq experiments, the normalised matrix comes directly from VALIDATOR.out
-    // and therefore there is no method_differential
+    // Some functional analysis methods act directly on the differential analysis results, some on the normalised matrix.
+    // By crossing with ch_tools, we pair the correct input file with the correct functional analysis method, taking into
+    // account the upstream differential method and data type (normalized matrix or filtered differential analysis results).
     ch_functional_input = ch_norm.map { meta, input ->
             [[method: meta.method_differential, type: 'norm'], meta, input]
         }
