@@ -514,11 +514,11 @@ workflow DIFFERENTIALABUNDANCE {
     if (params.study_type == "geo_soft_file") {
         ch_mat = ch_norm.map {meta, norm -> [meta, [norm]]}
     } else {
-        // otherwise, we take all the matrices: raw, normalized matrix, 
+        // otherwise, we take all the matrices: raw, normalized matrix,
         // and variance stabilized matrices if available
         ch_mat = ch_raw.map{ it[1] }
             .combine(ch_processed_matrices)
-            .map { raw, meta, matrices -> 
+            .map { raw, meta, matrices ->
                 matrices_new = [raw] + matrices
                 [meta, matrices_new]
             }
