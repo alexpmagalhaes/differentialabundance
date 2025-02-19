@@ -93,7 +93,7 @@ if (params.study_type == 'rnaseq') {
 // Also set fold change and q-value thresholds.
 tools_differential = [
     method        : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
-                     (params.study_type == 'rnaseq' && params.differential_use_limma))
+                    (params.study_type == 'rnaseq' && params.differential_use_limma))
                     ? 'limma' : 'deseq2',
     fc_threshold  : params.differential_min_fold_change,
     stat_threshold: params.differential_max_qval
@@ -439,9 +439,12 @@ workflow DIFFERENTIALABUNDANCE {
     }
 
     // prepare channel with normalized matrix, and variance stabilized matrices when available
-    // NOTE that only deseq2 produces variance stabilised matrices. Hence, we use filter to only add those matrices to ch_norm produced by deseq2.
-    ch_processed_matrices = ch_norm
-        .filter { meta, norm -> meta.method_differential == 'deseq2' } // only deseq2 produce variance stabilized matrices
+    // NOTE that only deseq2 produces variance stabilised matrices. Hence, we use filter to
+    // only add those matrices to ch_norm produced by deseq2. Whereas for other methods
+    // (currently we only have limma, but we are gonna enable more), we only need the
+    // normalised matrix
+    ch_norm
+        .filter { meta, norm -> meta.method_differential == 'deseq2' }
         .join(ch_differential_varstab)
         .map { meta, norm, vs -> [meta, [norm] + vs] }
         .mix(
