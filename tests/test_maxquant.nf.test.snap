@@ -21,10 +21,9 @@
                 },
                 "VALIDATE_YML_MODEL": {
                     "r-base": "4.4.2",
-                    "tidyverse": "2.0.0",
-                    "optparse": "1.7.5",
                     "yaml": "2.3.10",
-                    "jsonlite": "1.8.9"
+                    "jsonlite": "1.8.9",
+                    "tidyverse": "2.0.0"
                 },
                 "VALIDATOR": {
                     "r-shinyngs": "2.1.0"
@@ -179,14 +178,14 @@
                 "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
                 "designs.json:md5,4ef011dc27b01e863483eb06f0bc4006",
                 "pheno_table.csv:md5,e42e42e88a3f71959fd0750dfe93417a",
-                "versions.yml:md5,f785c0866ea6eeeb1fb9a41c1cfbf563"
+                "versions.yml:md5,a89c962483109045376386236ce1466f"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-13T19:32:03.06275722"
+        "timestamp": "2025-02-19T16:51:25.339187296"
     },
     "Test maxquant profile with yaml contrasts": {
         "content": [
@@ -210,10 +209,9 @@
                 },
                 "VALIDATE_YML_MODEL": {
                     "r-base": "4.4.2",
-                    "tidyverse": "2.0.0",
-                    "optparse": "1.7.5",
                     "yaml": "2.3.10",
-                    "jsonlite": "1.8.9"
+                    "jsonlite": "1.8.9",
+                    "tidyverse": "2.0.0"
                 },
                 "VALIDATOR": {
                     "r-shinyngs": "2.1.0"
@@ -368,13 +366,13 @@
                 "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
                 "designs.json:md5,4ef011dc27b01e863483eb06f0bc4006",
                 "pheno_table.csv:md5,e42e42e88a3f71959fd0750dfe93417a",
-                "versions.yml:md5,f785c0866ea6eeeb1fb9a41c1cfbf563"
+                "versions.yml:md5,a89c962483109045376386236ce1466f"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-14T16:26:38.47019236"
+        "timestamp": "2025-02-19T16:53:34.406184089"
     }
 }

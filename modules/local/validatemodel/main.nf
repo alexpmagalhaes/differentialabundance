@@ -8,7 +8,7 @@ process VALIDATE_YML_MODEL {
         'community.wave.seqera.io/library/r-jsonlite_r-optparse_r-tidyverse_r-yaml:18dc3fc2d990206d' }"
 
     input:
-    tuple val(meta) , path(samplesheet)
+    tuple val(meta), path(samplesheet)
     tuple val(meta2), path(models_yml)
 
     output:
@@ -21,22 +21,7 @@ process VALIDATE_YML_MODEL {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    """
-    validate_model.R \\
-        --yml "${models_yml}" \\
-        --samplesheet "${samplesheet}" \\
-        ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(Rscript -e 'R.Version()\$version.string' | sed -n 's|\\[1\\] "R version \\(.*\\) (.*|\\1|p')
-        tidyverse: \$(Rscript -e "cat(paste(packageVersion('tidyverse'), collapse='.'))")
-        optparse: \$(Rscript -e "cat(paste(packageVersion('optparse'), collapse='.'))")
-        yaml: \$(Rscript -e "cat(paste(packageVersion('yaml'), collapse='.'))")
-        jsonlite: \$(Rscript -e "cat(paste(packageVersion('jsonlite'), collapse='.'))")
-    END_VERSIONS
-    """
+    template 'validate_model.R'
 
     stub:
     """
@@ -48,10 +33,8 @@ process VALIDATE_YML_MODEL {
     "${task.process}":
         r-base: \$(Rscript -e 'R.Version()\$version.string' | sed -n 's|\\[1\\] "R version \\(.*\\) (.*|\\1|p')
         tidyverse: \$(Rscript -e "cat(paste(packageVersion('tidyverse'), collapse='.'))")
-        optparse: \$(Rscript -e "cat(paste(packageVersion('optparse'), collapse='.'))")
         yaml: \$(Rscript -e "cat(paste(packageVersion('yaml'), collapse='.'))")
         jsonlite: \$(Rscript -e "cat(paste(packageVersion('jsonlite'), collapse='.'))")
     END_VERSIONS
     """
-
 }

@@ -5,46 +5,57 @@
 # LOAD LIBRARIES ----------------------------------------------------
 suppressWarnings(suppressMessages({
     library(tidyverse)
-    library(optparse)
     library(yaml)
     library(jsonlite)
 }))
 
 # PARSE ARGUMENTS ---------------------------------------------------
 ## Generate list
-option_list <- list(
-    make_option(c("-y", "--yml"), type = "character", default = NULL,
-                help = "Path to the models.yml file", metavar = "character"),
-    make_option(c("-s", "--samplesheet"), type = "character", default = NULL,
-                help = "Path to the samplesheet CSV file", metavar = "character"),
-    make_option(c("-i", "--sample_id_col"), type = "character", default = "sample",
-                help = "Column that contains sample identificators", metavar = "character")
+
+parse_args <- function(x){
+    args_list <- unlist(strsplit(x, ' ?--')[[1]])[-1]
+    args_vals <- lapply(args_list, function(x) scan(text=x, what='character', quiet = TRUE))
+    args_vals <- lapply(args_vals, function(z){ length(z) <- 2; z})
+    parsed_args <- structure(lapply(args_vals, function(x) x[2]), names = lapply(args_vals, function(x) x[1]))
+    parsed_args[ ( ! parsed_args %in%  c('', 'null')) & ! is.na(parsed_args)]
+}
+
+opt <- list(
+    models_yml   = '$models_yml',
+    samplesheet  = '$samplesheet',
+    sample_id_col = "sample1"
 )
 
-## Parse command-line arguments
-opt_parser <-
-    OptionParser(
-        option_list = option_list,
-        description = "Validate a sample sheet against a YML file for model designs.",
-        epilogue =
-        "
-        The process will look for variables and factors in the YML file and validate that they are present in the sample sheet.
-        Will also look for unwanted characters within columns and colnames.
-        Finally, will evaluate all model designs based on the formula and contrasts to find whether the models are full ranked or not.
-        "
-    )
-opt <- parse_args(opt_parser)
+args_opt <- parse_args('$task.ext.args')
+for (ao in names(args_opt)){
+    if (! ao %in% names(opt)){
+        stop(paste("Invalid option:", ao))
+    }
+    opt[[ao]] <- args_opt[[ao]]
+}
+
+required_opts <- c("models_yml", "samplesheet")
+missing_opts <- required_opts[!required_opts %in% names(opt) | sapply(opt[required_opts], function(x) is.null(x) || x == "null")]
+if (length(missing_opts) > 0) {
+    stop(paste("Missing required options:", paste(missing_opts, collapse = ", ")))
+}
+cat("DEBUG: Final options: ", paste(names(opt), opt, sep="=", collapse=", "), "\n")
+
+# Ensure sample_id_col is set even if not passed via ext.args
+if (!("sample_id_col" %in% names(opt))) {
+    cat("DEBUG: sample_id_col not found in options; defaulting to 'sample'\n")
+    opt\$sample_id_col <- "sample"
+}
 
 ## Validate input arguments
 ### Required arguments
-if (is.null(opt$yml) || is.null(opt$samplesheet) ) {
+if (is.null(opt\$models_yml) || is.null(opt\$samplesheet) ) {
     stop("'--yml' and '--samplesheet' arguments are required.", call. = FALSE)
 }
 
-### Collect parameters (easier for dev and testing)
-path_yml         <- opt$yml
-path_samplesheet <- opt$samplesheet
-sample_column    <- opt$sample_id_col
+path_yml         <- opt\$models_yml
+path_samplesheet <- opt\$samplesheet
+sample_column    <- opt\$sample_id_col
 
 # LOAD FILES --------------------------------------------------------
 ## Load models.yml file
@@ -52,21 +63,21 @@ tryCatch({
     if (!file.exists(path_yml)) {
         stop(sprintf("File '%s' does not exist.", path_yml), call. = FALSE)
     }
-    if (!grepl("\\.(yaml|yml)$", path_yml, ignore.case = TRUE)) {
+    if (!(endsWith(tolower(path_yml), ".yaml") || endsWith(tolower(path_yml), ".yml"))) {
         stop(sprintf("File '%s' is not a YAML file (expected .yaml or .yml extension).", path_yml), call. = FALSE)
     }
     models <- yaml::read_yaml(path_yml)
     cat("Loaded YML file successfully.\n")
 }, error = function(e) {
-    stop(sprintf("Error loading YML file '%s': %s", path_yml, e$message), call. = FALSE)
+    stop(sprintf("Error loading YML file '%s': %s", path_yml, e\$message), call. = FALSE)
 })
 
 ## Load samplesheet CSV file
 tryCatch({
     # Set the separator based on the file extension
-    sep <- if (str_detect(path_samplesheet, "\\.(csv|CSV)$")) {
+    sep <- if (endsWith(tolower(path_samplesheet), ".csv")) {
         ","
-    } else if (str_detect(path_samplesheet, "\\.(tsv|TSV)$")) {
+    } else if (endsWith(tolower(path_samplesheet), ".tsv")) {
         "\t"
     } else {
         stop("Unsupported file extension. Please provide a .csv or .tsv file.")
@@ -79,7 +90,7 @@ tryCatch({
     }
     cat("Loaded samplesheet successfully.\n")
 }, error = function(e) {
-    stop("Error loading samplesheet CSV: ", e$message)
+    stop("Error loading samplesheet CSV: ", e\$message)
 })
 
 # PARSE FACTORS/LEVELS FROM YML FILE --------------------------------
@@ -93,42 +104,42 @@ process_models <- function(models) {
     contrasts_list <- list()
     var <- list()
 
-    # Ensure models$models is not null or empty
-    if (is.null(models$contrasts) || length(models$contrasts) == 0) {
-        stop("models$contrasts is null or empty. Please provide valid input.")
+    # Ensure models\$models is not null or empty
+    if (is.null(models\$contrasts) || length(models\$contrasts) == 0) {
+        stop("models\$contrasts is null or empty. Please provide valid input.")
     }
 
     # Temporary storage for gathering contrasts per variable
     temp_var <- list()
     blocking_vars <- c()
 
-    for (CONTRAST in models$contrasts) {
+    for (CONTRAST in models\$contrasts) {
 
-        # Validate CONTRAST$id
-        if (is.null(CONTRAST$id)) {
-            stop("Missing CONTRAST$id detected.")
+        # Validate CONTRAST\$id
+        if (is.null(CONTRAST\$id)) {
+            stop("Missing CONTRAST\$id detected.")
         }
 
-        if (CONTRAST$id %in% names(contrasts_list)) {
-            stop(paste0("Duplicate CONTRAST$id detected: ", CONTRAST$id, "."))
+        if (CONTRAST\$id %in% names(contrasts_list)) {
+            stop(paste0("Duplicate CONTRAST\$id detected: ", CONTRAST\$id, "."))
         }
 
         # Get column name: first comparison's element
-        variable <- CONTRAST$comparison[1]
+        variable <- CONTRAST\$comparison[1]
 
         # Check if name is valid
         if (is.null(variable) || variable == "") {
-            stop("Invalid `variable` defined in `CONTRAST$comparison[1]`.")
+            stop("Invalid `variable` defined in `CONTRAST\$comparison[1]`.")
         }
 
         # Get factors (rest of components)
-        levels <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
+        levels <- CONTRAST\$comparison[2:length(CONTRAST\$comparison)]
 
         # Populate contrasts_list for later model validation
-        contrasts_list[[CONTRAST$id]] <- list(
+        contrasts_list[[CONTRAST\$id]] <- list(
             "variable" = variable,
             "contrast" = levels,
-            "blocking_factors" = CONTRAST$blocking_factors
+            "blocking_factors" = CONTRAST\$blocking_factors
         )
 
         # Gather contrasts per variable into temporary storage
@@ -139,8 +150,8 @@ process_models <- function(models) {
         }
 
         # Gather blocking factors
-        if (!is.null(CONTRAST$blocking_factors)) {
-            blocking_vars <- unique(c(blocking_vars, CONTRAST$blocking_factors))
+        if (!is.null(CONTRAST\$blocking_factors)) {
+            blocking_vars <- unique(c(blocking_vars, CONTRAST\$blocking_factors))
         }
     }
 
@@ -222,8 +233,8 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
 
     ## Check that blocking variables exists and do not contain NAs, if they were specified
     blocking_factors <- c()
-    if ( !is.null(variables$blocking_factors) ) {
-        blocking_factors <- variables$blocking_factors
+    if ( !is.null(variables\$blocking_factors) ) {
+        blocking_factors <- variables\$blocking_factors
 
         for (VARIABLE in blocking_factors) {
             ## Check that the column exists
@@ -330,7 +341,7 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
         pheno_table      <- samplesheet %>% dplyr::select(all_of(selected_columns))
 
     }, error = function(e) {
-        stop("Error generating validated phenotypic table: ", e$message)
+        stop("Error generating validated phenotypic table: ", e\$message)
     })
 
     ## Return list
@@ -373,9 +384,9 @@ check_model_contrasts <- function(contrasts_list, colData) {
 
         ## Extract model components
         model        <- contrasts_list[[model_name]]
-        variable     <- model$variable
-        contrast     <- model$contrast
-        blocking     <- model$blocking_factors
+        variable     <- model\$variable
+        contrast     <- model\$contrast
+        blocking     <- model\$blocking_factors
 
         ## Create formula
         ### Gather components
@@ -391,7 +402,7 @@ check_model_contrasts <- function(contrasts_list, colData) {
         design_matrix <- model.matrix(dynamic_formula, data = colData)
 
         # Check the rank of the design matrix
-        rank <- qr(design_matrix)$rank
+        rank <- qr(design_matrix)\$rank
         expected_rank <- ncol(design_matrix)
 
         ## Add results to list
@@ -405,7 +416,7 @@ check_model_contrasts <- function(contrasts_list, colData) {
 
     for (DESIGN in names(design_list)) {
         cat("Design ", DESIGN,
-            if( design_list[[ DESIGN ]]$full_rank ) { " is " } else { " is not "},
+            if( design_list[[ DESIGN ]]\$full_rank ) { " is " } else { " is not "},
             "full ranked\n", sep = ""
         )
     }
@@ -429,3 +440,29 @@ if ( !is.null(phenotable_warnings[[ 2 ]]) ) {
 
 ## Export RData
 save.image("models.RData")
+
+################################################
+################################################
+## VERSIONS FILE                              ##
+################################################
+################################################
+
+r.version <- strsplit(version[['version.string']], ' ')[[1]][3]
+yaml.version <- as.character(packageVersion('yaml'))
+jsonlite.version <- as.character(packageVersion('jsonlite'))
+tidyverse.version <- as.character(packageVersion('tidyverse'))
+
+writeLines(
+    c(
+        '"${task.process}":',
+        paste('    r-base:', r.version),
+        paste('    yaml:', yaml.version),
+        paste('    jsonlite:', jsonlite.version),
+        paste('    tidyverse:', tidyverse.version)
+    ),
+'versions.yml')
+
+################################################
+################################################
+################################################
+################################################
