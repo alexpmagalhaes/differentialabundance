@@ -78,29 +78,37 @@ if (run_gene_set_analysis) {
     }
 }
 
-// Define tool channels
-// This channel is used to decide which tools to use
-// - tools_normalization handles the specificities when using ch_norm
-// - tools_differential specifies the method and key arguments for the differential analysis
-// - tools_functional specifies the method and input type for the functional analysis
-//   the input type is required to know if the input is the normalized matrix or the filtered differential results
+// Define tool settings based on study type and parameters.
+// (Future: settings may be loaded from files instead of being hard-coded)
+
+// Normalization tool: default to 'validator'
 tools_normalization = [method: 'validator']
 if (params.study_type == 'rnaseq') {
+    // For RNAseq, choose 'limma' if specified, otherwise 'deseq2'
     tools_normalization = [method: params.differential_use_limma ? 'limma' : 'deseq2']
 }
+
+// Differential analysis tool:
+// Use 'limma' for specific study types or RNAseq with limma flag; else 'deseq2'
+// Also set fold change and q-value thresholds.
 tools_differential = [
-    method       : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
-                    (params.study_type == 'rnaseq' && params.differential_use_limma))
+    method        : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
+                     (params.study_type == 'rnaseq' && params.differential_use_limma))
                     ? 'limma' : 'deseq2',
-    fc_threshold : params.differential_min_fold_change,
+    fc_threshold  : params.differential_min_fold_change,
     stat_threshold: params.differential_max_qval
 ]
+
+// Functional analysis tool:
+// Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
 tools_functional = params.gprofiler2_run ?
     [method: 'gprofiler2', input_type: 'filtered'] :
     (params.gsea_run ? [method: 'gsea', input_type: 'norm'] : [])
+
+// Combine all tool settings into a channel for downstream use.
 ch_tools = Channel.of([tools_normalization, tools_differential, tools_functional])
 
-// report related files
+// Report related files
 report_file = file(params.report_file, checkIfExists: true)
 logo_file = file(params.logo_file, checkIfExists: true)
 css_file = file(params.css_file, checkIfExists: true)
@@ -525,8 +533,7 @@ workflow DIFFERENTIALABUNDANCE {
         ch_mat = ch_raw.map{ it[1] }
             .combine(ch_processed_matrices)
             .map { raw, meta, matrices ->
-                matrices_new = [raw] + matrices
-                [meta, matrices_new]
+                [meta, [raw] + matrices]
             }
     }
 
