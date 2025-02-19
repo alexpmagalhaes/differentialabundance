@@ -79,6 +79,10 @@ if (run_gene_set_analysis) {
 }
 
 // Define tool channel
+tools_normalization = [method: 'validator']
+if (params.study_type == 'rnaseq') {
+    tools_normalization = [method: params.differential_use_limma ? 'limma' : 'deseq2']
+}
 tools_differential = [
     method       : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
                     (params.study_type == 'rnaseq' && params.differential_use_limma))
@@ -89,7 +93,7 @@ tools_differential = [
 tools_functional = params.gprofiler2_run ?
     [method: 'gprofiler2', input_type: 'filtered'] :
     (params.gsea_run ? [method: 'gsea', input_type: 'norm'] : [])
-ch_tools = Channel.of([tools_differential, tools_functional])
+ch_tools = Channel.of([tools_normalization, tools_differential, tools_functional])
 
 // report related files
 report_file = file(params.report_file, checkIfExists: true)
@@ -377,7 +381,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
         .combine(ch_tools)
-        .map { meta, matrix, tools_diff, tools_func ->
+        .map { meta, matrix, tools_norm, tools_diff, tools_func ->
             [
                 meta,
                 matrix,
@@ -408,7 +412,26 @@ workflow DIFFERENTIALABUNDANCE {
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
 
-    if (params.study_type == 'rnaseq') ch_norm = ch_differential_norm
+    // when the study type is rnaseq, we use the normalised matrix from the differential subworkflow
+    if (params.study_type == 'rnaseq') {
+        ch_norm = ch_differential_norm
+    } else {
+        // when the study type is not rnaseq, the normalised matrix comes directly from VALIDATOR.out
+        ch_norm = ch_norm
+            .map { meta, norm ->
+                def meta_new = meta + [method_differential: 'validator']
+            }
+    }
+
+    // prepare channel with normalized matrix, and variance stabilized matrices when available
+    ch_processed_matrices = ch_norm
+        .filter { meta, norm -> meta.method_differential == 'deseq2' } // only deseq2 produce variance stabilized matrices
+        .join(ch_differential_varstab)
+        .map { meta, norm, vs -> [meta, [norm] + vs] }
+        .mix(
+            ch_norm.filter { meta, norm -> meta.method_differential != 'deseq2' }
+                .map { meta, norm -> [meta, [norm]] }
+        )
 
     // ========================================================================
     // Functional analysis
@@ -432,28 +455,21 @@ workflow DIFFERENTIALABUNDANCE {
     // Here we pair the correct input type with the correct functional analysis method, through ch_tools.
     // It also considers that for non-rnaseq experiments, the normalised matrix comes directly from VALIDATOR.out
     // and therefore there is no method_differential
-    ch_functional_input = (params.study_type == 'rnaseq' ?
-            ch_norm.map { meta, input ->
-                [[method: meta.method_differential, type: 'norm'], meta, input]
-            } :
-            ch_norm.map { meta, input ->
-                [[type: 'norm'], meta, input]
-            }
-        )
+    ch_functional_input = ch_norm.map { meta, input ->
+            [[method: meta.method_differential, type: 'norm'], meta, input]
+        }
         .mix(
             ch_differential_results_filtered.map { meta, input ->
                 [[method: meta.method_differential, type: 'filtered'], meta, input]
             }
         )
         .cross(
-            ch_tools.map { tools_diff, tools_func ->
-                (params.study_type != 'rnaseq' && tools_func.input_type == 'norm') ?
-                    [[type: 'norm'], tools_diff, tools_func] :
-                    [[method: tools_diff.method, type: tools_func.input_type], tools_diff, tools_func]
+            ch_tools.map { tools_norm, tools_diff, tools_func ->
+                [[method: tools_norm.method, type: tools_func.input_type], tools_func.method]
             }
         )
         .map { input, tools ->
-            [input[1], input[2], tools[2].method]  // meta, input, functional analysis method
+            [input[1], input[2], tools[1]]  // meta, input, functional analysis method
         }
         .combine(ch_gene_sets)
         .combine(ch_background)
@@ -498,29 +514,21 @@ workflow DIFFERENTIALABUNDANCE {
     if (params.study_type == "geo_soft_file") {
         ch_mat = ch_norm.map {meta, norm -> [meta, [norm]]}
     } else {
-        // otherwise, the pipeline would produce normalized counts through methods like DESEQ2_NORM and LIMMA_NORM
-        // in the case of DESEQ2_NORM, it could optionally also generate variance stabilised matrices
-        // here we combine the raw matrices with all these matrices, if generated
-        ch_mat = ch_raw
-            .combine(ch_norm)
-            .combine( ch_differential_varstab.ifEmpty([[],[]]) )
-            .map { meta_exp, raw, meta_norm, norm, meta_var, vs ->
-                def matrices_new = [raw, norm] + vs  // note that this list of matrices will always include raw and normalised matrices. And optionally variance stabilised matrices.
-                if ((meta_norm.subMap(meta_exp.keySet()) == meta_exp) &&
-                    (meta_var == [] || meta_norm == meta_var)
-                    ) {
-                        return [meta_norm, matrices_new]
-                    }
+        // otherwise, we take all the matrices: raw, normalized matrix, 
+        // and variance stabilized matrices if available
+        ch_mat = ch_raw.map{ it[1] }
+            .combine(ch_processed_matrices)
+            .map { raw, meta, matrices -> 
+                matrices_new = [raw] + matrices
+                [meta, matrices_new]
             }
     }
 
     ch_all_matrices = VALIDATOR.out.sample_meta                 // meta_exp, samples
         .join(VALIDATOR.out.feature_meta)                       // meta_exp, samples, features
-        .combine(ch_mat)                                        // meta_mat, list of matrices (raw, norm, variance stabilized)  // see above
+        .combine(ch_mat)                                        // meta_mat, list of matrices (raw, norm, variance stabilized)
         .map { meta_exp, samples, features, meta_mat, matrices ->
-            if (meta_mat.subMap(meta_exp.keySet()) == meta_exp) {
-                return [meta_mat, samples, features, matrices]
-            }
+            return [meta_mat, samples, features, matrices]
         }
 
     // Exploratory analysis
