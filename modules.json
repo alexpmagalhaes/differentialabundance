@@ -42,7 +42,7 @@
                     },
                     "deseq2/differential": {
                         "branch": "master",
-                        "git_sha": "9326d73af3fbe2ee90d9ce0a737461a727c5118e",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "geoquery/getgeo": {
@@ -77,12 +77,12 @@
                     },
                     "proteus/readproteingroups": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "ba9efe74bd993e9ce77441104e48120834d5886e",
                         "installed_by": ["modules"]
                     },
                     "rmarkdownnotebook": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "ba9efe74bd993e9ce77441104e48120834d5886e",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/app": {
