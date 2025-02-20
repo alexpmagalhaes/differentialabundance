@@ -75,6 +75,8 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ALLOGRAFT_REJECTION.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.tsv",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.html",
+                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APOPTOSIS.html",
@@ -121,8 +123,6 @@
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_NOTCH_SIGNALING.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_OXIDATIVE_PHOSPHORYLATION.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_OXIDATIVE_PHOSPHORYLATION.tsv",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.html",
-                "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PEROXISOME.html",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PEROXISOME.tsv",
                 "report/gsea/phenotype_uninvolved_lesional/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PROTEIN_SECRETION.html",
@@ -195,6 +195,7 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ADIPOGENESIS.tsv:md5,6dcf05651f6b0386fe089eaa421c3127",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ALLOGRAFT_REJECTION.tsv:md5,e9dd4c2530785273c996dbf8e989e4cb",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANDROGEN_RESPONSE.tsv:md5,ed31e69bedf9bfdef793db64f60e0e3d",
+                "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_ANGIOGENESIS.tsv:md5,0742906e4fbdd02a37151f55ee2db847",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APICAL_JUNCTION.tsv:md5,b7ffdef669d6e8a7d6065b0ee4d94f08",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_APOPTOSIS.tsv:md5,6ce114c47b7c57eb2713e7b193b42561",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_BILE_ACID_METABOLISM.tsv:md5,802fc042c26bdcabe683df4597c0086e",
@@ -218,7 +219,6 @@
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_MYOGENESIS.tsv:md5,332f9386161436cd69d4b830e0f392d6",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_NOTCH_SIGNALING.tsv:md5,53bc5acac191f31dcdbfe62fcf396358",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_OXIDATIVE_PHOSPHORYLATION.tsv:md5,faab3d7cea1ff32b5c224587246ad34e",
-                "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.tsv:md5,4070abb7bce1b665cae361d1fafadc4a",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PEROXISOME.tsv:md5,66a120807b07d920c876b65b3925264c",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_PROTEIN_SECRETION.tsv:md5,d13300c61a1e99a0b05ef18fac74c42d",
                 "gene_sets_phenotype_uninvolved_lesional.h.all.v2022.1.Hs.symbols.HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY.tsv:md5,33429d1e3f2342c6c0e7b499035bd8da",
@@ -253,6 +253,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-19T16:47:03.900188026"
+        "timestamp": "2025-02-20T12:50:58.798786108"
     }
 }
