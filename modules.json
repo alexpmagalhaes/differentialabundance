@@ -22,7 +22,7 @@
                     },
                     "custom/matrixfilter": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
                         "installed_by": ["modules"]
                     },
                     "custom/tabulartogseachip": {
@@ -32,12 +32,12 @@
                     },
                     "custom/tabulartogseacls": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "custom/tabulartogseagct": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "deseq2/differential": {
@@ -52,12 +52,12 @@
                     },
                     "gprofiler2/gost": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
                         "installed_by": ["modules"]
                     },
                     "gsea/gsea": {
                         "branch": "master",
-                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "git_sha": "258399c484a25b880fddc9a8dd35b98f371d31f5",
                         "installed_by": ["modules"]
                     },
                     "gunzip": {
