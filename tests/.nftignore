@@ -1,8 +1,5 @@
 pipeline_info/*.{html,json,txt,yml}
 report/gsea/**/*.symbols.Gsea.rpt
-report/gsea/**/*.html
-report/gsea/phenotype_uninvolved_lesional_GSE50790/**/*.png
-report/gsea/**/phenotype_uninvolved_lesional_GSE50790.*.gsea_report_for_*.tsv
 report/*.html
 report/*.zip
 report/*.png
@@ -11,6 +8,4 @@ report/**/*.zip
 report/**/*.png
 *html
 shinyngs_app/**/data.rds
-report/gsea/phenotype_uninvolved_lesional_GSE50790/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional_GSE50790.h.all.v2022.1.Hs.symbols.HALLMARK_GLYCOLYSIS.{html,tsv}
-report/gsea/phenotype_uninvolved_lesional_GSE50790/h.all.v2022.1.Hs.symbols/gene_sets_phenotype_uninvolved_lesional_GSE50790.h.all.v2022.1.Hs.symbols.HALLMARK_P53_PATHWAY.{html,tsv}
 **/*.png
