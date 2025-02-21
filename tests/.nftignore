@@ -8,3 +8,4 @@ report/**/*.zip
 report/**/*.png
 *html
 shinyngs_app/**/data.rds
+**/*.png

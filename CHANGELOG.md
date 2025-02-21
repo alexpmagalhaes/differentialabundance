@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#431](https://github.com/nf-core/differentialabundance/pull/431)] - Add differential and functional subworkflows. ([@suzannejin](https://github.com/suzannejin), co-authored by [@bjlang](https://github.com/bjlang) and [@caraiz2001](https://github.com/caraiz2001), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#437](https://github.com/nf-core/differentialabundance/pull/437)] - Add nf-tests to deseq2/differential, rmarkdownnotebook, and proteus modules. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@TODO](TODO)).
 - [[#421](https://github.com/nf-core/differentialabundance/pull/421)] - Add immunedeconv module ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#420](https://github.com/nf-core/differentialabundance/pull/420)] - Add missing nf-tests to nf-core modules. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [[#431](https://github.com/nf-core/differentialabundance/pull/431)] - Replace the calls to differential and functional analysis modules by subworkflows. ([@suzannejin](https://github.com/suzannejin), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#410](https://github.com/nf-core/differentialabundance/pull/410)] - Update contrasts file format to allow yaml ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#374](https://github.com/nf-core/differentialabundance/pull/374)] - Update all modules and subworkflows ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#348](https://github.com/nf-core/differentialabundance/pull/348)] - Update test_full profile matrix file and indentation of profiles in nextflow.config ([@nschcolnicov](https://github.com/nschcolnicov), review by [@WackerO](https://github.com/WackerO) and [@pinin4fjords](https://github.com/pinin4fjords))
