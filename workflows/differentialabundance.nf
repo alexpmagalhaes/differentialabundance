@@ -127,8 +127,7 @@ citations_file = file(params.citations_file, checkIfExists: true)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { CUSTOM_TABULARTOGSEACHIP       } from '../modules/nf-core/custom/tabulartogseachip/main'
-include { CUSTOM_FILTERDIFFERENTIALTABLE } from '../modules/nf-core/custom/filterdifferentialtable/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -475,7 +474,6 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare input for functional analysis
 
-
     // Some functional analysis methods act directly on the differential analysis results, some on the normalised matrix.
     // By crossing with ch_tools, we pair the correct input file with the correct functional analysis method, taking into
     // account the upstream differential method and data type (normalized matrix or filtered differential analysis results).
@@ -502,7 +500,6 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // Run functional analysis
-
 
     DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
         ch_functional_input,

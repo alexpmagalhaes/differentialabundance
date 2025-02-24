@@ -9,22 +9,18 @@ tools:
       description: "R programming language for statistical computing"
       homepage: "https://www.r-project.org/"
       licence: ["GPL >=2"]
-      identifier: biotools:R
   - "tidyverse":
       description: "Collection of R packages for data manipulation and visualization"
       homepage: "https://www.tidyverse.org/"
       licence: ["MIT"]
-      identifier: biotools:tidyverse
   - "jsonlite":
-      description: "R package for converting data to and from JSON"
+      description: "jsonlite: A Simple and Robust JSON Parser and Generator for R"
       homepage: "https://cran.r-project.org/web/packages/jsonlite/index.html"
       licence: ["MIT"]
-      identifier: biotools:jsonlite
   - "yaml":
-      description: "R package for parsing and generating YAML"
+      description: "yaml: Methods to Convert R Data to YAML and Back"
       homepage: "https://cran.r-project.org/web/packages/yaml/index.html"
-      licence: ["GPL"]
-      identifier: biotools:yaml
+      licence: ["BSD 3"]
 
 input:
   - - meta:
