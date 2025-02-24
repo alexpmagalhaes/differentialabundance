@@ -1,0 +1,78 @@
+name: "validate_yml_model"
+description: "Validate a YAML model file and generate phenotype table, experimental designs, warnings, and software versions outputs."
+keywords:
+  - validation
+  - yaml
+  - model
+tools:
+  - "R":
+      description: "R programming language for statistical computing"
+      homepage: "https://www.r-project.org/"
+      licence: ["GPL >=2"]
+      identifier: biotools:R
+  - "tidyverse":
+      description: "Collection of R packages for data manipulation and visualization"
+      homepage: "https://www.tidyverse.org/"
+      licence: ["MIT"]
+      identifier: biotools:tidyverse
+  - "jsonlite":
+      description: "R package for converting data to and from JSON"
+      homepage: "https://cran.r-project.org/web/packages/jsonlite/index.html"
+      licence: ["MIT"]
+      identifier: biotools:jsonlite
+  - "yaml":
+      description: "R package for parsing and generating YAML"
+      homepage: "https://cran.r-project.org/web/packages/yaml/index.html"
+      licence: ["GPL"]
+      identifier: biotools:yaml
+
+input:
+  - - meta:
+        type: map
+        description: "Groovy map containing sample metadata (e.g., [ id:'sample1' ])"
+    - samplesheet:
+        type: file
+        description: "CSV or TSV sample sheet with metadata and file names"
+        pattern: "*.csv, *.tsv"
+  - - meta2:
+        type: map
+        description: "Groovy map containing model metadata (e.g., [ id:'sample1' ])"
+    - models_yml:
+        type: file
+        description: "YAML file defining model parameters and configuration"
+        pattern: "*.yml, *.yaml"
+
+output:
+  - pheno_table:
+      - meta:
+          type: map
+          description: "Groovy map containing sample metadata"
+      - "pheno_table.csv":
+          type: file
+          description: "CSV file with phenotype table derived from the model"
+          pattern: "pheno_table.csv"
+  - designs:
+      - meta:
+          type: map
+          description: "Groovy map containing sample metadata"
+      - "designs.json":
+          type: file
+          description: "JSON file containing experimental designs"
+          pattern: "designs.json"
+  - warnings:
+      - meta:
+          type: map
+          description: "Groovy map containing sample metadata"
+      - "warnings.json":
+          type: file
+          description: "Optional JSON file with warnings and validation notes"
+          pattern: "warnings.json"
+          optional: true
+  - versions:
+      - versions.yml:
+          type: file
+          description: "YAML file recording versions of software used during validation"
+          pattern: "versions.yml"
+
+authors:
+  - "@alanmmobbs93"
