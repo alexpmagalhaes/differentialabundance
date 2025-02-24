@@ -78,7 +78,8 @@
                 "validate",
                 "validate/designs.json",
                 "validate/pheno_table.csv",
-                "validate/versions.yml"
+                "validate/versions.yml",
+                "validate/warnings.json"
             ],
             [
                 "treatment_mCherry_hND6__SRP254919.dds.rld.rds:md5,6169c02c9c5dc9bfbd907d1d0ffe5442",
@@ -97,13 +98,14 @@
                 "all.vst.tsv:md5,f25a3a95044074ed2164d155fbdb9571",
                 "designs.json:md5,088d536fdff430dc12f4f8b0395a9636",
                 "pheno_table.csv:md5,4969fce19ad1ea5b3cf124f4dcc6a403",
-                "versions.yml:md5,a89c962483109045376386236ce1466f"
+                "versions.yml:md5,a89c962483109045376386236ce1466f",
+                "warnings.json:md5,58e0494c51d30eb3494f7c9198986bb9"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-20T15:46:40.845488414"
+        "timestamp": "2025-02-24T14:03:24.22147205"
     }
 }

@@ -246,9 +246,13 @@
                 "designs.json:md5,90d385ef2fc8dc7b61998fb9a8fbe5ae",
                 "pheno_table.csv:md5,230d9a96a3cd35f9c727463f810ccb33",
                 "versions.yml:md5,a89c962483109045376386236ce1466f",
-                "warnings.json:md5,478d6b1a2067c8e3e4ef766c539addbb"
+                "warnings.json:md5,a03ce7c550092a7efefd35a31b41ef9c"
             ]
         ],
-        "timestamp": "2025-02-21T14:03:17.318104"
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.4"
+        },
+        "timestamp": "2025-02-24T13:56:27.271631241"
     }
 }
