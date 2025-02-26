@@ -35,7 +35,7 @@ nextflow_pipeline {
         }
     }
 
-    test("Test profile - csv contrasts") {
+    test("Test profile - csv contrasts") { // make sure we keep backwards compatibility with csv contrasts
 
         when {
             params {
