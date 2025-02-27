@@ -1,7 +1,7 @@
 {
     "Test maxquant profile": {
         "content": [
-            21,
+            20,
             {
                 "LIMMA_DIFFERENTIAL": {
                     "r-base": "4.3.3",
@@ -19,14 +19,8 @@
                     "r-plotly": "4.10.2",
                     "bioconductor-limma": "3.54.0"
                 },
-                "VALIDATE_YML_MODEL": {
-                    "r-base": "4.4.2",
-                    "yaml": "2.3.10",
-                    "jsonlite": "1.8.9",
-                    "tidyverse": "2.0.0"
-                },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -118,12 +112,7 @@
                 "tables/proteus/Celltype/raw_proteingroups_tab.tsv",
                 "tables/proteus/fakeBatch",
                 "tables/proteus/fakeBatch/normalizeMedian.normalized_proteingroups_tab.tsv",
-                "tables/proteus/fakeBatch/raw_proteingroups_tab.tsv",
-                "validate",
-                "validate/designs.json",
-                "validate/pheno_table.csv",
-                "validate/versions.yml",
-                "validate/warnings.json"
+                "tables/proteus/fakeBatch/raw_proteingroups_tab.tsv"
             ],
             [
                 "fakebatch_fakeBatch_b1_b2_PXD043349.MArrayLM.limma.rds:md5,f321bf1e4fd44827810df9a9c38776d6",
@@ -148,22 +137,18 @@
                 "normalizeMedian.normalized_proteingroups_tab.tsv:md5,154fcd8d23409981b897d153e7b7e34e",
                 "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
                 "normalizeMedian.normalized_proteingroups_tab.tsv:md5,154fcd8d23409981b897d153e7b7e34e",
-                "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
-                "designs.json:md5,4ef011dc27b01e863483eb06f0bc4006",
-                "pheno_table.csv:md5,e42e42e88a3f71959fd0750dfe93417a",
-                "versions.yml:md5,a89c962483109045376386236ce1466f",
-                "warnings.json:md5,58e0494c51d30eb3494f7c9198986bb9"
+                "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-24T13:59:24.385035113"
+        "timestamp": "2025-02-27T17:48:00.075635958"
     },
     "Test maxquant profile with yaml contrasts": {
         "content": [
-            21,
+            20,
             {
                 "LIMMA_DIFFERENTIAL": {
                     "r-base": "4.3.3",
@@ -181,14 +166,8 @@
                     "r-plotly": "4.10.2",
                     "bioconductor-limma": "3.54.0"
                 },
-                "VALIDATE_YML_MODEL": {
-                    "r-base": "4.4.2",
-                    "yaml": "2.3.10",
-                    "jsonlite": "1.8.9",
-                    "tidyverse": "2.0.0"
-                },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -280,12 +259,7 @@
                 "tables/proteus/Celltype/raw_proteingroups_tab.tsv",
                 "tables/proteus/fakeBatch",
                 "tables/proteus/fakeBatch/normalizeMedian.normalized_proteingroups_tab.tsv",
-                "tables/proteus/fakeBatch/raw_proteingroups_tab.tsv",
-                "validate",
-                "validate/designs.json",
-                "validate/pheno_table.csv",
-                "validate/versions.yml",
-                "validate/warnings.json"
+                "tables/proteus/fakeBatch/raw_proteingroups_tab.tsv"
             ],
             [
                 "fakebatch_fakeBatch_b1_b2_PXD043349.MArrayLM.limma.rds:md5,f321bf1e4fd44827810df9a9c38776d6",
@@ -310,17 +284,13 @@
                 "normalizeMedian.normalized_proteingroups_tab.tsv:md5,154fcd8d23409981b897d153e7b7e34e",
                 "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
                 "normalizeMedian.normalized_proteingroups_tab.tsv:md5,154fcd8d23409981b897d153e7b7e34e",
-                "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a",
-                "designs.json:md5,4ef011dc27b01e863483eb06f0bc4006",
-                "pheno_table.csv:md5,e42e42e88a3f71959fd0750dfe93417a",
-                "versions.yml:md5,a89c962483109045376386236ce1466f",
-                "warnings.json:md5,58e0494c51d30eb3494f7c9198986bb9"
+                "raw_proteingroups_tab.tsv:md5,33a8791f84c676ea1aea4842231acb6a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-24T14:01:43.682812824"
+        "timestamp": "2025-02-27T17:49:55.601463217"
     }
 }

@@ -1,7 +1,7 @@
 {
     "Test rnaseq limma profile": {
         "content": [
-            23,
+            22,
             {
                 "CUSTOM_TABULARTOGSEACHIP": {
                     "gawk": "5.1.0"
@@ -31,14 +31,8 @@
                 "PLOT_EXPLORATORY": {
                     "r-shinyngs": "2.1.0"
                 },
-                "VALIDATE_YML_MODEL": {
-                    "r-base": "4.4.2",
-                    "yaml": "2.3.10",
-                    "jsonlite": "1.8.9",
-                    "tidyverse": "2.0.0"
-                },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -140,12 +134,7 @@
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results_filtered.tsv",
                 "tables/processed_abundance",
-                "tables/processed_abundance/all.normalised_counts.tsv",
-                "validate",
-                "validate/designs.json",
-                "validate/pheno_table.csv",
-                "validate/versions.yml",
-                "validate/warnings.json"
+                "tables/processed_abundance/all.normalised_counts.tsv"
             ],
             [
                 "treatment_mCherry_hND6__SRP254919.MArrayLM.limma.rds:md5,5727192a1f8175594f4a148306f23988",
@@ -171,17 +160,13 @@
                 "treatment_mCherry_hND6__SRP254919.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
                 "treatment_mCherry_hND6_sample_number_SRP254919.limma.results.tsv:md5,2a3937bfc95a1d0a0cbed1f2da4b0bd2",
                 "treatment_mCherry_hND6_sample_number_SRP254919.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "all.normalised_counts.tsv:md5,7510c89d6665176d5026b7af0a64344d",
-                "designs.json:md5,088d536fdff430dc12f4f8b0395a9636",
-                "pheno_table.csv:md5,4969fce19ad1ea5b3cf124f4dcc6a403",
-                "versions.yml:md5,a89c962483109045376386236ce1466f",
-                "warnings.json:md5,58e0494c51d30eb3494f7c9198986bb9"
+                "all.normalised_counts.tsv:md5,7510c89d6665176d5026b7af0a64344d"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-24T14:05:22.891628028"
+        "timestamp": "2025-02-27T17:53:48.560601083"
     }
 }
