@@ -18,7 +18,7 @@
                     "r-shinyngs": "2.1.0"
                 },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -85,6 +85,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-04T16:25:47.716237078"
+        "timestamp": "2025-02-27T17:56:20.053351"
     }
 }

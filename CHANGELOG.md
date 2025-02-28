@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[#374](https://github.com/nf-core/differentialabundance/pull/374)] - Update all modules and subworkflows ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#348](https://github.com/nf-core/differentialabundance/pull/348)] - Update test_full profile matrix file and indentation of profiles in nextflow.config ([@nschcolnicov](https://github.com/nschcolnicov), review by [@WackerO](https://github.com/WackerO) and [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#273](https://github.com/nf-core/differentialabundance/pull/273)] - Template update for nf-core/tools v3.2.0. ([@atrigila](https://github.com/atrigila), review by [@nschcolnicov](https://github.com/nschcolnicov))
+- [[#463](https://github.com/nf-core/differentialabundance/pull/463)] - Update shinyngs/validatefomcomponents with new design matrix checks (developed by [@alanmmobbs93](https://github.com/alanmmobbs93) and [@nschcolnicov](https://github.com/nschcolnicov), migrated by [@atrigila](https://github.com/atriila), review by [@grst](https://github.com/grst), [@nschcolnicov](https://github.com/nschcolnicov), [@pinin4fjords](https://github.com/pinin4fjords) and [@suzannejin](https://github.com/suzannejin))
 
 ## v1.5.0 - 2024-05-08
 

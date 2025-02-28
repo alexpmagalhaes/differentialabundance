@@ -30,7 +30,7 @@
                     "r-shinyngs": "2.1.0"
                 },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -234,6 +234,10 @@
                 "GSM1229348_Gudjohnsson_008_8470_PN.CEL.gz:md5,ec5129e035badf3b670178d53e24f0cc"
             ]
         ],
-        "timestamp": "2025-02-21T14:03:17.318104"
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.4"
+        },
+        "timestamp": "2025-02-27T17:44:33.839032162"
     }
 }

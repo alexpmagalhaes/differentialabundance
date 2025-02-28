@@ -6,11 +6,13 @@ nextflow_pipeline {
     tag "test"
     tag "pipeline"
 
-    test("Test profile - yml contrasts") {
+    test("Test profile - CSV contrasts") {
 
         when {
             params {
                 outdir        = "$outputDir"
+                contrasts_yml = null
+                contrasts     = "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.contrasts.csv"
             }
         }
 
@@ -35,14 +37,12 @@ nextflow_pipeline {
         }
     }
 
-    test("Test profile - csv contrasts") {
+    test("Test profile with yaml contrasts") {
 
         when {
             params {
                 outdir        = "$outputDir"
-                contrasts_yml = null
-                contrasts     = "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.contrasts.csv"
-
+                contrasts_yml     = "https://github.com/nf-core/test-datasets/raw/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml"
             }
         }
 
