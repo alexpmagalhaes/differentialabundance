@@ -8,10 +8,10 @@
                     "bioconductor-deseq2": "1.34.0"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "VALIDATOR": {
                     "r-shinyngs": "2.2.0"
@@ -75,10 +75,10 @@
                 "treatment_mCherry_hND6__SRP254919.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
                 "treatment_mCherry_hND6_sample_number_SRP254919.dds.rld.rds:md5,4ef00951aa423f2b5d1ab797b16ff20d",
                 "treatment_mCherry_hND6_sample_number_SRP254919.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
-                "versions.yml:md5,3b79bd76b788bcfe6a346b1d0d2dba36",
-                "versions.yml:md5,837080c1af397890cab637f12f6c4851",
+                "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
+                "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,27cf350d1f743e60e64b4434cf6d4687",
+                "versions.yml:md5,b9e9aeb4e55381e73a796d7760040c3b",
                 "treatment_mCherry_hND6__SRP254919.deseq2.results.tsv:md5,083c15a96e86aa34751c779c261cef54",
                 "treatment_mCherry_hND6__SRP254919.deseq2.results_filtered.tsv:md5,024da041c017d0539995aee55af83e26",
                 "treatment_mCherry_hND6_sample_number_SRP254919.deseq2.results.tsv:md5,1cacf5addc0f57199958137bb69fa4ac",

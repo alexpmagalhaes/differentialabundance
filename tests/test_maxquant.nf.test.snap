@@ -8,10 +8,10 @@
                     "bioconductor-limma": "3.58.1"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.1.0"
+                    "r-shinyngs": "2.2.0"
                 },
                 "PROTEUS": {
                     "r-base": "4.2.1",
@@ -124,8 +124,8 @@
                 "R_sessionInfo.log:md5,411badddf7904da0ed1de02b544109d2",
                 "normalizeMedian.normalized_proteingroups.rds:md5,6f7def9ce31c8ee07f649675db394848",
                 "raw_proteingroups.rds:md5,daef7d25977a1628870dee75e2977ee3",
-                "versions.yml:md5,3b79bd76b788bcfe6a346b1d0d2dba36",
-                "versions.yml:md5,837080c1af397890cab637f12f6c4851",
+                "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
+                "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
                 "fakebatch_fakeBatch_b1_b2_PXD043349.limma.results.tsv:md5,2e04750d6c02cf37ed489601980d19b8",
                 "fakebatch_fakeBatch_b1_b2_PXD043349.limma.results_filtered.tsv:md5,6842d5af760839cda6f23d64a3300a09",
                 "genotype_celltype_t1_FoB_PXD043349.limma.results.tsv:md5,990fa0b6a9618bcb03d4c6726f0d518a",
