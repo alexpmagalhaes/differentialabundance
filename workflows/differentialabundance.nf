@@ -7,6 +7,36 @@
 def checkPathParamList = [ params.input ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
+
+// Define tool settings based on study type and parameters.
+// (Future: settings may be loaded from files instead of being hard-coded)
+
+// Normalization tool:
+// in rnaseq, we use the data normalized by the differential tool
+// in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
+tools_normalization = (params.study_type == 'rnaseq') ?
+    [method: params.differential_method] :  //
+    [method: 'validator']
+
+// Differential analysis tool:
+// Also set fold change and q-value thresholds.
+tools_differential = [
+    method        : params.differential_method,
+    fc_threshold  : params.differential_min_fold_change,
+    stat_threshold: params.differential_max_qval
+]
+
+// Functional analysis tool:
+// Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
+tools_functional = (params.functional_method) ? [
+    method    : params.functional_method,
+    input_type: params.functional_method == 'gprofiler2' ? 'filtered' : 'norm'
+] : []
+
+// Combine all tool settings into a channel for downstream use.
+ch_tools = Channel.of([tools_normalization, tools_differential, tools_functional])
+
+
 // Check mandatory parameters
 def exp_meta = [ "id": params.study_name  ]
 if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) } else { exit 1, 'Input samplesheet not specified!' }
@@ -19,12 +49,9 @@ if (params.study_type == 'affy_array') {
     }
 } else if (params.study_type == 'maxquant') {
 
-    // Should the user have enabled --gsea_run, throw an error
-    if (params.gsea_run) {
-        error("Cannot run GSEA for maxquant data; please set --gsea_run to false.")
-    }
-    if (params.gprofiler2_run){
-        error("gprofiler2 pathway analysis is not yet possible with maxquant input data; please set --gprofiler2_run false and rerun pipeline!")
+    // Should the user have enabled functional analysis, and throw an error
+    if (params.functional_method ){
+        error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
     }
     if (!params.matrix) {
         error("Input matrix not specified!")
@@ -59,54 +86,22 @@ if (params.study_type == 'affy_array') {
 if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
 if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
-def run_gene_set_analysis = params.gsea_run || params.gprofiler2_run
-
 ch_gene_sets = Channel.of([[]])
-if (run_gene_set_analysis) {
+if (params.functional_method != null) {
     if (params.gene_sets_files) {
         gene_sets_files = params.gene_sets_files.split(",")
         ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-        if (params.gprofiler2_run && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
+        if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
             error("gprofiler2 can currently only work with a single gene set file")
         }
-    } else if (params.gsea_run) {
+    } else if (params.functional_method == 'gsea') {
         error("GSEA activated but gene set file not specified!")
-    } else if (params.gprofiler2_run) {
+    } else if (params.functional_method == 'gprofiler2') {
         if (!params.gprofiler2_token && !params.gprofiler2_organism) {
             error("To run gprofiler2, please provide a run token, GMT file or organism!")
         }
     }
 }
-
-// Define tool settings based on study type and parameters.
-// (Future: settings may be loaded from files instead of being hard-coded)
-
-// Normalization tool: default to 'validator'
-tools_normalization = [method: 'validator']
-if (params.study_type == 'rnaseq') {
-    // For RNAseq, choose 'limma' if specified, otherwise 'deseq2'
-    tools_normalization = [method: params.differential_use_limma ? 'limma' : 'deseq2']
-}
-
-// Differential analysis tool:
-// Use 'limma' for specific study types or RNAseq with limma flag; else 'deseq2'
-// Also set fold change and q-value thresholds.
-tools_differential = [
-    method        : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
-                    (params.study_type == 'rnaseq' && params.differential_use_limma))
-                    ? 'limma' : 'deseq2',
-    fc_threshold  : params.differential_min_fold_change,
-    stat_threshold: params.differential_max_qval
-]
-
-// Functional analysis tool:
-// Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
-tools_functional = params.gprofiler2_run ?
-    [method: 'gprofiler2', input_type: 'filtered'] :
-    (params.gsea_run ? [method: 'gsea', input_type: 'norm'] : [])
-
-// Combine all tool settings into a channel for downstream use.
-ch_tools = Channel.of([tools_normalization, tools_differential, tools_functional])
 
 // Report related files
 report_file = file(params.report_file, checkIfExists: true)
@@ -452,7 +447,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Prepare background file - for the moment it is only needed for gprofiler2
 
     ch_background = Channel.of([[]])
-    if (params.gprofiler2_run) {
+    if (params.functional_method == 'gprofiler2') {
         if (params.gprofiler2_background_file == "auto") {
             // If auto, use input matrix as background
             ch_background = CUSTOM_MATRIXFILTER.out.filtered.map{it.tail()}.first()
@@ -599,14 +594,14 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_differential_results.map{it[1]}.toList())
         .combine(ch_differential_model.map{it[1]}.toList())
 
-    if (params.gsea_run){
+    if (params.functional_method == 'gsea'){
         ch_report_input_files = ch_report_input_files
             .combine(ch_gsea_results
                 .map{it.tail()}.flatMap().toList()
             )
     }
 
-    if (params.gprofiler2_run){
+    if (params.functional_method == 'gprofiler2'){
         ch_report_input_files = ch_report_input_files
             .combine(gprofiler2_plot_html.map{it[1]}.flatMap().toList())
             .combine(gprofiler2_all_enrich.map{it[1]}.flatMap().toList())
@@ -659,25 +654,16 @@ workflow DIFFERENTIALABUNDANCE {
     // Condition params reported on study type
 
     def params_pattern = "report|gene_sets|study|observations|features|filtering|exploratory|differential"
-    if (params.study_type == 'rnaseq'){
-        if (params.differential_use_limma){
-            params_pattern += "|limma"
-        } else {
-            params_pattern += "|deseq2"
-        }
-    }
     if (params.study_type == 'affy_array' || params.study_type == 'geo_soft_file'){
-        params_pattern += "|affy|limma"
+        params_pattern += "|affy"
+    } else if (params.study_type == 'maxquant'){
+        params_pattern += "|proteus"
     }
-    if (params.study_type == 'maxquant'){
-        params_pattern += "|proteus|limma"
+    params_pattern += "|" + params.differential_method
+    if (params.functional_method != null){
+        params_pattern += "|" + params.functional_method
     }
-    if (params.gprofiler2_run){
-        params_pattern += "|gprofiler2"
-    }
-    if (params.gsea_run){
-        params_pattern += "|gsea"
-    }
+
     params_pattern = ~/(${params_pattern}).*/
 
     ch_report_params = ch_report_input_files
