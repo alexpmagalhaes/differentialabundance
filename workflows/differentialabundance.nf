@@ -92,21 +92,21 @@ workflow DIFFERENTIALABUNDANCE {
             .filter{ it[0].analysis_name == params.analysis_name }
             .map { it ->
                 def meta = [
-                    analysis_name : it[0].analysis_name,
-                    diff_method   : it[0].diff_method,
-                    diff_args     : (it[0].diff_args == '') ? [] : parseParams(it[0].diff_args),
-                    func_method   : it[0].func_method,
-                    func_args     : (it[0].func_args == '') ? [] : parseParams(it[0].func_args)
+                    analysis_name: it[0].analysis_name,
+                    diff_method  : it[0].diff_method,
+                    diff_args    : (it[0].diff_args == []) ? 'none' : parseParams(it[0].diff_args),
+                    func_method  : (it[0].func_method == []) ? null : it[0].func_method,
+                    func_args    : (it[0].func_args == []) ? 'none' : parseParams(it[0].func_args)
                 ]
                 return [meta]
             }
     } else {
         // create a channel with a meta information from the command line parameters
         ch_tools_meta = Channel.of([[
-            diff_method : params.differential_method,
-            diff_args   : [],
-            func_method : params.functional_method,
-            func_args   : []
+            diff_method: params.differential_method,
+            diff_args  : 'none',
+            func_method: params.functional_method,
+            func_args  : 'none'
         ]])
     }
 
@@ -116,26 +116,29 @@ workflow DIFFERENTIALABUNDANCE {
             // Normalization tool:
             // in rnaseq, we use the data normalized by the differential tool
             // in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
-            def tools_normalization = (params.study_type == 'rnaseq') ?
-                [ method: it[0].diff_method ] :
-                [ method: 'validator' ]
+            def tools_normalization = [
+                method: (params.study_type == 'rnaseq') ? it[0].diff_method : 'validator',
+                args  : it[0].diff_args
+            ]
             // Differential analysis tool:
             // Also set fold change and q-value thresholds.
             // TODO: check if the thresholds are in the meta first
             def tools_differential = [
                 method        : it[0].diff_method,
-                fc_threshold  : ('differential_min_fold_change' in it[0].diff_args) ?
+                fc_threshold  : (it[0].diff_args != 'none' && 'differential_min_fold_change' in it[0].diff_args) ?
                     it[0].diff_args.differential_min_fold_change :
                     params.differential_min_fold_change,
-                stat_threshold: ('differential_max_qval' in it[0].diff_args) ?
+                stat_threshold: (it[0].diff_args != 'none' && 'differential_max_qval' in it[0].diff_args) ?
                     it[0].diff_args.differential_max_qval :
-                    params.differential_max_qval
+                    params.differential_max_qval,
+                args          : it[0].diff_args
             ]
             // Functional analysis tool:
             // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
             def tools_functional = (it[0].func_method) ? [
                 method    : it[0].func_method,
-                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm'
+                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm',
+                args      : it[0].func_args
             ] : []
 
             return [ tools_normalization, tools_differential, tools_functional ]
@@ -443,8 +446,12 @@ workflow DIFFERENTIALABUNDANCE {
     ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
         .combine(ch_tools)
         .map { meta, matrix, tools_norm, tools_diff, tools_func ->
+            // we add extra arguments from toolsheet through meta
+            // these arguments can be used to overwrite the default
+            // params specified in modules.config
+            def meta_new = meta + [args_differential: tools_diff.args]
             [
-                meta,
+                meta_new,
                 matrix,
                 tools_diff.method,
                 tools_diff.fc_threshold,
@@ -481,7 +488,7 @@ workflow DIFFERENTIALABUNDANCE {
         // we need to update the meta so that it can match with tools_norm
         ch_norm = ch_norm
             .map { meta, norm ->
-                def meta_new = meta + [method_differential: 'validator']
+                def meta_new = meta + [method_differential: 'validator', args_differential: 'none']
                 [meta_new, norm]
             }
     }
@@ -513,22 +520,24 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Some functional analysis methods act directly on the differential analysis results, some on the normalised matrix.
     // By crossing with ch_tools, we pair the correct input file with the correct functional analysis method, taking into
-    // account the upstream differential method and data type (normalized matrix or filtered differential analysis results).
+    // account the upstream differential method, args and data type (normalized matrix or filtered differential analysis
+    // results).
     ch_functional_input = ch_norm.map { meta, input ->
-            [[method: meta.method_differential, type: 'norm'], meta, input]
+            [[method: meta.method_differential, ags: meta.args_differential, type: 'norm'], meta, input]
         }
         .mix(
             ch_differential_results_filtered.map { meta, input ->
-                [[method: meta.method_differential, type: 'filtered'], meta, input]
+                [[method: meta.method_differential, ags: meta.args_differential, type: 'filtered'], meta, input]
             }
         )
         .cross(
             ch_tools.map { tools_norm, tools_diff, tools_func ->
-                [[method: tools_norm.method, type: tools_func.input_type], tools_func.method]
+                [[method: tools_norm.method, ags: tools_norm.args, type: tools_func.input_type], tools_func]
             }
         )
         .map { input, tools ->
-            [input[1], input[2], tools[1]]  // meta, input, functional analysis method
+            def meta = input[1] + [args_functional: tools[1].args]
+            [meta, input[2], tools[1].method]  // meta, input, functional analysis method
         }
         .combine(ch_gene_sets)
         .combine(ch_background)

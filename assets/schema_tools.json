@@ -18,20 +18,17 @@
             },
             "diff_args": {
                 "type": "string",
-                "meta": ["diff_args"],
-                "default": ""
+                "meta": ["diff_args"]
             },
             "func_method": {
                 "type": "string",
                 "errorMessage": "choose a proper functional enrichment analysis method",
                 "meta": ["func_method"],
-                "enum": ["gsea", "gprofiler2"],
-                "default": ""
+                "enum": ["gsea", "gprofiler2"]
             },
             "func_args": {
                 "type": "string",
-                "meta": ["func_args"],
-                "default": ""
+                "meta": ["func_args"]
             }
         },
         "required": ["analysis_name", "diff_method"]
