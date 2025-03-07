@@ -35,6 +35,17 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 //
 include { samplesheetToList } from 'plugin/nf-schema'
 
+// function to split the argument strings from toolsheet into a groovy map
+// for example "--param1 aa --param2 bb --param4 cc" will be converted to
+// [param1: aa, param2: bb, param4: cc]
+def parseParams(String paramStr) {
+    def tokens = paramStr.split().findAll { it } // Split and remove empty strings
+    def pairs = tokens.collate(2)  // Group into pairs
+    return pairs.collectEntries {
+        [(it[0].replaceAll('^-+', '')): it[1]]  // Remove leading dashes
+    }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -57,6 +68,8 @@ workflow DIFFERENTIALABUNDANCE {
     // Define tool settings
     // Use the toolsheet information if an analysis name is provided
     // otherwise ensamble the tools channel from the command line parameters
+    // (for the moment we only run one analysis at a time, but in the future
+    // we would enable benchmark mode to run multiple analyses)
 
     if (params.analysis_name) {
         // use the corresponding toolsheet given the study type
@@ -77,11 +90,23 @@ workflow DIFFERENTIALABUNDANCE {
         // create a channel with the toolsheet meta information
         ch_tools_meta = ch_toolsheet
             .filter{ it[0].analysis_name == params.analysis_name }
+            .map { it ->
+                def meta = [
+                    analysis_name : it[0].analysis_name,
+                    diff_method   : it[0].diff_method,
+                    diff_args     : (it[0].diff_args == '') ? [] : parseParams(it[0].diff_args),
+                    func_method   : it[0].func_method,
+                    func_args     : (it[0].func_args == '') ? [] : parseParams(it[0].func_args)
+                ]
+                return [meta]
+            }
     } else {
         // create a channel with a meta information from the command line parameters
         ch_tools_meta = Channel.of([[
-            diff_method: params.differential_method,
-            func_method: params.functional_method
+            diff_method : params.differential_method,
+            diff_args   : [],
+            func_method : params.functional_method,
+            func_args   : []
         ]])
     }
 
@@ -99,8 +124,12 @@ workflow DIFFERENTIALABUNDANCE {
             // TODO: check if the thresholds are in the meta first
             def tools_differential = [
                 method        : it[0].diff_method,
-                fc_threshold  : params.differential_min_fold_change,
-                stat_threshold: params.differential_max_qval
+                fc_threshold  : ('differential_min_fold_change' in it[0].diff_args) ?
+                    it[0].diff_args.differential_min_fold_change :
+                    params.differential_min_fold_change,
+                stat_threshold: ('differential_max_qval' in it[0].diff_args) ?
+                    it[0].diff_args.differential_max_qval :
+                    params.differential_max_qval
             ]
             // Functional analysis tool:
             // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
