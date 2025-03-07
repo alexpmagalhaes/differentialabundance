@@ -430,16 +430,49 @@
                 "exploratory_palette_name"
             ]
         },
+        "tools_options": {
+            "title": "Toolsheet options",
+            "type": "object",
+            "description": "Options related to the use of toolsheet",
+            "default": "",
+            "properties": {
+                "analysis_name": {
+                    "type": "string",
+                    "description": "Name of the analysis to run"
+                },
+                "toolsheet_rnaseq": {
+                    "type": "string",
+                    "default": "${projectDir}/assets/toolsheet_rnaseq.csv"
+                },
+                "toolsheet_custom": {
+                    "type": "string",
+                    "default": "null"
+                },
+                "toolsheet_affy": {
+                    "type": "string",
+                    "default": "${projectDir}/assets/toolsheet_affy.csv"
+                },
+                "toolsheet_soft": {
+                    "type": "string",
+                    "default": "${projectDir}/assets/toolsheet_soft.csv"
+                },
+                "toolsheet_maxquant": {
+                    "type": "string",
+                    "default": "${projectDir}/assets/toolsheet_maxquant.csv"
+                }
+            }
+        },
         "differential_analysis": {
             "title": "Differential analysis",
             "type": "object",
             "description": "Options related to differential operations",
             "default": "",
             "properties": {
-                "differential_use_limma": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-adjust",
-                    "description": "If true limma will be used for all study_types"
+                "differential_method": {
+                    "type": "string",
+                    "description": "Differential analysis method",
+                    "enum": ["deseq2", "limma"],
+                    "default": "deseq2"
                 },
                 "differential_file_suffix": {
                     "type": "string",
@@ -774,6 +807,26 @@
                 }
             }
         },
+        "functional_analysis_options": {
+            "title": "Functional analysis options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "functional_method": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "Functional analysis method",
+                    "enum": ["gsea", "gprofiler2"]
+                },
+                "gene_sets_files": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "Gene sets in GMT or GMX-format; for GSEA: multiple comma-separated input files in either format are possible. For gprofiler2: A single file in GMT format is possible; this has lowest priority and will be overridden by --gprofiler2_token and --gprofiler2_organism.",
+                    "fa_icon": "fas fa-bars"
+                }
+            }
+        },
         "gsea": {
             "title": "GSEA",
             "type": "object",
@@ -916,11 +969,6 @@
             "description": "",
             "default": "",
             "properties": {
-                "gprofiler2_run": {
-                    "type": "boolean",
-                    "description": "Set to run gprofiler2 and do a pathway enrichment analysis.",
-                    "fa_icon": "fas fa-running"
-                },
                 "gprofiler2_organism": {
                     "type": "string",
                     "description": "Short name of the organism that is analyzed, e.g. hsapiens for homo sapiens.",
@@ -1029,20 +1077,6 @@
                 }
             },
             "fa_icon": "fab fa-app-store-ios"
-        },
-        "gene_set_options": {
-            "title": "Options related to gene set analysis",
-            "type": "object",
-            "fa_icon": "fas fa-cogs",
-            "description": "Files and options used by gene set analysis modules.",
-            "properties": {
-                "gene_sets_files": {
-                    "type": "string",
-                    "default": "null",
-                    "description": "Gene sets in GMT or GMX-format; for GSEA: multiple comma-separated input files in either format are possible. For gprofiler2: A single file in GMT format is possible; this has lowest priority and will be overridden by --gprofiler2_token and --gprofiler2_organism.",
-                    "fa_icon": "fas fa-bars"
-                }
-            }
         },
         "reporting_options": {
             "title": "Reporting options",
@@ -1267,12 +1301,6 @@
                     "description": "Base URL or local path to location of pipeline test dataset files",
                     "default": "https://raw.githubusercontent.com/nf-core/test-datasets/",
                     "hidden": true
-                },
-                "trace_report_suffix": {
-                    "type": "string",
-                    "fa_icon": "far calendar",
-                    "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
-                    "hidden": true
                 }
             }
         }
@@ -1303,6 +1331,9 @@
             "$ref": "#/$defs/exploratory_analysis"
         },
         {
+            "$ref": "#/$defs/tools_options"
+        },
+        {
             "$ref": "#/$defs/differential_analysis"
         },
         {
@@ -1315,6 +1346,9 @@
             "$ref": "#/$defs/immunedeconv"
         },
         {
+            "$ref": "#/$defs/functional_analysis_options"
+        },
+        {
             "$ref": "#/$defs/gsea"
         },
         {
@@ -1322,9 +1356,6 @@
         },
         {
             "$ref": "#/$defs/shiny_app_settings"
-        },
-        {
-            "$ref": "#/$defs/gene_set_options"
         },
         {
             "$ref": "#/$defs/reporting_options"

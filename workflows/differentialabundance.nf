@@ -1,131 +1,6 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    HANDLE INPUT PARAMETERS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-def checkPathParamList = [ params.input ]
-for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
-
-// Define tool settings based on study type and parameters.
-// (Future: settings may be loaded from files instead of being hard-coded)
-
-// Normalization tool:
-// in rnaseq, we use the data normalized by the differential tool
-// in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
-tools_normalization = (params.study_type == 'rnaseq') ?
-    [method: params.differential_method] :  //
-    [method: 'validator']
-
-// Differential analysis tool:
-// Also set fold change and q-value thresholds.
-tools_differential = [
-    method        : params.differential_method,
-    fc_threshold  : params.differential_min_fold_change,
-    stat_threshold: params.differential_max_qval
-]
-
-// Functional analysis tool:
-// Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
-tools_functional = (params.functional_method) ? [
-    method    : params.functional_method,
-    input_type: params.functional_method == 'gprofiler2' ? 'filtered' : 'norm'
-] : []
-
-// Combine all tool settings into a channel for downstream use.
-ch_tools = Channel.of([tools_normalization, tools_differential, tools_functional])
-
-
-// Check mandatory parameters
-def exp_meta = [ "id": params.study_name  ]
-if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) } else { exit 1, 'Input samplesheet not specified!' }
-
-if (params.study_type == 'affy_array') {
-    if (params.affy_cel_files_archive) {
-        ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
-    } else {
-        error("CEL files archive not specified!")
-    }
-} else if (params.study_type == 'maxquant') {
-
-    // Should the user have enabled functional analysis, and throw an error
-    if (params.functional_method ){
-        error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
-    }
-    if (!params.matrix) {
-        error("Input matrix not specified!")
-    }
-    matrix_file = file(params.matrix, checkIfExists: true)
-
-    // Make channel for proteus
-    proteus_in = Channel.of([ file(params.input), matrix_file ])
-} else if (params.study_type == 'geo_soft_file') {
-
-    // To pull SOFT files from a GEO a GSE study identifer must be provided
-
-    if (params.querygse && params.features_metadata_cols) {
-        ch_querygse = Channel.of([exp_meta, params.querygse])
-    } else {
-        error("Query GSE not specified or features metadata columns not specified")
-    }
-} else {
-    // If this is not microarray data or maxquant output, and this an RNA-seq dataset,
-    // then assume we're reading from a matrix
-
-    if (params.study_type == "rnaseq" && params.matrix) {
-        matrix_file = file(params.matrix, checkIfExists: true)
-        ch_in_raw = Channel.of([ exp_meta, matrix_file])
-    } else {
-        error("Input matrix not specified!")
-    }
-
-}
-
-// Check optional parameters
-if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
-if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
-
-ch_gene_sets = Channel.of([[]])
-if (params.functional_method != null) {
-    if (params.gene_sets_files) {
-        gene_sets_files = params.gene_sets_files.split(",")
-        ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-        if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
-            error("gprofiler2 can currently only work with a single gene set file")
-        }
-    } else if (params.functional_method == 'gsea') {
-        error("GSEA activated but gene set file not specified!")
-    } else if (params.functional_method == 'gprofiler2') {
-        if (!params.gprofiler2_token && !params.gprofiler2_organism) {
-            error("To run gprofiler2, please provide a run token, GMT file or organism!")
-        }
-    }
-}
-
-// Report related files
-report_file = file(params.report_file, checkIfExists: true)
-logo_file = file(params.logo_file, checkIfExists: true)
-css_file = file(params.css_file, checkIfExists: true)
-citations_file = file(params.citations_file, checkIfExists: true)
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CONFIG FILES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT LOCAL MODULES/SUBWORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT NF-CORE MODULES/SUBWORKFLOWS
+    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -155,6 +30,11 @@ include { softwareVersionsToYAML                            } from '../subworkfl
 include { ABUNDANCE_DIFFERENTIAL_FILTER                     } from '../subworkflows/nf-core/abundance_differential_filter/main'
 include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkflows/nf-core/differential_functional_enrichment/main'
 
+//
+// FUNCTIONS:
+//
+include { samplesheetToList } from 'plugin/nf-schema'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -165,7 +45,147 @@ workflow DIFFERENTIALABUNDANCE {
 
     main:
 
+    // ========================================================================
+    // Handle input parameters
+    // ========================================================================
+
+    // TODO: this should be done in PIPELINE_INITIALISATION
+
+    def checkPathParamList = [ params.input ]
+    for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+
+    // Define tool settings
+    // Use the toolsheet information if an analysis name is provided
+    // otherwise ensamble the tools channel from the command line parameters
+
+    if (params.analysis_name) {
+        // use the corresponding toolsheet given the study type
+        // TODO check analysis_name is in toolsheet
+        if (params.toolsheet_custom) {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
+        } else if (params.study_type == 'rnaseq') {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_rnaseq, './assets/schema_tools.json'))
+        } else if (params.study_type == 'affy_array') {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_affy, './assets/schema_tools.json'))
+        } else if (params.study_type == 'geo_soft_file') {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_geo, './assets/schema_tools.json'))
+        } else if (params.study_type == 'maxquant') {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_maxquant, './assets/schema_tools.json'))
+        } else {
+            error("Please make sure to mention the correct study_type")
+        }
+        // create a channel with the toolsheet meta information
+        ch_tools_meta = ch_toolsheet
+            .filter{ it[0].analysis_name == params.analysis_name }
+    } else {
+        // create a channel with a meta information from the command line parameters
+        ch_tools_meta = Channel.of([[
+            diff_method: params.differential_method,
+            func_method: params.functional_method
+        ]])
+    }
+
+    // parse channel tools for downstream processes
+    ch_tools = ch_tools_meta
+        .map{ it ->
+            // Normalization tool:
+            // in rnaseq, we use the data normalized by the differential tool
+            // in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
+            def tools_normalization = (params.study_type == 'rnaseq') ?
+                [ method: it[0].diff_method ] :
+                [ method: 'validator' ]
+            // Differential analysis tool:
+            // Also set fold change and q-value thresholds.
+            // TODO: check if the thresholds are in the meta first
+            def tools_differential = [
+                method        : it[0].diff_method,
+                fc_threshold  : params.differential_min_fold_change,
+                stat_threshold: params.differential_max_qval
+            ]
+            // Functional analysis tool:
+            // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
+            def tools_functional = (it[0].func_method) ? [
+                method    : it[0].func_method,
+                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm'
+            ] : []
+
+            return [ tools_normalization, tools_differential, tools_functional ]
+        }
+
+    // Check mandatory parameters
+    def exp_meta = [ "id": params.study_name  ]
+    if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) } else { exit 1, 'Input samplesheet not specified!' }
+
+    if (params.study_type == 'affy_array') {
+        if (params.affy_cel_files_archive) {
+            ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
+        } else {
+            error("CEL files archive not specified!")
+        }
+    } else if (params.study_type == 'maxquant') {
+
+        // Should the user have enabled functional analysis, and throw an error
+        if (params.functional_method ){
+            error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
+        }
+        if (!params.matrix) {
+            error("Input matrix not specified!")
+        }
+        matrix_file = file(params.matrix, checkIfExists: true)
+
+        // Make channel for proteus
+        proteus_in = Channel.of([ file(params.input), matrix_file ])
+    } else if (params.study_type == 'geo_soft_file') {
+
+        // To pull SOFT files from a GEO a GSE study identifer must be provided
+
+        if (params.querygse && params.features_metadata_cols) {
+            ch_querygse = Channel.of([exp_meta, params.querygse])
+        } else {
+            error("Query GSE not specified or features metadata columns not specified")
+        }
+    } else {
+        // If this is not microarray data or maxquant output, and this an RNA-seq dataset,
+        // then assume we're reading from a matrix
+
+        if (params.study_type == "rnaseq" && params.matrix) {
+            matrix_file = file(params.matrix, checkIfExists: true)
+            ch_in_raw = Channel.of([ exp_meta, matrix_file])
+        } else {
+            error("Input matrix not specified!")
+        }
+
+    }
+
+    // Check optional parameters
+    if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
+    if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
+
+    ch_gene_sets = Channel.of([[]])
+    if (params.functional_method != null) {
+        if (params.gene_sets_files) {
+            gene_sets_files = params.gene_sets_files.split(",")
+            ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
+            if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
+                error("gprofiler2 can currently only work with a single gene set file")
+            }
+        } else if (params.functional_method == 'gsea') {
+            error("GSEA activated but gene set file not specified!")
+        } else if (params.functional_method == 'gprofiler2') {
+            if (!params.gprofiler2_token && !params.gprofiler2_organism) {
+                error("To run gprofiler2, please provide a run token, GMT file or organism!")
+            }
+        }
+    }
+
+    // Report related files
+    report_file = file(params.report_file, checkIfExists: true)
+    logo_file = file(params.logo_file, checkIfExists: true)
+    css_file = file(params.css_file, checkIfExists: true)
+    citations_file = file(params.citations_file, checkIfExists: true)
+
     ch_versions = Channel.empty()
+
     // Channel for the contrasts file
     if (params.contrasts_yml && params.contrasts) {
         error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
@@ -199,6 +219,10 @@ workflow DIFFERENTIALABUNDANCE {
             }
             .unique()
     }
+
+    // ========================================================================
+    // Data preprocessing
+    // ========================================================================
 
     // If we have affy array data in the form of CEL files we'll be deriving
     // matrix and annotation from them
