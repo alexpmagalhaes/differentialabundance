@@ -1,0 +1,7 @@
+analysis_name,diff_method,diff_args,func_method,func_args
+deseq2,deseq2,,,
+deseq2_gsea,deseq2,,gsea,
+deseq2_gprofiler2,deseq2,,gprofiler2,
+limma,limma,--limma_use_voom true,,
+limma_gsea,limma,--limma_use_voom true,gsea,
+limma_gprofiler2,limma,--limma_use_voom true,gprofiler2,
