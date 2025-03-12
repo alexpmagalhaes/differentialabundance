@@ -102,9 +102,9 @@ workflow DIFFERENTIALABUNDANCE {
                 def meta = [
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
-                    diff_args    : (it[0].diff_args == []) ? [] : parseParams(it[0].diff_args),
+                    diff_args    : (it[0].diff_args == []) ? [:] : parseParams(it[0].diff_args),
                     func_method  : (it[0].func_method == []) ? null : it[0].func_method,
-                    func_args    : (it[0].func_args == []) ? [] : parseParams(it[0].func_args)
+                    func_args    : (it[0].func_args == []) ? [:] : parseParams(it[0].func_args)
                 ]
                 return [meta]
             }
@@ -113,9 +113,9 @@ workflow DIFFERENTIALABUNDANCE {
         // if so, we use default args, and hence the ch_tools args are empty
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
-            diff_args  : [],
+            diff_args  : [:],
             func_method: params.functional_method,
-            func_args  : []
+            func_args  : [:]
         ]])
     }
 
@@ -148,10 +148,11 @@ workflow DIFFERENTIALABUNDANCE {
                 method    : it[0].func_method,
                 args      : it[0].func_args,
                 input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm'
-            ] : []
+            ] : [:]
 
             return [ tools_normalization, tools_differential, tools_functional ]
         }
+    ch_tools.view{ "tools is $it" }
 
     // TODO: now that we have ch_tools, we should validate the tool related parameters
     // based on the info contained in ch_tools, instead of the ones coming from params
@@ -199,7 +200,6 @@ workflow DIFFERENTIALABUNDANCE {
         } else {
             error("Input matrix not specified!")
         }
-
     }
 
     // Check optional parameters
@@ -462,17 +462,15 @@ workflow DIFFERENTIALABUNDANCE {
             // we add extra arguments from toolsheet through meta
             // these arguments can be used to overwrite the default
             // params specified in modules.config
-            def meta_new = (tools_diff.args == []) ?
-                meta + [args_differential: tools_diff.args] :
-                meta
             [
-                meta_new,
+                meta + [args_differential: tools_diff.args],
                 matrix,
                 tools_diff.method,
                 tools_diff.fc_threshold,
                 tools_diff.stat_threshold
             ]
         }
+    ch_differential_input.view{"differential input is $it"}
 
     // Run differential analysis
 
@@ -491,6 +489,8 @@ workflow DIFFERENTIALABUNDANCE {
     ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
     ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
     ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix
+
+    ch_differential_results.view{"differential results is $it"}
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -538,30 +538,22 @@ workflow DIFFERENTIALABUNDANCE {
     // account the upstream differential method, args and data type (normalized matrix or filtered differential analysis
     // results).
     ch_functional_input = ch_norm.map { meta, input ->
-            def args = (meta.args_differential) ? [args: meta.args_differential] : []
-            def key = [method: meta.method_differential, type: 'norm'] + args
-            [key, meta, input]
+            [[method: meta.method_differential, args: meta.args_differential, type: 'norm'], meta, input]
         }
         .mix(
             ch_differential_results_filtered.map { meta, input ->
-                def args = (meta.args_differential) ? [args: meta.args_differential] : []
-                def key = [method: meta.method_differential, type: 'filtered'] + args
-                [key, meta, input]
+                [[method: meta.method_differential, args: meta.args_differential, type: 'filtered'], meta, input]
             }
         )
         .cross(
             ch_tools.map { tools_norm, tools_diff, tools_func ->
-                def args = (tools_diff.args) ? [args: tools_diff.args] : []
-                def key = [method: tools_diff.method, type: tools_func.input_type] + args
-                [key, tools_func]
+                [[method: tools_diff.method, args: tools_diff.args, type: tools_func.input_type], tools_func]
             }
         )
         .map { input, tools ->
             // create a new meta that will contain method_differential, args_differential, and args_functional
             // args_functional can be used to overwrite the default params specified in modules.config
-            def meta = (tools[1].args == []) ?
-                input[1] :
-                input[1] + [args_functional: tools[1].args]
+            def meta = input[1] + [args_functional: tools[1].args]
             [meta, input[2], tools[1].method]  // meta, input, functional analysis method
         }
         .combine(ch_gene_sets)
@@ -569,6 +561,8 @@ workflow DIFFERENTIALABUNDANCE {
         .map { meta, input, method, gene_sets, background ->
             [meta, input, gene_sets, background, method]
         }
+
+    ch_functional_input.view{"functional input is $it"}
 
     // Run functional analysis
 
@@ -585,6 +579,8 @@ workflow DIFFERENTIALABUNDANCE {
     gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
     gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich
     gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich
+
+    ch_gsea_results.view{"gsea results is $it"}
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
