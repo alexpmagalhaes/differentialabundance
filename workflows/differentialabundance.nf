@@ -132,18 +132,6 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 //
 include { samplesheetToList } from 'plugin/nf-schema'
 
-// function to split the argument strings from toolsheet into a groovy map
-// for example "--param1 aa --param2 bb --param4 cc" will be converted to
-// [param1: aa, param2: bb, param4: cc]
-// TODO: this should also be in PIPELINE_INITIALISATION
-def parseParams(String paramStr) {
-    def tokens = paramStr.split().findAll { it } // Split and remove empty strings
-    def pairs = tokens.collate(2)  // Group into pairs
-    return pairs.collectEntries {
-        [(it[0].replaceAll('^-+', '')): it[1]]  // Remove leading dashes
-    }
-}
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -152,109 +140,12 @@ def parseParams(String paramStr) {
 
 workflow DIFFERENTIALABUNDANCE {
 
+    take:
+    ch_tools
+
     main:
 
     ch_versions = Channel.empty()
-
-    // ========================================================================
-    // Handle toolsheet
-    // ========================================================================
-
-    // TODO: this should be done in PIPELINE_INITIALISATION
-    // TODO: add the corresponding checks when using ch_tools
-        //   - check if analysis_name is in toolsheet
-        //   - replace the checks depending on params.differential_method, etc.
-        //   - check the ch_tools content vs params through groovy
-    // TODO: add tests when --analysis_name is specified
-    // TODO: properly input method and args to report
-    // TODO: change report rmd to fit the new params (eg. functional_method)
-
-
-    // Define tool settings
-    // Use the toolsheet information if an analysis name is provided
-    // otherwise ensamble the tools channel from the command line parameters
-    // TODO: for the moment we only run one analysis at a time, but in the future
-    // we would enable benchmark mode to run multiple analyses.
-
-    if (params.analysis_name) {
-
-        // use the corresponding toolsheet given the study type
-        if (params.toolsheet_custom) {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
-        } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_rnaseq, './assets/schema_tools.json'))
-        } else if (params.study_type == 'affy_array') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_affy, './assets/schema_tools.json'))
-        } else if (params.study_type == 'geo_soft_file') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_geo, './assets/schema_tools.json'))
-        } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_maxquant, './assets/schema_tools.json'))
-        } else {
-            error("Please make sure to mention the correct study_type")
-        }
-
-        // create a channel with the toolsheet meta information
-        ch_tools_meta = ch_toolsheet
-            // we use the analysis_name to filter the toolsheet
-            .filter{ it[0].analysis_name == params.analysis_name }
-            // we map the meta information properly
-            // Note that the args are parsed into a groovy map using parseParams.
-            // In this way, we can use them through modules.config to overwrite
-            // the default params. This is done as the params coming from the
-            // toolsheet should be highest priority, when they are provided
-            .map { it ->
-                def meta = [
-                    analysis_name: it[0].analysis_name,
-                    diff_method  : it[0].diff_method,
-                    diff_args    : (it[0].diff_args == []) ? [:] : parseParams(it[0].diff_args),
-                    func_method  : (it[0].func_method == []) ? null : it[0].func_method,
-                    func_args    : (it[0].func_args == []) ? [:] : parseParams(it[0].func_args)
-                ]
-                return [meta]
-            }
-    } else {
-        // create a channel with a meta information from the command line parameters
-        // if so, we use default args, and hence the ch_tools args are empty
-        ch_tools_meta = Channel.of([[
-            diff_method: params.differential_method,
-            diff_args  : [:],
-            func_method: params.functional_method,
-            func_args  : [:]
-        ]])
-    }
-
-    // parse channel tools into a proper structure for downstream processes
-    ch_tools = ch_tools_meta
-        .map{ it ->
-            // Normalization tool:
-            // in rnaseq, we use the data normalized by the differential tool
-            // in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
-            def tools_normalization = (params.study_type == 'rnaseq') ?
-                [method: it[0].diff_method, args: it[0].diff_args] :
-                [method: 'validator', args: [:]]
-            // Differential analysis tool:
-            // Also set fold change and q-value thresholds, required as input for
-            // the differential abundance analysis subworkflow
-            def tools_differential = [
-                method        : it[0].diff_method,
-                args          : it[0].diff_args,
-                fc_threshold  : ('differential_min_fold_change' in it[0].diff_args) ?
-                    it[0].diff_args.differential_min_fold_change :
-                    params.differential_min_fold_change,
-                stat_threshold: ('differential_max_qval' in it[0].diff_args) ?
-                    it[0].diff_args.differential_max_qval :
-                    params.differential_max_qval
-            ]
-            // Functional analysis tool:
-            // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
-            def tools_functional = (it[0].func_method) ? [
-                method    : it[0].func_method,
-                args      : it[0].func_args,
-                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm'
-            ] : [:]
-
-            return [ tools_normalization, tools_differential, tools_functional ]
-        }
 
     // ========================================================================
     // Handle contrasts
