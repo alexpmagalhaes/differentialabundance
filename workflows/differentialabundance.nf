@@ -21,12 +21,9 @@ if (params.study_type == 'affy_array') {
     }
 } else if (params.study_type == 'maxquant') {
 
-    // Should the user have enabled --gsea_run, throw an error
-    if (params.gsea_run) {
-        error("Cannot run GSEA for maxquant data; please set --gsea_run to false.")
-    }
-    if (params.gprofiler2_run){
-        error("gprofiler2 pathway analysis is not yet possible with maxquant input data; please set --gprofiler2_run false and rerun pipeline!")
+    // Should the user have enabled functional analysis, and throw an error
+    if (params.functional_method ){
+        error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
     }
     if (!params.matrix) {
         error("Input matrix not specified!")
@@ -54,26 +51,23 @@ if (params.study_type == 'affy_array') {
     } else {
         error("Input matrix not specified!")
     }
-
 }
 
 // Check optional parameters
 if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
 if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
-def run_gene_set_analysis = params.gsea_run || params.gprofiler2_run
-
 ch_gene_sets = Channel.of([[]])
-if (run_gene_set_analysis) {
+if (params.functional_method != null) {
     if (params.gene_sets_files) {
         gene_sets_files = params.gene_sets_files.split(",")
         ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-        if (params.gprofiler2_run && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
+        if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
             error("gprofiler2 can currently only work with a single gene set file")
         }
-    } else if (params.gsea_run) {
+    } else if (params.functional_method == 'gsea') {
         error("GSEA activated but gene set file not specified!")
-    } else if (params.gprofiler2_run) {
+    } else if (params.functional_method == 'gprofiler2') {
         if (!params.gprofiler2_token && !params.gprofiler2_organism) {
             error("To run gprofiler2, please provide a run token, GMT file or organism!")
         }
@@ -166,6 +160,14 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
 
     // TODO: this should be done in PIPELINE_INITIALISATION
+    // TODO: add the corresponding checks when using ch_tools
+        //   - check if analysis_name is in toolsheet
+        //   - replace the checks depending on params.differential_method, etc.
+        //   - check the ch_tools content vs params through groovy
+    // TODO: add tests when --analysis_name is specified
+    // TODO: properly input method and args to report
+    // TODO: change report rmd to fit the new params (eg. functional_method)
+
 
     // Define tool settings
     // Use the toolsheet information if an analysis name is provided
@@ -176,10 +178,6 @@ workflow DIFFERENTIALABUNDANCE {
     if (params.analysis_name) {
 
         // use the corresponding toolsheet given the study type
-        // TODO add the corresponding checks when using ch_tools
-        //   - check if analysis_name is in toolsheet
-        //   - replace the checks depending on params.differential_method, etc.
-        //   - check the ch_tools content vs params through groovy
         if (params.toolsheet_custom) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
