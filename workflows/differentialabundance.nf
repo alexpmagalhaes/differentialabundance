@@ -125,10 +125,9 @@ workflow DIFFERENTIALABUNDANCE {
             // Normalization tool:
             // in rnaseq, we use the data normalized by the differential tool
             // in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
-            def tools_normalization = [
-                method: (params.study_type == 'rnaseq') ? it[0].diff_method : 'validator',
-                args  : it[0].diff_args
-            ]
+            def tools_normalization = (params.study_type == 'rnaseq') ?
+                [method: it[0].diff_method, args: it[0].diff_args] :
+                [method: 'validator', args: [:]]
             // Differential analysis tool:
             // Also set fold change and q-value thresholds, required as input for
             // the differential abundance analysis subworkflow
@@ -152,7 +151,6 @@ workflow DIFFERENTIALABUNDANCE {
 
             return [ tools_normalization, tools_differential, tools_functional ]
         }
-    ch_tools.view{ "tools is $it" }
 
     // TODO: now that we have ch_tools, we should validate the tool related parameters
     // based on the info contained in ch_tools, instead of the ones coming from params
@@ -470,7 +468,7 @@ workflow DIFFERENTIALABUNDANCE {
                 tools_diff.stat_threshold
             ]
         }
-    ch_differential_input.view{"differential input is $it"}
+
 
     // Run differential analysis
 
@@ -490,8 +488,6 @@ workflow DIFFERENTIALABUNDANCE {
     ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
     ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix
 
-    ch_differential_results.view{"differential results is $it"}
-
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
 
@@ -503,7 +499,7 @@ workflow DIFFERENTIALABUNDANCE {
         // we need to update the meta so that it can match with tools_norm
         ch_norm = ch_norm
             .map { meta, norm ->
-                def meta_new = meta + [method_differential: 'validator']
+                def meta_new = meta + [method_differential: 'validator', args_differential: [:]]
                 [meta_new, norm]
             }
     }
@@ -547,7 +543,7 @@ workflow DIFFERENTIALABUNDANCE {
         )
         .cross(
             ch_tools.map { tools_norm, tools_diff, tools_func ->
-                [[method: tools_diff.method, args: tools_diff.args, type: tools_func.input_type], tools_func]
+                [[method: tools_norm.method, args: tools_norm.args, type: tools_func.input_type], tools_func]
             }
         )
         .map { input, tools ->
@@ -561,8 +557,6 @@ workflow DIFFERENTIALABUNDANCE {
         .map { meta, input, method, gene_sets, background ->
             [meta, input, gene_sets, background, method]
         }
-
-    ch_functional_input.view{"functional input is $it"}
 
     // Run functional analysis
 
@@ -579,8 +573,6 @@ workflow DIFFERENTIALABUNDANCE {
     gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
     gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich
     gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich
-
-    ch_gsea_results.view{"gsea results is $it"}
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
