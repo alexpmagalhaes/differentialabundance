@@ -5,6 +5,7 @@
 */
 
 // TODO: this should be done in PIPELINE_INITIALISATION
+// TODO: replace the checks depending on params.differential_method, etc. by ch_tools checks
 
 def checkPathParamList = [ params.input ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }

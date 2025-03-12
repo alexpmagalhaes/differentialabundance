@@ -833,11 +833,6 @@
             "description": "",
             "default": "",
             "properties": {
-                "gsea_run": {
-                    "type": "boolean",
-                    "description": "Set to run GSEA to infer differential gene sets in contrasts",
-                    "fa_icon": "fas fa-running"
-                },
                 "gsea_permute": {
                     "type": "string",
                     "default": "phenotype",
