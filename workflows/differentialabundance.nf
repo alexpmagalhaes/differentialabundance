@@ -68,13 +68,16 @@ workflow DIFFERENTIALABUNDANCE {
     // Define tool settings
     // Use the toolsheet information if an analysis name is provided
     // otherwise ensamble the tools channel from the command line parameters
-    // (for the moment we only run one analysis at a time, but in the future
-    // we would enable benchmark mode to run multiple analyses)
+    // TODO: for the moment we only run one analysis at a time, but in the future
+    // we would enable benchmark mode to run multiple analyses.
 
     if (params.analysis_name) {
 
         // use the corresponding toolsheet given the study type
-        // TODO check analysis_name is in toolsheet
+        // TODO add the corresponding checks when using ch_tools
+        //   - check if analysis_name is in toolsheet
+        //   - replace the checks depending on params.differential_method, etc.
+        //   - check the ch_tools content with params through groovy
         if (params.toolsheet_custom) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {

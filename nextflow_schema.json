@@ -817,7 +817,7 @@
                     "type": "string",
                     "default": "null",
                     "description": "Functional analysis method",
-                    "enum": ["gsea", "gprofiler2"]
+                    "enum": ["null", "gsea", "gprofiler2"]
                 },
                 "gene_sets_files": {
                     "type": "string",
