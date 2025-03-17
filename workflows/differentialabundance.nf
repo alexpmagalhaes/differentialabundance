@@ -690,10 +690,6 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_functional_with_key)
         .map { [it[0], it.tail().flatten()] }  // [key, samples, features, matrices, contrasts, collated versions, logo, css, citations, differential outputs, functional analysis results]
 
-    // for the moment we just take the files, without the key
-    ch_report_input_files = ch_report_input_files
-        .map { it.tail().flatten() }
-
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
         matrix_file = file(params.matrix, checkIfExists:true)
@@ -745,24 +741,22 @@ workflow DIFFERENTIALABUNDANCE {
     } else if (params.study_type == 'maxquant'){
         params_pattern += "|proteus"
     }
-    params_pattern += "|" + params.differential_method
-    if (params.functional_method != null){
-        params_pattern += "|" + params.functional_method
-    }
-
-    params_pattern = ~/(${params_pattern}).*/
 
     ch_report_params = ch_report_input_files
-        .map{
-            params.findAll{ k,v -> k.matches(params_pattern) } +
-            [report_file_names, it.collect{ f -> f.name}].transpose().collectEntries()
+        .map{ meta, files ->
+            // update params scope and pattern with tools info
+            def params_with_tools = params + meta.args_differential + meta.args_functional
+            def pattern_with_tools = params_pattern + "|${meta.method_differential}" + (meta.method_functional ? "|${meta.method_functional}" : "")
+            // return params for report
+            params_with_tools.findAll{ k,v -> k.matches(~/(${pattern_with_tools}).*/) } +
+            [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
         }
 
     // Render the final report
     RMARKDOWNNOTEBOOK(
         ch_report_file,
         ch_report_params,
-        ch_report_input_files
+        ch_report_input_files.map{it.tail().flatten()}
     )
 
     // Make a report bundle comprising the markdown document and all necessary
@@ -770,7 +764,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     MAKE_REPORT_BUNDLE(
         RMARKDOWNNOTEBOOK.out.parameterised_notebook
-            .combine(ch_report_input_files)
+            .combine(ch_report_input_files.map{it.tail().flatten()})
             .map{[it[0], it[1..-1]]}
     )
 
