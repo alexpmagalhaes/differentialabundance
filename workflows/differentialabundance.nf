@@ -496,6 +496,11 @@ workflow DIFFERENTIALABUNDANCE {
     gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich
     gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich
 
+    ch_functional_results = gprofiler2_plot_html
+        .join(gprofiler2_all_enrich, remainder: true)
+        .join(gprofiler2_sub_enrich, remainder: true)
+        .mix(ch_gsea_results)
+
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
 
@@ -533,6 +538,49 @@ workflow DIFFERENTIALABUNDANCE {
             return [meta_mat, samples, features, matrices]
         }
 
+    // create a channel mapping the differential outputs with the matrices
+    // This is done based on the differential method and args used as common key.
+    // This channel is useful to plot the differential analysis results but also
+    // later on to parse the input for report generation. This tool-based parsing
+    // enables handling the report parameters coming from ch_tools. (it will also
+    // be useful to handle multi-tool logic in future implementations)
+
+    // first parse the key for differential outputs
+    ch_differential_with_key = ch_differential_results
+        .join(ch_differential_model, remainder: true)
+        .map { meta, results, model ->
+            [[method: meta.method_differential, args: meta.args_differential], meta, results, model]
+        }
+    // For rnaseq studies, each differential analysis result and model is paired with
+    // the corresponding normalised matrix. To do so we rely on the common tool-based key.
+    if (params.study_type == 'rnaseq') {
+        ch_differential_with_matrices = ch_differential_with_key
+            .combine(
+                ch_all_matrices.map { meta, samples, features, matrices ->
+                    [[method: meta.method_differential, args: meta.args_differential], samples, features, matrices]
+                }
+                ,by: 0
+            )
+    // for non rna-seq studies in which the normalised matrix come directly from
+    // VALIDATOR, we can simply combine it with the differential results and model.
+    // Note that by doing this combination, we update the meta so that it can match
+    // with the differential analysis tools (instead of validator)
+    } else {
+        ch_differential_with_matrices = ch_differential_with_key
+            .combine( ch_all_matrices.map{it.tail()} )
+    }
+    // use multimap, so that the different elements can be easily accessed both for
+    // plotting and for parsing the input for report generation
+    ch_differential_with_matrices = ch_differential_with_matrices
+        .multiMap { key, meta, results, model, samples, features, matrices ->
+            differential_results:
+            [meta, results]
+            model:
+            [meta, model]
+            matrices:
+            [meta, samples, features, matrices]
+        }
+
     // Exploratory analysis
 
     PLOT_EXPLORATORY(
@@ -543,8 +591,8 @@ workflow DIFFERENTIALABUNDANCE {
     // Plot differential analysis results
 
     PLOT_DIFFERENTIAL(
-        ch_differential_results,
-        ch_all_matrices.first()
+        ch_differential_with_matrices.differential_results,
+        ch_differential_with_matrices.matrices
     )
 
     // Gather software versions
@@ -580,30 +628,71 @@ workflow DIFFERENTIALABUNDANCE {
     ch_css_file = Channel.from(css_file)
     ch_citations_file = Channel.from(citations_file)
 
-    ch_report_input_files = ch_all_matrices
-        .map{ it.tail() }
-        .map{it.flatten()}
+    // create a list of input files for the report
+    // This list will be created considering the tools used in the pipeline.
+    // So all the files that were produced following a concrete set of tools
+    // will go together to the report.
+
+    // first parse the channel containing the matrices, with a tool-based key
+    ch_matrices_with_key = ch_differential_with_matrices.matrices
+        .map {
+            [[method: it[0].method_differential, args: it[0].args_differential], it.tail().flatten()]
+        }
+        .unique()   // [key, samples, features, matrices]
+
+    // we create the differential outputs channel with a tool-based key
+    // Note that since there are as many differential outputs as contrasts,
+    // we need to group them by the tools, so that all the files go together
+    // to the report
+    ch_differential_with_key = ch_differential_with_matrices.differential_results
+        .join(ch_differential_with_matrices.model)
+        .map { meta, results, model ->
+            [[method:meta.method_differential, args:meta.args_differential], results, model]
+        }
+        .groupTuple()
+        .map { [it[0], it.tail().flatten()] }   // [key, differential results files, differential models]
+
+    // we create the functional analysis outputs channel with a tool-based key
+    ch_functional_with_key = ch_functional_results
+        .map {[
+            [method_differential: it[0].method_differential, args_differential: it[0].args_differential, method_functional: it[0].method_functional, args_functional: it[0].args_functional],
+            it.tail().flatten()
+        ]}
+        .groupTuple()
+        .map { [it[0], it.tail().flatten()] }   // [key, functional analysis results files]
+
+    // we combine the matrices with the contrasts, collated versions, logo,
+    // css and citations files. We also combine with the differential outputs
+    // based on the tool-based key
+    ch_report_input_files = ch_matrices_with_key
         .combine(VALIDATOR.out.contrasts.map{it.tail()})
         .combine(ch_collated_versions)
         .combine(ch_logo_file)
         .combine(ch_css_file)
         .combine(ch_citations_file)
-        .combine(ch_differential_results.map{it[1]}.toList())
-        .combine(ch_differential_model.map{it[1]}.toList())
+        .join(ch_differential_with_key)  // [key, samples, features, matrices, contrasts, collated versions, logo, css, citations, differential outputs]
 
-    if (params.functional_method == 'gsea'){
-        ch_report_input_files = ch_report_input_files
-            .combine(ch_gsea_results
-                .map{it.tail()}.flatMap().toList()
-            )
-    }
+    // we update the key using ch_tools to define the combination of differential
+    // and functional tool outputs that go together
+    ch_report_input_files = ch_report_input_files
+        .cross(
+            ch_tools.map { tools_norm, tools_diff, tools_func ->
+                [[method:tools_diff.method, args:tools_diff.args], tools_func]
+            }
+        )
+        .map { files, tools -> [
+            [method_differential: tools[0].method, args_differential: tools[0].args, method_functional: tools[1].method, args_functional: tools[1].args],
+            files.tail()
+        ]}
 
-    if (params.functional_method == 'gprofiler2'){
-        ch_report_input_files = ch_report_input_files
-            .combine(gprofiler2_plot_html.map{it[1]}.flatMap().toList())
-            .combine(gprofiler2_all_enrich.map{it[1]}.flatMap().toList())
-            .combine(gprofiler2_sub_enrich.map{it[1]}.flatMap().toList())
-    }
+    // we add the functional analysis results to the list of files needed for report
+    ch_report_input_files = ch_report_input_files
+        .join(ch_functional_with_key)
+        .map { [it[0], it.tail().flatten()] }  // [key, samples, features, matrices, contrasts, collated versions, logo, css, citations, differential outputs, functional analysis results]
+
+    // for the moment we just take the files, without the key
+    ch_report_input_files = ch_report_input_files
+        .map { it.tail().flatten() }
 
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
