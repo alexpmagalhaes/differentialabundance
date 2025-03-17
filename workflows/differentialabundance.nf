@@ -687,7 +687,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // we add the functional analysis results to the list of files needed for report
     ch_report_input_files = ch_report_input_files
-        .join(ch_functional_with_key)
+        .join(ch_functional_with_key, remainder:true)
         .map { [it[0], it.tail().flatten()] }  // [key, samples, features, matrices, contrasts, collated versions, logo, css, citations, differential outputs, functional analysis results]
 
     // Run IMMUNEDECONV
