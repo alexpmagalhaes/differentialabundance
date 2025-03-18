@@ -80,8 +80,8 @@ workflow PIPELINE_INITIALISATION {
     //   - check the parsed ch_tools content vs params through groovy
     //   - check if analysis_name is in toolsheet
     //   - replace the checks depending on params.differential_method, etc.
-    // TODO: add tests when --analysis_name is specified
-    // TODO: properly input method and args to report
+    // TODO: use ch_tools args in modules.config
+    // TODO: add tests for the toolsheet
     // TODO: change report rmd to fit the new params (eg. functional_method)
 
     // TODO: for the moment we only run one analysis at a time, but in the future
@@ -158,12 +158,11 @@ workflow PIPELINE_INITIALISATION {
             ]
             // Functional analysis tool:
             // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
-            def tools_functional = (it[0].func_method) ? [
+            def tools_functional = [
                 method    : it[0].func_method,
                 args      : it[0].func_args,
-                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : 'norm'
-            ] : [:]
-
+                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : (it[0].func_method == 'gsea' ? 'norm' : null)
+            ]
             return [ tools_normalization, tools_differential, tools_functional ]
         }
 

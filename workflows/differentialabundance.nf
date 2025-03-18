@@ -649,8 +649,16 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_css_file)
         .combine(ch_citations_file)
         .join(ch_differential_with_key)
-        .join(ch_functional_with_key)
-        .map { [it[0], it.tail().flatten()] }
+        .join(ch_functional_with_key, remainder: true)
+        .map {
+            // functional analysis is optional. When it is not run, the joining with
+            // remainder: true will create a meta with null values for method_functional
+            // and args_functional, and null files. Here we update the meta to keep
+            // args_functional as a map to stay consistent. We also remove null values
+            // from files list.
+            def meta = (it[0].method_functional) ? it[0] : it[0] + [args_functional: [:]]
+            [it[0], it.tail().grep().flatten()]
+        }
 
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
