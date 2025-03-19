@@ -349,7 +349,6 @@ def methodsDescriptionText(mqc_methods_yaml) {
 * parseArgs("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
 */
 def parseArgs(String argsStr) {
-    println("argsStr: $argsStr")
     if (!argsStr) return [:]
     def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
     def pairs = tokens.collate(2)                // Group into pairs
@@ -365,7 +364,6 @@ def parseArgs(String argsStr) {
 * @return A map of params.
 */
 def getParams(String basePattern, String method) {
-    print("basePattern: $basePattern, method: $method")
     if (!method) return [:]
     pattern = "$basePattern|$method"
     return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
