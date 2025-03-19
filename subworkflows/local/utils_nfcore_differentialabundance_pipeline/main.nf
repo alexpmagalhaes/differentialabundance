@@ -76,17 +76,19 @@ workflow PIPELINE_INITIALISATION {
     // Use the toolsheet information if an analysis name is provided
     // otherwise ensamble the tools channel from the command line parameters
 
+    // TODO: for the moment we only run one analysis at a time, but in the future
+    // we would enable benchmark mode to run multiple analyses.
+
     // TODO: define proper checks
     //   - check the parsed ch_tools content vs params through groovy
     //   - check if analysis_name is in toolsheet
     //   - replace the checks depending on params.differential_method, etc.
-    // TODO: use ch_tools args in modules.config
     // TODO: add tests for the toolsheet
     // TODO: change report rmd to fit the new params (eg. functional_method)
     // TODO: update usage.md
-
-    // TODO: for the moment we only run one analysis at a time, but in the future
-    // we would enable benchmark mode to run multiple analyses.
+    // TODO: remove method-specific fixed params (eg. differential_file_suffix,
+    // differential_fc_column, etc.) from user params scope. Instead, define
+    // them here based on the chosen tool.
 
     if (params.analysis_name) {
 
@@ -98,7 +100,7 @@ workflow PIPELINE_INITIALISATION {
         } else if (params.study_type == 'affy_array') {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_affy, './assets/schema_tools.json'))
         } else if (params.study_type == 'geo_soft_file') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_geo, './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_soft, './assets/schema_tools.json'))
         } else if (params.study_type == 'maxquant') {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_maxquant, './assets/schema_tools.json'))
         } else {
