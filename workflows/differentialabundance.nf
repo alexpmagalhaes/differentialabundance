@@ -377,9 +377,11 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_tools)
         .map { meta, matrix, tools_norm, tools_diff, tools_func ->
             [
-                // we add extra arguments from toolsheet through meta
-                // these arguments can be used to overwrite the default
-                // params specified in modules.config
+                // as the differential subworkflow will automatically add
+                // method_differential into meta, here we only need to add
+                // args_differential into meta. In this way, the differential
+                // outputs should always have in the meta the method_differential
+                // and args_differential
                 meta + [args_differential: tools_diff.args],
                 matrix,
                 tools_diff.method,
@@ -466,8 +468,9 @@ workflow DIFFERENTIALABUNDANCE {
             }
         )
         .map { input, tools ->
-            // create a new meta that will contain method_differential, args_differential, and args_functional.
-            // args_functional can be used to overwrite the default params specified in modules.config
+            // the functional analysis subworkflow will automatically add method_functional into meta
+            // so here we only need to add args_functional into meta. In this way, the functional outputs
+            // will have in the meta: method_differential, args_differential, method_functional and args_functional
             def meta = input[1] + [args_functional: tools[1].args]
             [meta, input[2], tools[1].method]  // meta, input, functional analysis method
         }
@@ -476,8 +479,6 @@ workflow DIFFERENTIALABUNDANCE {
         .map { meta, input, method, gene_sets, background ->
             [meta, input, gene_sets, background, method]
         }
-
-    ch_functional_input.view{"ch_functional_input is $it"}
 
     // Run functional analysis
 
@@ -591,7 +592,7 @@ workflow DIFFERENTIALABUNDANCE {
     // multiple tools in parallel (future implementation). It is also needed
     // to transfer the args in ch_tools properly to the report module.
 
-    // first we create the matrices channel with a tool-based key
+    // first we parse the matrices channel with a tool-based key
     ch_matrices_with_key = ch_all_matrices
         .map { meta, samples, features, matrices ->
             [[method: meta.method_differential, args: meta.args_differential], samples, features, matrices]
@@ -606,7 +607,7 @@ workflow DIFFERENTIALABUNDANCE {
             [tools[1], files[1], files[2], files[3]]  // key, samples, features, [ matrices ]
         }
 
-    // we create the differential analysis outputs channel with a tool-based key
+    // we parse the differential analysis outputs channel with a tool-based key
     ch_differential_with_key = ch_differential_results
         .join(ch_differential_model, remainder: true)
         .map { meta, results, model ->
@@ -623,7 +624,7 @@ workflow DIFFERENTIALABUNDANCE {
             [tools[1], files[1], files[2]]  // key, [ results ], [ models ]
         }
 
-    // we create the functional analysis outputs channel with a tool-based key
+    // we parse the functional analysis outputs channel with a tool-based key
     ch_functional_with_key = ch_functional_results
         .map {[
             [method_differential: it[0].method_differential, args_differential: it[0].args_differential, method_functional: it[0].method_functional, args_functional: it[0].args_functional],
@@ -662,8 +663,6 @@ workflow DIFFERENTIALABUNDANCE {
             [it[0], it.tail().grep().flatten()]
         }
 
-    ch_report_input_files.view{"ch_report_input_files is $it"}
-
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
         matrix_file = file(params.matrix, checkIfExists:true)
@@ -679,7 +678,7 @@ workflow DIFFERENTIALABUNDANCE {
 
         // Make (and optionally deploy) the shinyngs app
 
-        // parse matrices and differential results considering to the tool-based key
+        // parse matrices and differential results considering the tool-based key
         ch_matrices_with_differential = ch_matrices_with_key
             .join(ch_differential_with_key)
             .multiMap { key, samples, features, matrices, results, models ->
@@ -703,8 +702,6 @@ workflow DIFFERENTIALABUNDANCE {
             .map { contrasts, meta, results ->
                 [meta, contrasts, results]
             }
-
-        ch_app_differential.view{"ch_app_differential is $it"}
 
         SHINYNGS_APP(
             ch_matrices_with_differential.matrices, // meta, samples, features, [  matrices ]

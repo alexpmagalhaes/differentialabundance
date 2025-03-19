@@ -92,13 +92,11 @@ workflow PIPELINE_INITIALISATION {
         if (params.toolsheet_custom) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_rnaseq, './assets/schema_tools.json'))
-        } else if (params.study_type == 'affy_array') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_affy, './assets/schema_tools.json'))
-        } else if (params.study_type == 'geo_soft_file') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_soft, './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_rnaseq.csv', './assets/schema_tools.json'))
+        } else if (params.study_type in ['affy_array', 'geo_soft_file']) {
+            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_affy.csv', './assets/schema_tools.json'))
         } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_maxquant, './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_maxquant.csv', './assets/schema_tools.json'))
         } else {
             error("Please make sure to mention the correct study_type")
         }
@@ -153,12 +151,8 @@ workflow PIPELINE_INITIALISATION {
             def tools_differential = [
                 method        : it[0].diff_method,
                 args          : it[0].diff_args,
-                fc_threshold  : ('differential_min_fold_change' in it[0].diff_args) ?
-                    it[0].diff_args.differential_min_fold_change :
-                    params.differential_min_fold_change,
-                stat_threshold: ('differential_max_qval' in it[0].diff_args) ?
-                    it[0].diff_args.differential_max_qval :
-                    params.differential_max_qval
+                fc_threshold  : it[0].diff_args.differential_min_fold_change,
+                stat_threshold: it[0].diff_args.differential_max_qval
             ]
             // Functional analysis tool:
             // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
@@ -169,8 +163,6 @@ workflow PIPELINE_INITIALISATION {
             ]
             return [ tools_normalization, tools_differential, tools_functional ]
         }
-
-        ch_tools.view{"ch_tools: $it"}
 
     emit:
     tools       = ch_tools

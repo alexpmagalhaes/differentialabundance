@@ -232,7 +232,7 @@ Each row defines a combination of differential analysis tool and functional anal
 
 To run a given combination of tools, you can use the `--analysis_name` parameter.
 
-Optionally, one can also provide its own toolsheet file using the `--toolsheet_custom` flag. This file can be in TSV or YAML format.
+Optionally, one can also provide its own toolsheet file using the `--toolsheet_custom` flag. This file can be in CSV, TSV or YAML format.
 
 ## Working with the output R markdown file
 

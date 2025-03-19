@@ -438,27 +438,12 @@
             "properties": {
                 "analysis_name": {
                     "type": "string",
-                    "description": "Name of the analysis to run"
-                },
-                "toolsheet_rnaseq": {
-                    "type": "string",
-                    "default": "${projectDir}/assets/toolsheet_rnaseq.csv"
+                    "description": "Name of the analysis (as specified in toolsheet) to run"
                 },
                 "toolsheet_custom": {
                     "type": "string",
+                    "description": "Path to a custom toolsheet file",
                     "default": "null"
-                },
-                "toolsheet_affy": {
-                    "type": "string",
-                    "default": "${projectDir}/assets/toolsheet_affy.csv"
-                },
-                "toolsheet_soft": {
-                    "type": "string",
-                    "default": "${projectDir}/assets/toolsheet_soft.csv"
-                },
-                "toolsheet_maxquant": {
-                    "type": "string",
-                    "default": "${projectDir}/assets/toolsheet_maxquant.csv"
                 }
             }
         },
