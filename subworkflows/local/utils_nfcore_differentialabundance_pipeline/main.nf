@@ -92,11 +92,11 @@ workflow PIPELINE_INITIALISATION {
         if (params.toolsheet_custom) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_rnaseq.csv', './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", './assets/schema_tools.json'))
         } else if (params.study_type in ['affy_array', 'geo_soft_file']) {
-            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_affy.csv', './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_affy.csv", './assets/schema_tools.json'))
         } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList('./assets/toolsheet_maxquant.csv', './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", './assets/schema_tools.json'))
         } else {
             error("Please make sure to mention the correct study_type")
         }
