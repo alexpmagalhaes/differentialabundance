@@ -39,8 +39,9 @@ nextflow_pipeline {
 
         when {
             params {
-                outdir        = "$outputDir"
-                analysis_name = "limma"
+                outdir              = "$outputDir"
+                analysis_name       = "limma"
+                differential_method = null
             }
         }
 

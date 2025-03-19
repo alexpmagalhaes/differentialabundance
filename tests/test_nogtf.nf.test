@@ -39,8 +39,9 @@ nextflow_pipeline {
 
         when {
             params {
-                outdir        = "$outputDir"
-                analysis_name = "deseq2"
+                outdir              = "$outputDir"
+                analysis_name       = "deseq2"
+                differential_method = null
             }
         }
 
