@@ -601,7 +601,7 @@ workflow DIFFERENTIALABUNDANCE {
             ]}
         )
         .map { files, tools ->
-            [tools[1], files.tail().flatten()]  // [key, files]
+            [tools[1], files[1], files[2], files[3]]  // key, samples, features, [ matrices ]
         }
 
     // we create the differential analysis outputs channel with a tool-based key
@@ -611,7 +611,6 @@ workflow DIFFERENTIALABUNDANCE {
             [[method: meta.method_differential, args: meta.args_differential], results, model]
         }
         .groupTuple()   // group all the files produced for different contrasts together
-        .map { [it[0], it.tail().flatten()] }
         .cross (
             ch_tools.map { tools_norm, tools_diff, tools_func -> [
                 [method: tools_diff.method, args: tools_diff.args],
@@ -619,7 +618,7 @@ workflow DIFFERENTIALABUNDANCE {
             ]}
         )
         .map { files, tools ->
-            [tools[1], files.tail().flatten()]   // [key, files]
+            [tools[1], files[1], files[2]]  // key, [ results ], [ models ]
         }
 
     // we create the functional analysis outputs channel with a tool-based key
@@ -629,7 +628,6 @@ workflow DIFFERENTIALABUNDANCE {
             it.tail()
         ]}
         .groupTuple()   // group all the files produced for different contrasts together
-        .map { [it[0], it.tail().flatten()] }
         .cross (
             ch_tools.map { tools_norm, tools_diff, tools_func -> [
                 // note that the normalized matrix is used to run gsea, whereas differential results are used to run gprofiler2
@@ -638,7 +636,7 @@ workflow DIFFERENTIALABUNDANCE {
             ]}
         )
         .map { files, tools ->
-            [tools[1], files.tail().flatten()]    // [key, files]
+            [tools[1], files.tail()]    // key, [ files ]
         }
 
     // we combine the channels defined above with the contrasts, collated versions,
@@ -662,6 +660,8 @@ workflow DIFFERENTIALABUNDANCE {
             [it[0], it.tail().grep().flatten()]
         }
 
+    ch_report_input_files.view{"ch_report_input_files is $it"}
+
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
         matrix_file = file(params.matrix, checkIfExists:true)
@@ -677,26 +677,35 @@ workflow DIFFERENTIALABUNDANCE {
 
         // Make (and optionally deploy) the shinyngs app
 
+        // parse matrices and differential results considering to the tool-based key
+        ch_matrices_with_differential = ch_matrices_with_key
+            .join(ch_differential_with_key)
+            .multiMap { key, samples, features, matrices, results, models ->
+                def meta = exp_meta + key
+                matrices:
+                [meta, samples, features, matrices]   // meta, samples, features, [  matrices ]
+                results:
+                [meta, results]                       // meta, [ results ]
+            }
+
         // Make a new contrasts file from the differential metas to guarantee the
         // same order as the differential results
-
-        // TODO adapt this to consider the tool-based key
-
         def contrast_columns = ['variable','reference','target','blocking']
         ch_app_differential = ch_differential_results.first().map{contrast_columns.join(',')}
             .concat(
                 ch_differential_results.map{it[0].subMap(contrast_columns).values().join(',')}
             )
             .collectFile(name: 'contrasts.csv', newLine: true, sort: false)
-            .map{
-                tuple(exp_meta, it)
+            // combine with differential results
+            .combine (ch_matrices_with_differential.results)
+            .map { contrasts, meta, results ->
+                [meta, contrasts, results]
             }
-            .combine(ch_differential_results.map{it[1]}.collect().map{[it]})
 
         ch_app_differential.view{"ch_app_differential is $it"}
 
         SHINYNGS_APP(
-            ch_all_matrices,     // meta, samples, features, [  matrices ]
+            ch_matrices_with_differential.matrices, // meta, samples, features, [  matrices ]
             ch_app_differential, // meta, contrasts, [differential results]
             params.exploratory_assay_names.split(',').findIndexOf { it == params.exploratory_final_assay } + 1
         )
