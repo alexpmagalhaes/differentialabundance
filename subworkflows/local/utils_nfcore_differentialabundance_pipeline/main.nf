@@ -82,8 +82,6 @@ workflow PIPELINE_INITIALISATION {
     // TODO: define proper checks
     //   - check if analysis_name is in toolsheet
     //   - replace the checks depending on params.differential_method, etc.
-    // TODO: change report rmd to fit the new params (eg. functional_method)
-    // TODO: update usage.md
     // TODO: remove method-specific fixed params (eg. differential_file_suffix,
     // differential_fc_column, etc.) from user params scope. Instead, define
     // them here based on the chosen tool.
