@@ -475,6 +475,8 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, input, gene_sets, background, method]
         }
 
+    ch_functional_input.view{"ch_functional_input is $it"}
+
     // Run functional analysis
 
     DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
@@ -677,6 +679,8 @@ workflow DIFFERENTIALABUNDANCE {
 
         // Make a new contrasts file from the differential metas to guarantee the
         // same order as the differential results
+
+        // TODO adapt this to consider the tool-based key
 
         def contrast_columns = ['variable','reference','target','blocking']
         ch_app_differential = ch_differential_results.first().map{contrast_columns.join(',')}
