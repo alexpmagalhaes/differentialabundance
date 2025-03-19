@@ -83,6 +83,7 @@ workflow PIPELINE_INITIALISATION {
     // TODO: use ch_tools args in modules.config
     // TODO: add tests for the toolsheet
     // TODO: change report rmd to fit the new params (eg. functional_method)
+    // TODO: update usage.md
 
     // TODO: for the moment we only run one analysis at a time, but in the future
     // we would enable benchmark mode to run multiple analyses.
@@ -117,9 +118,13 @@ workflow PIPELINE_INITIALISATION {
                 def meta = [
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
-                    diff_args    : (it[0].diff_args == []) ? [:] : parseParams(it[0].diff_args),
+                    diff_args    : (it[0].diff_args == []) ?
+                        getParams('differential', it[0].diff_method) :
+                        getParams('differential', it[0].diff_method) + parseParams(it[0].diff_args),
                     func_method  : (it[0].func_method == []) ? null : it[0].func_method,
-                    func_args    : (it[0].func_args == []) ? [:] : parseParams(it[0].func_args)
+                    func_args    : (it[0].func_args == []) ?
+                        getParams('functional', it[0].func_method) :
+                        getParams('functional', it[0].func_method) + parseParams(it[0].func_args)
                 ]
                 return [meta]
             }
@@ -128,9 +133,9 @@ workflow PIPELINE_INITIALISATION {
         // if so, we use default args, and hence the ch_tools args are empty
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
-            diff_args  : [:],
+            diff_args  : getParams('differential', params.differential_method),
             func_method: params.functional_method,
-            func_args  : [:]
+            func_args  : getParams('functional', params.functional_method)
         ]])
     }
 
@@ -165,6 +170,8 @@ workflow PIPELINE_INITIALISATION {
             ]
             return [ tools_normalization, tools_differential, tools_functional ]
         }
+
+        ch_tools.view{"ch_tools: $it"}
 
     emit:
     tools       = ch_tools
@@ -346,4 +353,15 @@ def parseParams(String paramStr) {
     return pairs.collectEntries {
         [(it[0].replaceAll('^-+', '')): it[1]]   // Remove leading dashes
     }
+}
+
+/**
+* Get params from the pipeline params scope.
+* @param paramsType The base pattern to match the params against.
+* @param method The method to get the params for.
+* @return A map of params.
+*/
+def getParams(String basePattern, String method) {
+    pattern = "$basePattern|$method"
+    return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
 }

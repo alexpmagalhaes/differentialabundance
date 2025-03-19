@@ -678,15 +678,18 @@ workflow DIFFERENTIALABUNDANCE {
         // Make a new contrasts file from the differential metas to guarantee the
         // same order as the differential results
 
-        ch_app_differential = ch_differential_results.first().map{it[0].keySet().tail().join(',')}
+        def contrast_columns = ['variable','reference','target','blocking']
+        ch_app_differential = ch_differential_results.first().map{contrast_columns.join(',')}
             .concat(
-                ch_differential_results.map{it[0].values().tail().join(',')}
+                ch_differential_results.map{it[0].subMap(contrast_columns).values().join(',')}
             )
             .collectFile(name: 'contrasts.csv', newLine: true, sort: false)
             .map{
                 tuple(exp_meta, it)
             }
             .combine(ch_differential_results.map{it[1]}.collect().map{[it]})
+
+        ch_app_differential.view{"ch_app_differential is $it"}
 
         SHINYNGS_APP(
             ch_all_matrices,     // meta, samples, features, [  matrices ]
