@@ -58,15 +58,17 @@ if (params.study_type == 'affy_array') {
 if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
 if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
-ch_gene_sets = Channel.of([[]])
-if (params.functional_method != null) {
-    if (params.gene_sets_files) {
-        gene_sets_files = params.gene_sets_files.split(",")
-        ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-        if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
-            error("gprofiler2 can currently only work with a single gene set file")
-        }
-    } else if (params.functional_method == 'gsea') {
+if (params.gene_sets_files) {
+    gene_sets_files = params.gene_sets_files.split(",")
+    ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
+    if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
+        error("gprofiler2 can currently only work with a single gene set file")
+    }
+} else {
+    ch_gene_sets = Channel.of([[]])
+
+    // TODO these checks should be done considering ch_tools instead
+    if (params.functional_method == 'gsea') {
         error("GSEA activated but gene set file not specified!")
     } else if (params.functional_method == 'gprofiler2') {
         if (!params.gprofiler2_token && !params.gprofiler2_organism) {
@@ -732,7 +734,7 @@ workflow DIFFERENTIALABUNDANCE {
         .map{ meta, files ->
             // update params scope and pattern with tools info
             def params_with_tools = params + meta.args_differential + meta.args_functional
-            def pattern_with_tools = params_pattern + "|${meta.method_differential}" + (meta.method_functional ? "|${meta.method_functional}" : "")
+            def pattern_with_tools = params_pattern + "|${meta.method_differential}" + (meta.method_functional ? "|functional|${meta.method_functional}" : "")
             // return params for report
             params_with_tools.findAll{ k,v -> k.matches(~/(${pattern_with_tools}).*/) } +
             [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()

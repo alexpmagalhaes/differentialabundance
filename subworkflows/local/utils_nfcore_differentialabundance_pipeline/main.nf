@@ -80,10 +80,8 @@ workflow PIPELINE_INITIALISATION {
     // we would enable benchmark mode to run multiple analyses.
 
     // TODO: define proper checks
-    //   - check the parsed ch_tools content vs params through groovy
     //   - check if analysis_name is in toolsheet
     //   - replace the checks depending on params.differential_method, etc.
-    // TODO: add tests for the toolsheet
     // TODO: change report rmd to fit the new params (eg. functional_method)
     // TODO: update usage.md
     // TODO: remove method-specific fixed params (eg. differential_file_suffix,
@@ -121,12 +119,12 @@ workflow PIPELINE_INITIALISATION {
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
                     diff_args    : (it[0].diff_args) ?
-                        getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) :
-                        getParams('differential', it[0].diff_method),
+                        getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method] :
+                        getParams('differential', it[0].diff_method) + [differential_method: it[0].diff_method],
                     func_method  : it[0].func_method,
                     func_args    : (it[0].func_args) ?
-                        getParams('functional', it[0].func_method) + parseParams(it[0].func_args) :
-                        getParams('functional', it[0].func_method)
+                        getParams('functional', it[0].func_method) + parseArgs(it[0].func_args) + [functional_method: it[0].func_method] :
+                        getParams('functional', it[0].func_method) + [functional_method: it[0].func_method]
                 ]
                 return [meta]
             }
@@ -348,9 +346,10 @@ def methodsDescriptionText(mqc_methods_yaml) {
 * @param argsStr The string of arguments to parse.
 * @return A map of parameters.
 * @example
-* parseParams("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
+* parseArgs("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
 */
 def parseArgs(String argsStr) {
+    println("argsStr: $argsStr")
     if (!argsStr) return [:]
     def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
     def pairs = tokens.collate(2)                // Group into pairs
@@ -366,6 +365,7 @@ def parseArgs(String argsStr) {
 * @return A map of params.
 */
 def getParams(String basePattern, String method) {
+    print("basePattern: $basePattern, method: $method")
     if (!method) return [:]
     pattern = "$basePattern|$method"
     return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
