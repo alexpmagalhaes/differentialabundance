@@ -108,31 +108,31 @@ workflow PIPELINE_INITIALISATION {
         }
 
         // create a channel with the toolsheet meta information
+        // Note that here we create a meta with the tool method info, and also
+        // tool-specific arguments. We use parseArgs to parse the args from
+        // toolsheet, and getParams to get the original args from the pipeline
+        // params scope. In this way, when a parameter is defined in toolsheet,
+        // it will have the highest priority, and overwrite the original params.
+        // These args can be accessed by the module through modules.config.
         ch_tools_meta = ch_toolsheet
-            // we use the analysis_name to filter the toolsheet
             .filter{ it[0].analysis_name == params.analysis_name }
-            // we map the meta information properly
-            // Note that the args are parsed into a groovy map using parseParams.
-            // In this way, we can use them through modules.config to overwrite
-            // the default params. This is done as the params coming from the
-            // toolsheet should be highest priority, when they are provided
             .map { it ->
                 def meta = [
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
-                    diff_args    : (it[0].diff_args == []) ?
-                        getParams('differential', it[0].diff_method) :
-                        getParams('differential', it[0].diff_method) + parseParams(it[0].diff_args),
-                    func_method  : (it[0].func_method == []) ? null : it[0].func_method,
-                    func_args    : (it[0].func_args == []) ?
-                        getParams('functional', it[0].func_method) :
-                        getParams('functional', it[0].func_method) + parseParams(it[0].func_args)
+                    diff_args    : (it[0].diff_args) ?
+                        getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) :
+                        getParams('differential', it[0].diff_method),
+                    func_method  : it[0].func_method,
+                    func_args    : (it[0].func_args) ?
+                        getParams('functional', it[0].func_method) + parseParams(it[0].func_args) :
+                        getParams('functional', it[0].func_method)
                 ]
                 return [meta]
             }
     } else {
-        // create a channel with a meta information from the command line parameters
-        // if so, we use default args, and hence the ch_tools args are empty
+        // create a channel with a meta tool-specific info based on the pipeline
+        // params scope.
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
             diff_args  : getParams('differential', params.differential_method),
@@ -146,7 +146,8 @@ workflow PIPELINE_INITIALISATION {
         .map{ it ->
             // Normalization tool:
             // in rnaseq, we use the data normalized by the differential tool
-            // in non-rnaseq studies, like for example array, we use the data normalized from the VALIDATOR module
+            // in non-rnaseq studies, like for example array, we use the data
+            // normalized from the VALIDATOR module
             def tools_normalization = (params.study_type == 'rnaseq') ?
                 [method: it[0].diff_method, args: it[0].diff_args] :
                 [method: 'validator', args: [:]]
@@ -343,14 +344,15 @@ def methodsDescriptionText(mqc_methods_yaml) {
 }
 
 /**
-* Parse a string of parameters into a map.
-* @param paramStr The string of parameters to parse.
+* Parse a string of arguments into a map.
+* @param argsStr The string of arguments to parse.
 * @return A map of parameters.
 * @example
-* parseParams("--param1 aa --param2 bb --param4 cc") => [param1: aa, param2: bb, param4: cc]
+* parseParams("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
 */
-def parseParams(String paramStr) {
-    def tokens = paramStr.split().findAll { it } // Split and remove empty strings
+def parseArgs(String argsStr) {
+    if (!argsStr) return [:]
+    def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
     def pairs = tokens.collate(2)                // Group into pairs
     return pairs.collectEntries {
         [(it[0].replaceAll('^-+', '')): it[1]]   // Remove leading dashes
@@ -364,10 +366,7 @@ def parseParams(String paramStr) {
 * @return A map of params.
 */
 def getParams(String basePattern, String method) {
-    if (method) {
-        pattern = "$basePattern|$method"
-        return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
-    } else {
-        return [:]
-    }
+    if (!method) return [:]
+    pattern = "$basePattern|$method"
+    return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
 }
