@@ -364,6 +364,10 @@ def parseParams(String paramStr) {
 * @return A map of params.
 */
 def getParams(String basePattern, String method) {
-    pattern = "$basePattern|$method"
-    return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
+    if (method) {
+        pattern = "$basePattern|$method"
+        return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
+    } else {
+        return [:]
+    }
 }
