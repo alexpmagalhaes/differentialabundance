@@ -92,11 +92,11 @@ workflow PIPELINE_INITIALISATION {
         if (params.toolsheet_custom) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", "${projectDir}/assets/schema_tools.json"))
         } else if (params.study_type in ['affy_array', 'geo_soft_file']) {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_affy.csv", './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_affy.csv", "${projectDir}/assets/schema_tools.json"))
         } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", './assets/schema_tools.json'))
+            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", "${projectDir}/assets/schema_tools.json"))
         } else {
             error("Please make sure to mention the correct study_type")
         }
@@ -114,13 +114,9 @@ workflow PIPELINE_INITIALISATION {
                 def meta = [
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
-                    diff_args    : (it[0].diff_args) ?
-                        getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method] :
-                        getParams('differential', it[0].diff_method) + [differential_method: it[0].diff_method],
+                    diff_args    : getParams("differential|${it[0].diff_method}") + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method]
                     func_method  : it[0].func_method,
-                    func_args    : (it[0].func_args) ?
-                        getParams('functional', it[0].func_method) + parseArgs(it[0].func_args) + [functional_method: it[0].func_method] :
-                        getParams('functional', it[0].func_method) + [functional_method: it[0].func_method]
+                    func_args    : getParams("functional|${it[0].func_method}") + parseArgs(it[0].func_args) + [functional_method: it[0].func_method]
                 ]
                 return [meta]
             }
@@ -129,22 +125,24 @@ workflow PIPELINE_INITIALISATION {
         // params scope.
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
-            diff_args  : getParams('differential', params.differential_method),
+            diff_args  : getParams("differential|${it[0].diff_method}"),
             func_method: params.functional_method,
-            func_args  : getParams('functional', params.functional_method)
+            func_args  : getParams("functional|${it[0].func_method}")
         ]])
     }
 
     // parse channel tools into a proper structure for downstream processes
+    // This channel will dictate the differential and functional tools to be
+    // run through the pipeline
     ch_tools = ch_tools_meta
         .map{ it ->
             // Normalization tool:
             // in rnaseq, we use the data normalized by the differential tool
             // in non-rnaseq studies, like for example array, we use the data
-            // normalized from the VALIDATOR module
+            // normalized from the VALIDATOR module.
             def tools_normalization = (params.study_type == 'rnaseq') ?
                 [method: it[0].diff_method, args: it[0].diff_args] :
-                [method: 'validator', args: [:]]
+                [method: 'validator', args: [:]]  // as it is not a differential module, we set args to empty
             // Differential analysis tool:
             // Also set fold change and q-value thresholds, required as input for
             // the differential abundance analysis subworkflow
@@ -155,7 +153,7 @@ workflow PIPELINE_INITIALISATION {
                 stat_threshold: it[0].diff_args.differential_max_qval
             ]
             // Functional analysis tool:
-            // Use gprofiler2 (filtered input) if enabled, else gsea (normalized input) if enabled.
+            // use filtered differential results for gprofiler2, and normalized matrix for gsea
             def tools_functional = [
                 method    : it[0].func_method,
                 args      : it[0].func_args,
@@ -339,7 +337,7 @@ def methodsDescriptionText(mqc_methods_yaml) {
 * parseArgs("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
 */
 def parseArgs(String argsStr) {
-    if (!argsStr) return [:]
+    if (!argsStr) return [:]                     // if null return empty
     def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
     def pairs = tokens.collate(2)                // Group into pairs
     return pairs.collectEntries {
@@ -349,12 +347,10 @@ def parseArgs(String argsStr) {
 
 /**
 * Get params from the pipeline params scope.
-* @param paramsType The base pattern to match the params against.
-* @param method The method to get the params for.
+* @param pattern The pattern to match.
 * @return A map of params.
 */
-def getParams(String basePattern, String method) {
+def getParams(String pattern) {
     if (!method) return [:]
-    pattern = "$basePattern|$method"
     return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
 }
