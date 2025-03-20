@@ -114,9 +114,9 @@ workflow PIPELINE_INITIALISATION {
                 def meta = [
                     analysis_name: it[0].analysis_name,
                     diff_method  : it[0].diff_method,
-                    diff_args    : getParams("differential|${it[0].diff_method}") + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method]
+                    diff_args    : getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method],
                     func_method  : it[0].func_method,
-                    func_args    : getParams("functional|${it[0].func_method}") + parseArgs(it[0].func_args) + [functional_method: it[0].func_method]
+                    func_args    : getParams('functional', it[0].func_method) + parseArgs(it[0].func_args) + [functional_method: it[0].func_method]
                 ]
                 return [meta]
             }
@@ -125,9 +125,9 @@ workflow PIPELINE_INITIALISATION {
         // params scope.
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
-            diff_args  : getParams("differential|${it[0].diff_method}"),
+            diff_args  : getParams('differential', params.differential_method),
             func_method: params.functional_method,
-            func_args  : getParams("functional|${it[0].func_method}")
+            func_args  : getParams('functional', params.functional_method)
         ]])
     }
 
@@ -350,7 +350,8 @@ def parseArgs(String argsStr) {
 * @param pattern The pattern to match.
 * @return A map of params.
 */
-def getParams(String pattern) {
+def getParams(String basePattern, String method) {
     if (!method) return [:]
+    pattern = "$basePattern|$method"
     return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
 }
