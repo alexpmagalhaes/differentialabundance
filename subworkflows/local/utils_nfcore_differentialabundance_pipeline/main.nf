@@ -98,7 +98,7 @@ workflow PIPELINE_INITIALISATION {
         } else if (params.study_type == 'maxquant') {
             ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", "${projectDir}/assets/schema_tools.json"))
         } else {
-            error("Please make sure to mention the correct study_type")
+            error("Please make sure to mention the correct study_type. The available options are: 'rnaseq', 'affy_array', 'geo_soft_file' or 'maxquant'")
         }
 
         // create a channel with the toolsheet meta information
