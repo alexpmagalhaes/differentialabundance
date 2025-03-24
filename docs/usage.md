@@ -228,7 +228,10 @@ By default, if you don't provide features, for non-array data the workflow will 
 
 We provide a set of toolsheet files that define the tools that make sense to run for a given study type. These files are in the `assets` directory of the pipeline.
 
-Each row defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments. Note that the arguments defined in the toolsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files.
+Each row defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments. 
+
+> [!WARNING]
+> Note that the arguments defined in the toolsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files.
 
 To run a given combination of tools, you can use the `--analysis_name` parameter.
 
