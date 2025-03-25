@@ -74,7 +74,7 @@ workflow PIPELINE_INITIALISATION {
 
     // Define tool settings
     // Use the toolsheet information if an analysis name is provided
-    // otherwise ensamble the tools channel from the command line parameters
+    // otherwise ensamble the tools channel from the pipeline params scope
 
     // TODO: for the moment we only run one analysis at a time, but in the future
     // we would enable benchmark mode to run multiple analyses.
@@ -88,7 +88,8 @@ workflow PIPELINE_INITIALISATION {
 
     if (params.analysis_name) {
 
-        // use the corresponding toolsheet given the study type
+        // use the user provided toolsheet, if available
+        // otherwise use the default toolsheet based on the study type
         if (params.toolsheet) {
             ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
@@ -101,13 +102,17 @@ workflow PIPELINE_INITIALISATION {
             error("Please make sure to mention the correct study_type. The available options are: 'rnaseq', 'affy_array', 'geo_soft_file' or 'maxquant'")
         }
 
-        // create a channel with the toolsheet meta information
-        // Note that here we create a meta with the tool method info, and also
-        // tool-specific arguments. We use parseArgs to parse the args from
-        // toolsheet, and getParams to get the original args from the pipeline
-        // params scope. In this way, when a parameter is defined in toolsheet,
-        // it will have the highest priority, and overwrite the original params.
-        // These args can be accessed by the module through modules.config.
+        // create a channel with the toolsheet information
+        // Note that here we create a channel with the tool method info, and also tool-specific arguments.
+        // The tool-specific arguments are obtained considering both the pipeline params scope and the
+        // toolsheet args. In concrete, the getParams function will return the params that match a given
+        // pattern. In this case is 'differential|<diff_method>' or 'functional|<func_method>'. The
+        // parseArgs function will parse the args defined in the toolsheet. These toolsheet arguments will
+        // overwrite the ones parsed by getParams. In this way, when a parameter is defined in toolsheet,
+        // it will have the highest priority, and overwrite the original params. For consistency, we also
+        // overwrite the args differential_method and functional_method with the ones defined in the
+        // toolsheet. The parsed args can be accessed by the modules through modules.config. Both getParams
+        // and parseArgs functions are defined at the bottom of this file.
         ch_tools_meta = ch_toolsheet
             .filter{ it[0].analysis_name == params.analysis_name }
             .map { it ->
@@ -121,8 +126,10 @@ workflow PIPELINE_INITIALISATION {
                 return [meta]
             }
     } else {
-        // create a channel with a meta tool-specific info based on the pipeline
-        // params scope.
+        // create a channel with the tool-specific info based on the pipeline
+        // params scope. This is useful when the user does not run the pipeline
+        // relying on the toolsheet. For consistency, the tool-specific params
+        // are also parsed through the getParams function.
         ch_tools_meta = Channel.of([[
             diff_method: params.differential_method,
             diff_args  : getParams('differential', params.differential_method),
@@ -349,6 +356,8 @@ def parseArgs(String argsStr) {
 * Get params from the pipeline params scope.
 * @param pattern The pattern to match.
 * @return A map of params.
+* @example
+* getParams('differential|limma') => [differential_method: limma, limma_param1: value1, limma_param2: value2, ...]
 */
 def getParams(String basePattern, String method) {
     if (!method) return [:]
