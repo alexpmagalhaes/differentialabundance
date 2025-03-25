@@ -89,8 +89,8 @@ workflow PIPELINE_INITIALISATION {
     if (params.analysis_name) {
 
         // use the corresponding toolsheet given the study type
-        if (params.toolsheet_custom) {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
+        if (params.toolsheet) {
+            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet, './assets/schema_tools.json'))
         } else if (params.study_type == 'rnaseq') {
             ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", "${projectDir}/assets/schema_tools.json"))
         } else if (params.study_type in ['affy_array', 'geo_soft_file']) {

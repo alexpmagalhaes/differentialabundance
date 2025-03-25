@@ -440,7 +440,7 @@
                     "type": "string",
                     "description": "Name of the analysis (as specified in toolsheet) to run"
                 },
-                "toolsheet_custom": {
+                "toolsheet": {
                     "type": "string",
                     "description": "Path to a custom toolsheet file",
                     "default": "null"
