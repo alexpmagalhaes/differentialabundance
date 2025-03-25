@@ -644,7 +644,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     // we combine the channels defined above with the contrasts, collated versions,
     // logo, css and citations files. We also combine with the differential outputs
-    // using the tool-based key
+    // using the tool-based key:
+    // [method_differential, args_differential, method_functional, args_functional]
     ch_report_input_files = ch_matrices_with_key
         .combine(VALIDATOR.out.contrasts.map{it.tail()})
         .combine(ch_collated_versions)
@@ -654,13 +655,14 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_differential_with_key)
         .join(ch_functional_with_key, remainder: true)
         .map {
-            // functional analysis is optional. When it is not run, the joining with
-            // remainder: true will create a meta with null values for method_functional
-            // and args_functional, and null files. Here we update the meta to keep
-            // args_functional as a map to stay consistent. We also remove null values
-            // from files list.
+            // functional analysis is optional. When it is not run, joining an empty
+            // ch_functional_with_key channel with remainder:true will result in a
+            // channel with a meta containing null values for method_functional and
+            // args_functional, and null files. Since args_functional should be a
+            // map, here we update meta to keep args_functional as a map [:]. We
+            // also remove the null files using grep().
             def meta = (it[0].method_functional) ? it[0] : it[0] + [args_functional: [:]]
-            [it[0], it.tail().grep().flatten()]
+            [meta, it.tail().grep().flatten()]    // meta, files
         }
 
     // Run IMMUNEDECONV
@@ -719,7 +721,6 @@ workflow DIFFERENTIALABUNDANCE {
         [ 'contrasts_file', 'versions_file', 'logo', 'css', 'citations' ]
 
     // Condition params reported on study type
-
     def params_pattern = "report|gene_sets|study|observations|features|filtering|exploratory|differential"
     if (params.study_type == 'affy_array' || params.study_type == 'geo_soft_file'){
         params_pattern += "|affy"
@@ -727,17 +728,29 @@ workflow DIFFERENTIALABUNDANCE {
         params_pattern += "|proteus"
     }
 
+    // prepare the final report params
     ch_report_params = ch_report_input_files
         .map{ meta, files ->
-            // update params scope and pattern with tools info
+            // the params scope don't necessarily include the args parsed from toolsheet.
+            // Hence we need to consider both params and the args parsed from toolsheet
+            // (args_differential and args_functional) to create the final report params.
             def params_with_tools = params + meta.args_differential + meta.args_functional
-            def pattern_with_tools = params_pattern + "|${meta.method_differential}" + (meta.method_functional ? "|functional|${meta.method_functional}" : "")
-            // return params for report
+
+            // update the pattern with tools-specific info
+            def pattern_with_tools = params_pattern +
+                "|${meta.method_differential}" +
+                (meta.method_functional ? "|functional|${meta.method_functional}" : "")
+
+            // Extract and return parameters for the report by creating a map where
+            // the keys are parameter names matching the pattern and the values are
+            // their corresponding parameter values. And add this map to the report
+            // files map.
             params_with_tools.findAll{ k,v -> k.matches(~/(${pattern_with_tools}).*/) } +
             [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
         }
 
     // Render the final report
+
     RMARKDOWNNOTEBOOK(
         ch_report_file,
         ch_report_params,
