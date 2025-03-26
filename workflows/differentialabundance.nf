@@ -461,6 +461,14 @@ workflow DIFFERENTIALABUNDANCE {
         }
     }
 
+    ch_contrasts_dream = ch_contrasts_dream
+        .branch {
+            valid: it[0].formula != null
+            invalid: it[0].formula == null
+        }
+
+    ch_contrasts_dream = ch_contrasts_dream.valid
+
     // Run differential analysis
 
     ABUNDANCE_DIFFERENTIAL_FILTER(

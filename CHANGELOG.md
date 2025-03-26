@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#441](https://github.com/nf-core/differentialabundance/pull/441)] - Add dream differential module. ([@nschcolnicov](https://github.com/nschcolnicov) and [@alanmmobbs93](https://github.com/alanmobbs93), review by [@pinin4fjords](https://github.com/pinin4fjords), [@suzannejin](https://github.com/suzannejin) and [@grst](https://github.com/grst)).
 - [[#440](https://github.com/nf-core/differentialabundance/pull/440)] - Add handling for formula based contrasts. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#437](https://github.com/nf-core/differentialabundance/pull/437)] - Add nf-tests to deseq2/differential, rmarkdownnotebook, and proteus modules. ([@nschcolnicov](https://github.com/nschcolnicov), review by [@TODO](TODO)).
 - [[#431](https://github.com/nf-core/differentialabundance/pull/431)] - Add differential and functional subworkflows. ([@suzannejin](https://github.com/suzannejin), co-authored by [@bjlang](https://github.com/bjlang) and [@caraiz2001](https://github.com/caraiz2001), review by [@pinin4fjords](https://github.com/pinin4fjords))
