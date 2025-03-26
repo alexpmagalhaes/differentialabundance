@@ -55,6 +55,39 @@ if (params.study_type == 'affy_array') {
 
 }
 
+/**
+* Parses a YAML file to extract contrast data.
+*
+* @param ymlFile The YAML file to parse.
+* @return A list of maps, each containing keys: id, variable, reference, and target.
+*/
+import org.yaml.snakeyaml.Yaml
+def parseContrastsFromYML(ymlFile) {
+
+    def yaml = new Yaml()
+    def yamlData = yaml.load(ymlFile.text)
+
+    if (!yamlData?.contrasts) {
+        throw new IllegalArgumentException("Invalid YAML structure: Missing 'contrasts' key.")
+    }
+
+    def tuples = yamlData.contrasts.collect { contrasts ->
+        if (!contrasts?.id || !contrasts?.comparison || contrasts.comparison.size() < 3) {
+            throw new IllegalArgumentException("Invalid contrast data: ${contrasts}")
+        }
+
+        [
+            contrast_id: contrasts.id,
+            contrast_variable: contrasts.comparison[0],
+            contrast_reference: contrasts.comparison[1],
+            contrast_target: contrasts.comparison[2],
+            blocking_factors: contrasts.blocking_factors ?: null, // Handle missing blocking_factors
+            formula: contrasts.formula ?: null // Handle missing formula
+        ]
+    }
+    return tuples
+}
+
 // Check optional parameters
 if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
 if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
@@ -171,6 +204,7 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
+    ch_contrasts_dream = Channel.empty()
     // Channel for the contrasts file
     if (params.contrasts_yml && params.contrasts) {
         error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
@@ -404,6 +438,29 @@ workflow DIFFERENTIALABUNDANCE {
             ]
         }
 
+    // Create contrasts dream channel
+    if (!(params.study_type == 'affy_array' || params.study_type == 'geo_soft_file' || params.study_type == 'maxquant' || (params.study_type == 'rnaseq' && params.differential_use_limma))) {
+
+        ch_samples_and_matrix = VALIDATOR.out.sample_meta
+        .join(CUSTOM_MATRIXFILTER.out.filtered)     // -> meta, samplesheet, filtered matrix
+        .first()
+
+        // Current DREAM_DIFFERENTIAL implementation only works with yml contrast files
+        if ( params.contrasts_yml ) {
+
+            ch_contrasts_dream = ch_contrasts_file
+                .flatMap{ meta, yml ->
+                    parseContrastsFromYML(yml)
+                }                                                       // returns array [ contrast_id: <name>, contrast_variable: <variable>, ... ]
+                .combine( ch_samples_and_matrix )                       // ch_samples_and_matrix = [ meta, samplesheet, filtered_matrix            ]
+                .map{
+                    meta_yml, meta_samplesheet, samplesheet, matrix ->
+                        def meta_update = meta_samplesheet + meta_yml   // Combine data from experiment (pipeline) + yml (contrasts)
+                        tuple(meta_update, samplesheet, matrix )
+                }
+        }
+    }
+
     // Run differential analysis
 
     ABUNDANCE_DIFFERENTIAL_FILTER(
@@ -411,7 +468,8 @@ workflow DIFFERENTIALABUNDANCE {
         VALIDATOR.out.sample_meta,
         ch_transcript_lengths,
         ch_control_features,
-        ch_contrasts
+        ch_contrasts,
+        ch_contrasts_dream
     )
 
     // collect differential results
