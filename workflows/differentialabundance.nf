@@ -4,9 +4,6 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO: this should be done in PIPELINE_INITIALISATION
-// TODO: replace the checks depending on params.differential_method, etc. by ch_tools checks
-
 def checkPathParamList = [ params.input ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
@@ -52,6 +49,7 @@ if (params.study_type == 'affy_array') {
     } else {
         error("Input matrix not specified!")
     }
+
 }
 
 // Check optional parameters
@@ -643,8 +641,8 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // we combine the channels defined above with the contrasts, collated versions,
-    // logo, css and citations files. We also combine with the differential outputs
-    // using the tool-based key:
+    // logo, css and citations files. We also combine with the outputs from differential
+    // and functional analysis using the tool-based key:
     // [method_differential, args_differential, method_functional, args_functional]
     ch_report_input_files = ch_matrices_with_key
         .combine(VALIDATOR.out.contrasts.map{it.tail()})
@@ -664,6 +662,7 @@ workflow DIFFERENTIALABUNDANCE {
             def meta = (it[0].method_functional) ? it[0] : it[0] + [args_functional: [:]]
             [meta, it.tail().grep().flatten()]    // meta, files
         }
+
 
     // Run IMMUNEDECONV
     if (params.immunedeconv_run){
