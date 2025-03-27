@@ -68,106 +68,10 @@ workflow PIPELINE_INITIALISATION {
     //
     validateInputParameters()
 
-    // ===========================================================================
-    // Handle toolsheet
-    // ===========================================================================
-
-    // Define tool settings
-    // Use the toolsheet information if an analysis name is provided
-    // otherwise ensamble the tools channel from the pipeline params scope
-
-    // TODO: for the moment we only run one analysis at a time, but in the future
-    // we would enable benchmark mode to run multiple analyses.
-
-    // TODO: define proper checks
-    //   - check if analysis_name is in toolsheet
-    //   - replace the checks depending on params.differential_method, etc.
-    // TODO: remove method-specific fixed params (eg. differential_file_suffix,
-    // differential_fc_column, etc.) from user params scope. Instead, define
-    // them here based on the chosen tool.
-
-    if (params.analysis_name) {
-
-        // use the user provided toolsheet, if available
-        // otherwise use the default toolsheet based on the study type
-        if (params.toolsheet) {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet, './assets/schema_tools.json'))
-        } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", "${projectDir}/assets/schema_tools.json"))
-        } else if (params.study_type in ['affy_array', 'geo_soft_file']) {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_affy.csv", "${projectDir}/assets/schema_tools.json"))
-        } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", "${projectDir}/assets/schema_tools.json"))
-        } else {
-            error("Please make sure to mention the correct study_type. The available options are: 'rnaseq', 'affy_array', 'geo_soft_file' or 'maxquant'")
-        }
-
-        // create a channel with the toolsheet information
-        // Note that here we create a channel with the tool method info, and also tool-specific arguments.
-        // The tool-specific arguments are obtained considering both the pipeline params scope and the
-        // toolsheet args. In concrete, the getParams function will return the params that match a given
-        // pattern. In this case is 'differential|<diff_method>' or 'functional|<func_method>'. The
-        // parseArgs function will parse the args defined in the toolsheet. These toolsheet arguments will
-        // overwrite the ones parsed by getParams. In this way, when a parameter is defined in toolsheet,
-        // it will have the highest priority, and overwrite the original params. For consistency, we also
-        // overwrite the args differential_method and functional_method with the ones defined in the
-        // toolsheet. The parsed args can be accessed by the modules through modules.config. Both getParams
-        // and parseArgs functions are defined at the bottom of this file.
-        ch_tools_meta = ch_toolsheet
-            .filter{ it[0].analysis_name == params.analysis_name }
-            .map { it ->
-                def meta = [
-                    analysis_name: it[0].analysis_name,
-                    diff_method  : it[0].diff_method,
-                    diff_args    : getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method],
-                    func_method  : it[0].func_method,
-                    func_args    : getParams('functional', it[0].func_method) + parseArgs(it[0].func_args) + [functional_method: it[0].func_method]
-                ]
-                return [meta]
-            }
-    } else {
-        // create a channel with the tool-specific info based on the pipeline
-        // params scope. This is useful when the user does not run the pipeline
-        // relying on the toolsheet. For consistency, the tool-specific params
-        // are also parsed through the getParams function.
-        ch_tools_meta = Channel.of([[
-            diff_method: params.differential_method,
-            diff_args  : getParams('differential', params.differential_method),
-            func_method: params.functional_method,
-            func_args  : getParams('functional', params.functional_method)
-        ]])
-    }
-
-    // parse channel tools into a proper structure for downstream processes
-    // This channel will dictate the differential and functional tools to be
-    // run through the pipeline
-    ch_tools = ch_tools_meta
-        .map{ it ->
-            // Normalization tool:
-            // in rnaseq, we use the data normalized by the differential tool
-            // in non-rnaseq studies, like for example array, we use the data
-            // normalized from the VALIDATOR module.
-            def tools_normalization = (params.study_type == 'rnaseq') ?
-                [method: it[0].diff_method, args: it[0].diff_args] :
-                [method: 'validator', args: [:]]  // as it is not a differential module, we set args to empty
-            // Differential analysis tool:
-            // Also set fold change and q-value thresholds, required as input for
-            // the differential abundance analysis subworkflow
-            def tools_differential = [
-                method        : it[0].diff_method,
-                args          : it[0].diff_args,
-                fc_threshold  : it[0].diff_args.differential_min_fold_change,
-                stat_threshold: it[0].diff_args.differential_max_qval
-            ]
-            // Functional analysis tool:
-            // use filtered differential results for gprofiler2, and normalized matrix for gsea
-            def tools_functional = [
-                method    : it[0].func_method,
-                args      : it[0].func_args,
-                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : (it[0].func_method == 'gsea' ? 'norm' : null)
-            ]
-            return [ tools_normalization, tools_differential, tools_functional ]
-        }
+    //
+    // Define tool settings based on analysis name or default parameters
+    //
+    ch_tools = Channel.of(getToolConfigurations())
 
     emit:
     tools       = ch_tools
@@ -341,9 +245,9 @@ def methodsDescriptionText(mqc_methods_yaml) {
 * @param argsStr The string of arguments to parse.
 * @return A map of parameters.
 * @example
-* parseArgs("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
+* parseStrArgsToMap("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
 */
-def parseArgs(String argsStr) {
+def parseStrArgsToMap(String argsStr) {
     if (!argsStr) return [:]                     // if null return empty
     def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
     def pairs = tokens.collate(2)                // Group into pairs
@@ -353,14 +257,150 @@ def parseArgs(String argsStr) {
 }
 
 /**
-* Get params from the pipeline params scope.
-* @param pattern The pattern to match.
-* @return A map of params.
-* @example
-* getParams('differential|limma') => [differential_method: limma, limma_param1: value1, limma_param2: value2, ...]
+* Parse the parameters for a specific analysis type and method.
+* @param analysisType The analysis type. Eg. 'differential', 'functional'.
+* @param method The method to use for the analysis.
+* @param argsStr The string of arguments to parse.
+* @return A map of parameters.
 */
-def getParams(String basePattern, String method) {
-    if (!method) return [:]
-    pattern = "$basePattern|$method"
-    return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
+def parseParams(String analysisType, String method, String argsStr){
+    def parsed_params = [:]
+
+    // parse the params specific to the analysis type from the pipeline params
+    parsed_params += params.findAll { k, v -> k.matches(~/(${analysisType}).*/) }
+
+    // parse the params specific to the method
+    // First it gets the default values as specified by the pipeline params scope,
+    // and then overwrite with the values specified in the argsStr (highest priority),
+    // when provided
+    if (method) {
+        parsed_params += params.findAll { k, v -> k.matches(~/(${method}).*/) }
+        parsed_params["${analysisType}_method"] = method
+    }
+    if (argsStr) {
+        parsed_params += parseStrArgsToMap(argsStr)
+    }
+
+    return parsed_params
+}
+
+/**
+* Get tool configurations based on whether analysis_name is provided
+* @return A channel with tool configurations.
+*/
+def getToolConfigurations() {
+    if (params.analysis_name) {
+        return getToolsheetConfigurations()
+    } else {
+        return getDefaultConfigurations()
+    }
+}
+
+/**
+* Get configurations from toolsheet
+* @return A list of tool configurations by parsing toolsheet.
+*/
+def getToolsheetConfigurations() {
+    // Load appropriate toolsheet based on study type
+    def toolsheet_path = getToolsheetPath()
+
+    // Load and filter toolsheet for specific analysis
+    def toolsheet = samplesheetToList(toolsheet_path, "${projectDir}/assets/schema_tools.json")
+        .find { it[0].analysis_name == params.analysis_name }
+        ?: error("Analysis '${params.analysis_name}' not found in toolsheet")
+
+    // Construct tool configurations
+    def tool_config = toolsheet[0]
+    return [
+        getNormalizationConfig(tool_config),
+        getDifferentialConfig(tool_config),
+        getFunctionalConfig(tool_config)
+    ]
+}
+
+/**
+* Get default configurations from pipeline parameters
+* @return A list of default tool configurations.
+*/
+def getDefaultConfigurations() {
+    return [
+        getNormalizationConfig(null),
+        getDifferentialConfig(null),
+        getFunctionalConfig(null)
+    ]
+}
+
+/**
+* Get the appropriate toolsheet path.
+* @return The path to the toolsheet.
+*/
+def getToolsheetPath() {
+    // use user-provided toolsheet if available
+    if (params.toolsheet) {
+        return params.toolsheet
+    }
+    // use default toolsheet based on study type
+    switch (params.study_type) {
+        case 'rnaseq':
+            return "${projectDir}/assets/toolsheet_rnaseq.csv"
+        case ['affy_array', 'geo_soft_file']:
+            return "${projectDir}/assets/toolsheet_affy.csv"
+        case 'maxquant':
+            return "${projectDir}/assets/toolsheet_maxquant.csv"
+        default:
+            error("Invalid study_type. Must be one of: 'rnaseq', 'affy_array', 'geo_soft_file', 'maxquant'")
+    }
+}
+
+/**
+* Get normalization tool configuration
+* @param tool_config The tool configuration.
+* @return A map of normalization configuration.
+*/
+def getNormalizationConfig(tool_config) {
+    // non-rnaseq studies use directly the normalized matrix output from the VALIDATOR module
+    if (params.study_type != 'rnaseq') {
+        return [method: 'validator', args: [:]]
+    }
+    // for rna-seq studies, use the differential method specified in the toolsheet
+    // or the default differential method specified in the pipeline parameters
+    def method = tool_config?.diff_method ?: params.differential_method
+    def args = parseParams('differential', method, tool_config?.diff_args ?: null)
+    return [method: method, args: args]
+}
+
+/**
+* Get differential analysis tool configuration
+* @param tool_config The tool configuration.
+* @return A map of differential analysis configuration.
+*/
+def getDifferentialConfig(tool_config) {
+    def method = tool_config?.diff_method ?: params.differential_method
+    def args = parseParams('differential', method, tool_config?.diff_args ?: null)
+    def fc_threshold = args.differential_min_fold_change
+    def stat_threshold = args.differential_max_qval
+    return [
+        method: method,
+        args: args,
+        fc_threshold: fc_threshold,
+        stat_threshold: stat_threshold
+    ]
+}
+
+/**
+* Get functional analysis tool configuration
+* @param tool_config The tool configuration.
+* @return A map of functional analysis configuration.
+*/
+def getFunctionalConfig(tool_config) {
+    def method = tool_config?.func_method ?: params.functional_method
+    def args = parseParams('functional', method, tool_config?.func_args ?: null)
+    def input_type = method == 'gprofiler2' ? 'filtered' :
+                    method == 'gsea' ? 'norm' :
+                    null
+    return [
+        method: method,
+        args: args,
+        input_type: input_type
+    ]
 }
