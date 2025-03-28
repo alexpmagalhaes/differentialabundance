@@ -13,6 +13,7 @@ process VARIANCEPARTITION_DREAM {
 
     output:
     tuple val(meta), path("*.dream.results.tsv")        , emit: results
+    tuple val(meta), path("*.dream.model.txt")          , emit: model
     path "versions.yml"                                 , emit: versions
 
     when:
@@ -25,6 +26,7 @@ process VARIANCEPARTITION_DREAM {
     prefix = task.ext.prefix   ?: "${meta.id}"
     """
     touch "${meta.contrast_id}.dream.results.tsv"
+    touch "${meta.contrast_id}.dream.model.txt"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

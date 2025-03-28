@@ -159,6 +159,9 @@ results <- topTable(fitmm, coef = coef_name,
 write.table(results, file = paste(opt\$output_prefix, 'dream.results.tsv', sep = '.'),
             col.names = TRUE, row.names = FALSE, sep = '\t', quote = FALSE )
 
+# Save model to file
+write(form, file=paste(opt\$output_prefix, 'dream.model.txt', sep = '.'))
+
 ################################################
 ################################################
 ## VERSIONS FILE                              ##

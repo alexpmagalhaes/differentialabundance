@@ -164,6 +164,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
 
     ch_model = DESEQ2_DIFFERENTIAL.out.model
         .mix(LIMMA_DIFFERENTIAL.out.model)
+        .mix(VARIANCEPARTITION_DREAM.out.model)
 
     ch_variance_stabilised_matrix = DESEQ2_NORM.out.rlog_counts
         .mix(DESEQ2_NORM.out.vst_counts)
