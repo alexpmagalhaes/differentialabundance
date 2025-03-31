@@ -35,6 +35,11 @@ workflow PIPELINE_INITIALISATION {
 
     main:
 
+    // Check that params is available
+    if (!params) {
+        error("Pipeline parameters not initialized. This is a critical error.")
+    }
+
     ch_versions = Channel.empty()
 
     //
@@ -72,95 +77,8 @@ workflow PIPELINE_INITIALISATION {
     // Handle toolsheet
     // ===========================================================================
 
-    // Define tool settings
-    // Use the toolsheet information if an analysis name is provided
-    // otherwise ensamble the tools channel from the command line parameters
-
-    // TODO: for the moment we only run one analysis at a time, but in the future
-    // we would enable benchmark mode to run multiple analyses.
-
-    // TODO: define proper checks
-    //   - check if analysis_name is in toolsheet
-    //   - replace the checks depending on params.differential_method, etc.
-    // TODO: remove method-specific fixed params (eg. differential_file_suffix,
-    // differential_fc_column, etc.) from user params scope. Instead, define
-    // them here based on the chosen tool.
-
-    if (params.analysis_name) {
-
-        // use the corresponding toolsheet given the study type
-        if (params.toolsheet_custom) {
-            ch_toolsheet = Channel.fromList(samplesheetToList(params.toolsheet_custom, './assets/schema_tools.json'))
-        } else if (params.study_type == 'rnaseq') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_rnaseq.csv", "${projectDir}/assets/schema_tools.json"))
-        } else if (params.study_type in ['affy_array', 'geo_soft_file']) {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_affy.csv", "${projectDir}/assets/schema_tools.json"))
-        } else if (params.study_type == 'maxquant') {
-            ch_toolsheet = Channel.fromList(samplesheetToList("${projectDir}/assets/toolsheet_maxquant.csv", "${projectDir}/assets/schema_tools.json"))
-        } else {
-            error("Please make sure to mention the correct study_type. The available options are: 'rnaseq', 'affy_array', 'geo_soft_file' or 'maxquant'")
-        }
-
-        // create a channel with the toolsheet meta information
-        // Note that here we create a meta with the tool method info, and also
-        // tool-specific arguments. We use parseArgs to parse the args from
-        // toolsheet, and getParams to get the original args from the pipeline
-        // params scope. In this way, when a parameter is defined in toolsheet,
-        // it will have the highest priority, and overwrite the original params.
-        // These args can be accessed by the module through modules.config.
-        ch_tools_meta = ch_toolsheet
-            .filter{ it[0].analysis_name == params.analysis_name }
-            .map { it ->
-                def meta = [
-                    analysis_name: it[0].analysis_name,
-                    diff_method  : it[0].diff_method,
-                    diff_args    : getParams('differential', it[0].diff_method) + parseArgs(it[0].diff_args) + [differential_method: it[0].diff_method],
-                    func_method  : it[0].func_method,
-                    func_args    : getParams('functional', it[0].func_method) + parseArgs(it[0].func_args) + [functional_method: it[0].func_method]
-                ]
-                return [meta]
-            }
-    } else {
-        // create a channel with a meta tool-specific info based on the pipeline
-        // params scope.
-        ch_tools_meta = Channel.of([[
-            diff_method: params.differential_method,
-            diff_args  : getParams('differential', params.differential_method),
-            func_method: params.functional_method,
-            func_args  : getParams('functional', params.functional_method)
-        ]])
-    }
-
-    // parse channel tools into a proper structure for downstream processes
-    // This channel will dictate the differential and functional tools to be
-    // run through the pipeline
-    ch_tools = ch_tools_meta
-        .map{ it ->
-            // Normalization tool:
-            // in rnaseq, we use the data normalized by the differential tool
-            // in non-rnaseq studies, like for example array, we use the data
-            // normalized from the VALIDATOR module.
-            def tools_normalization = (params.study_type == 'rnaseq') ?
-                [method: it[0].diff_method, args: it[0].diff_args] :
-                [method: 'validator', args: [:]]  // as it is not a differential module, we set args to empty
-            // Differential analysis tool:
-            // Also set fold change and q-value thresholds, required as input for
-            // the differential abundance analysis subworkflow
-            def tools_differential = [
-                method        : it[0].diff_method,
-                args          : it[0].diff_args,
-                fc_threshold  : it[0].diff_args.differential_min_fold_change,
-                stat_threshold: it[0].diff_args.differential_max_qval
-            ]
-            // Functional analysis tool:
-            // use filtered differential results for gprofiler2, and normalized matrix for gsea
-            def tools_functional = [
-                method    : it[0].func_method,
-                args      : it[0].func_args,
-                input_type: it[0].func_method == 'gprofiler2' ? 'filtered' : (it[0].func_method == 'gsea' ? 'norm' : null)
-            ]
-            return [ tools_normalization, tools_differential, tools_functional ]
-        }
+    // Define tool settings based on analysis name or default parameters
+    ch_tools = Channel.fromList(getToolConfigurations())
 
     emit:
     tools       = ch_tools
@@ -329,29 +247,123 @@ def methodsDescriptionText(mqc_methods_yaml) {
     return description_html.toString()
 }
 
-/**
-* Parse a string of arguments into a map.
-* @param argsStr The string of arguments to parse.
-* @return A map of parameters.
-* @example
-* parseArgs("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
-*/
-def parseArgs(String argsStr) {
-    if (!argsStr) return [:]                     // if null return empty
-    def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
-    def pairs = tokens.collate(2)                // Group into pairs
-    return pairs.collectEntries {
-        [(it[0].replaceAll('^-+', '')): it[1]]   // Remove leading dashes
-    }
+// Get tool configurations based on whether analysis_name is provided
+def getToolConfigurations() {
+    // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
+    return (params.analysis_name || params.toolsheet_custom) ?
+        getToolsheetConfigurations() :
+        getDefaultConfigurations()
 }
 
-/**
-* Get params from the pipeline params scope.
-* @param pattern The pattern to match.
-* @return A map of params.
-*/
-def getParams(String basePattern, String method) {
-    if (!method) return [:]
-    pattern = "$basePattern|$method"
-    return params.findAll { k, v -> k.matches(~/(${pattern}).*/) }
+// Create a temporary schema file for toolsheet validation
+// This schema is derived from the pipeline's nextflow_schema.json by:
+// 1. Reading the toolsheet headers to determine which fields to include
+// 2. Extracting only those properties from the pipeline schema
+// 3. Creating a schema that allows for an array of objects
+// 4. Making analysis_name the only required field
+// 5. Adding meta fields to all properties
+// @return The absolute path to the temporary schema file
+def createToolsheetSchema() {
+    // Load toolsheet and get headers
+    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
+    def toolsheet_lines = new File(toolsheet_path).readLines()
+    def headers = toolsheet_lines[0].split(',')
+
+    // Ensure analysis_name is in headers
+    if (!headers.contains('analysis_name')) {
+        error("The toolsheet must contain an 'analysis_name' column")
+    }
+
+    // Load and parse pipeline schema
+    def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
+    def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
+
+    // Extract only the properties that are present in the toolsheet
+    def all_properties = [:]
+    schema_json.$defs.each { group_name, group_def ->
+        if (group_def.properties) {
+            group_def.properties.each { prop_name, prop_def ->
+                // Only include properties that are in the toolsheet headers
+                if (headers.contains(prop_name)) {
+                    // Add meta field to each property
+                    def prop_with_meta = prop_def + [meta: [prop_name]]
+                    all_properties[prop_name] = prop_with_meta
+                }
+            }
+        }
+    }
+
+    // Ensure analysis_name property exists in schema
+    if (!all_properties.containsKey('analysis_name')) {
+        // Find analysis_name definition in pipeline schema
+        def analysis_name_def = null
+        schema_json.$defs.each { group_name, group_def ->
+            if (group_def.properties && group_def.properties.containsKey('analysis_name')) {
+                analysis_name_def = group_def.properties['analysis_name']
+            }
+        }
+
+        if (!analysis_name_def) {
+            error("Could not find analysis_name definition in pipeline schema")
+        }
+
+        // Add analysis_name to properties with meta field
+        all_properties['analysis_name'] = analysis_name_def + [meta: ['analysis_name']]
+    }
+
+    // Create samplesheet schema with filtered properties and analysis_name as required
+    def samplesheet_schema = [
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        'title': 'nf-core/differentialabundance - toolsheet schema',
+        'description': 'Schema for validating the toolsheet configuration',
+        'type': 'array',
+        'items': [
+            'type': 'object',
+            'properties': all_properties,
+            'required': ['analysis_name']
+        ]
+    ]
+
+    // Write temporary schema file
+    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
+    def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
+    temp_schema.text = schema_string
+
+    return temp_schema.absolutePath
+}
+
+// Get configurations from toolsheet
+def getToolsheetConfigurations() {
+    // Load toolsheet
+    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
+
+    // Create temporary schema for validation
+    def schema_path = createToolsheetSchema()
+
+    // Load toolsheet and validate each row against the transformed schema
+    def raw_toolsheet = samplesheetToList(toolsheet_path, schema_path)
+
+    def toolsheet = raw_toolsheet
+        .findAll { row ->
+            // If analysis_name is set, only keep matching rows
+            if (params.analysis_name) {
+                return row[0].analysis_name == params.analysis_name
+            }
+            return true
+        }
+
+    if (toolsheet.isEmpty()) {
+        if (params.analysis_name) {
+            error("No configuration found in toolsheet for analysis_name '${params.analysis_name}'")
+        } else {
+            error("No valid configurations found in toolsheet")
+        }
+    }
+
+    return toolsheet.map{it + params}
+}
+
+// Get default configurations from pipeline parameters
+def getDefaultConfigurations() {
+    return [params]
 }

@@ -1,0 +1,11 @@
+analysis_name,study_type,differential_method,limma_use_voom,functional_method
+deseq2,rnaseq,deseq2,,
+deseq2_gsea,rnaseq,deseq2,,gsea
+deseq2_gprofiler2,rnaseq,deseq2,,gprofiler2
+limma_rnaseq,rnaseq,limma,true,
+limma_rnaseq_gsea,rnaseq,limma,true,gsea
+limma_rnaseq_gprofiler2,rnaseq,limma,true,gprofiler2
+limma_affy,affy_array,limma,,
+limma_affy_gsea,affy_array,limma,,gsea
+limma_affy_gprofiler2,affy_array,limma,,gprofiler2
+limma_maxquant,maxquant,limma,,
