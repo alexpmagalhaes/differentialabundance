@@ -142,6 +142,63 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputParameters() {
     genomeExistsError()
+
+    // Check file existence for input parameters
+    def checkPathParamList = [ params.input ]
+    for (param in checkPathParamList) {
+        if (param) {
+            file(param, checkIfExists: true)
+        }
+    }
+
+    // Check mandatory parameters
+    if (!params.input) {
+        error("Input samplesheet not specified!")
+    }
+
+    // Validate study type specific parameters
+    if (params.study_type == 'affy_array') {
+        if (!params.affy_cel_files_archive) {
+            error("CEL files archive not specified!")
+        }
+    } else if (params.study_type == 'maxquant') {
+        if (params.functional_method) {
+            error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
+        }
+        if (!params.matrix) {
+            error("Input matrix not specified!")
+        }
+    } else if (params.study_type == 'geo_soft_file') {
+        if (!params.querygse || !params.features_metadata_cols) {
+            error("Query GSE not specified or features metadata columns not specified")
+        }
+    } else if (params.study_type == "rnaseq") {
+        if (!params.matrix) {
+            error("Input matrix not specified!")
+        }
+    }
+
+    // Validate functional analysis parameters
+    if (params.functional_method) {
+        if (params.functional_method == 'gsea' && !params.gene_sets_files) {
+            error("GSEA activated but gene set file not specified!")
+        } else if (params.functional_method == 'gprofiler2') {
+            if (!params.gprofiler2_token && !params.gprofiler2_organism) {
+                error("To run gprofiler2, please provide a run token, GMT file or organism!")
+            }
+            if (params.gene_sets_files && params.gene_sets_files.split(",").size() > 1) {
+                error("gprofiler2 can currently only work with a single gene set file")
+            }
+        }
+    }
+
+    // Validate contrasts parameters
+    if (params.contrasts_yml && params.contrasts) {
+        error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
+    }
+    if (!(params.contrasts_yml || params.contrasts)) {
+        error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
+    }
 }
 
 //

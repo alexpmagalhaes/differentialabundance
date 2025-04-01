@@ -4,75 +4,31 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def checkPathParamList = [ params.input ]
-for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
-// Check mandatory parameters
+// Create input channels
 def exp_meta = [ "id": params.study_name  ]
-if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) }
 
 if (params.study_type == 'affy_array') {
-    if (params.affy_cel_files_archive) {
-        ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
-    } else {
-        error("CEL files archive not specified!")
-    }
+    ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
 } else if (params.study_type == 'maxquant') {
-
-    // Should the user have enabled functional analysis, and throw an error
-    if (params.functional_method ){
-        error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
-    }
-    if (!params.matrix) {
-        error("Input matrix not specified!")
-    }
     matrix_file = file(params.matrix, checkIfExists: true)
-
-    // Make channel for proteus
     proteus_in = Channel.of([ file(params.input), matrix_file ])
 } else if (params.study_type == 'geo_soft_file') {
-
-    // To pull SOFT files from a GEO a GSE study identifer must be provided
-
-    if (params.querygse && params.features_metadata_cols) {
-        ch_querygse = Channel.of([exp_meta, params.querygse])
-    } else {
-        error("Query GSE not specified or features metadata columns not specified")
-    }
-} else {
-    // If this is not microarray data or maxquant output, and this an RNA-seq dataset,
-    // then assume we're reading from a matrix
-
-    if (params.study_type == "rnaseq" && params.matrix) {
-        matrix_file = file(params.matrix, checkIfExists: true)
-        ch_in_raw = Channel.of([ exp_meta, matrix_file])
-    } else {
-        error("Input matrix not specified!")
-    }
-
+    ch_querygse = Channel.of([exp_meta, params.querygse])
+} else if (params.study_type == "rnaseq") {
+    matrix_file = file(params.matrix, checkIfExists: true)
+    ch_in_raw = Channel.of([ exp_meta, matrix_file])
 }
 
-// Check optional parameters
+// Create optional parameter channels
 if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
 if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
 if (params.gene_sets_files) {
     gene_sets_files = params.gene_sets_files.split(",")
     ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-    if (params.functional_method == 'gprofiler2' && (!params.gprofiler2_token && !params.gprofiler2_organism) && gene_sets_files.size() > 1) {
-        error("gprofiler2 can currently only work with a single gene set file")
-    }
 } else {
     ch_gene_sets = Channel.of([[]])
-
-    // TODO these checks should be done considering ch_tools instead
-    if (params.functional_method == 'gsea') {
-        error("GSEA activated but gene set file not specified!")
-    } else if (params.functional_method == 'gprofiler2') {
-        if (!params.gprofiler2_token && !params.gprofiler2_organism) {
-            error("To run gprofiler2, please provide a run token, GMT file or organism!")
-        }
-    }
 }
 
 // Report related files
@@ -141,6 +97,11 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
+
+
+
+
+
 
     // ========================================================================
     // Handle contrasts
