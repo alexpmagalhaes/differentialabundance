@@ -1,51 +1,5 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    HANDLE INPUT PARAMETERS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-// Create input channels
-def exp_meta = [ "id": params.study_name  ]
-if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) }
-
-if (params.study_type == 'affy_array') {
-    ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
-} else if (params.study_type == 'maxquant') {
-    matrix_file = file(params.matrix, checkIfExists: true)
-    proteus_in = Channel.of([ file(params.input), matrix_file ])
-} else if (params.study_type == 'geo_soft_file') {
-    ch_querygse = Channel.of([exp_meta, params.querygse])
-} else if (params.study_type == "rnaseq") {
-    matrix_file = file(params.matrix, checkIfExists: true)
-    ch_in_raw = Channel.of([ exp_meta, matrix_file])
-}
-
-// Create optional parameter channels
-if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
-if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
-
-if (params.gene_sets_files) {
-    gene_sets_files = params.gene_sets_files.split(",")
-    ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
-} else {
-    ch_gene_sets = Channel.of([[]])
-}
-
-// Report related files
-report_file = file(params.report_file, checkIfExists: true)
-logo_file = file(params.logo_file, checkIfExists: true)
-css_file = file(params.css_file, checkIfExists: true)
-citations_file = file(params.citations_file, checkIfExists: true)
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CONFIG FILES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -98,10 +52,42 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_versions = Channel.empty()
 
+    // ========================================================================
+    // Handle input parameters
+    // ========================================================================
 
+    // Create input channels
+    def exp_meta = [ "id": params.study_name  ]
+    if (params.input) { ch_input = Channel.of([ exp_meta, file(params.input, checkIfExists: true) ]) }
 
+    if (params.study_type == 'affy_array') {
+        ch_celfiles = Channel.of([ exp_meta, file(params.affy_cel_files_archive, checkIfExists: true) ])
+    } else if (params.study_type == 'maxquant') {
+        matrix_file = file(params.matrix, checkIfExists: true)
+        proteus_in = Channel.of([ file(params.input), matrix_file ])
+    } else if (params.study_type == 'geo_soft_file') {
+        ch_querygse = Channel.of([exp_meta, params.querygse])
+    } else if (params.study_type == "rnaseq") {
+        matrix_file = file(params.matrix, checkIfExists: true)
+        ch_in_raw = Channel.of([ exp_meta, matrix_file])
+    }
 
+    // Create optional parameter channels
+    if (params.transcript_length_matrix) { ch_transcript_lengths = Channel.of([ exp_meta, file(params.transcript_length_matrix, checkIfExists: true)]).first() } else { ch_transcript_lengths = Channel.of([[],[]]) }
+    if (params.control_features) { ch_control_features = Channel.of([ exp_meta, file(params.control_features, checkIfExists: true)]).first() } else { ch_control_features = Channel.of([[],[]]) }
 
+    if (params.gene_sets_files) {
+        gene_sets_files = params.gene_sets_files.split(",")
+        ch_gene_sets = Channel.of(gene_sets_files).map { file(it, checkIfExists: true) }
+    } else {
+        ch_gene_sets = Channel.of([[]])
+    }
+
+    // Report related files
+    report_file = file(params.report_file, checkIfExists: true)
+    logo_file = file(params.logo_file, checkIfExists: true)
+    css_file = file(params.css_file, checkIfExists: true)
+    citations_file = file(params.citations_file, checkIfExists: true)
 
     // ========================================================================
     // Handle contrasts
