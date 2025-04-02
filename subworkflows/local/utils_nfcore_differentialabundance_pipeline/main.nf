@@ -417,7 +417,7 @@ def getToolsheetConfigurations() {
         }
     }
 
-    return toolsheet.map{it + params}
+    return toolsheet.collect{ row -> (params.findAll { k, v -> k != 'trace_report_suffix' } + row[0]) }
 }
 
 // Get default configurations from pipeline parameters
