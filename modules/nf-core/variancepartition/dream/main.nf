@@ -23,10 +23,9 @@ process VARIANCEPARTITION_DREAM {
     template 'dream.R'
 
     stub:
-    prefix = task.ext.prefix   ?: "${meta.id}"
     """
-    touch "${meta.contrast_id}.dream.results.tsv"
-    touch "${meta.contrast_id}.dream.model.txt"
+    touch "${meta.id}.dream.results.tsv"
+    touch "${meta.id}.dream.model.txt"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
