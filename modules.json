@@ -112,7 +112,7 @@
                     },
                     "shinyngs/validatefomcomponents": {
                         "branch": "master",
-                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "git_sha": "0d290ba0c91d488a47726adedc176f5fe443cf19",
                         "installed_by": ["modules"]
                     },
                     "untar": {
