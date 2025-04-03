@@ -104,15 +104,6 @@ workflow DIFFERENTIALABUNDANCE {
     ch_gene_sets = ch_tools_with_id
         .map { tools -> [ tools, tools.gene_sets_files ? tools.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
 
-    // Report related files
-    ch_report_files = ch_tools_with_id
-        .map { tools -> [ tools, [
-            tools.report_file ? file(tools.report_file, checkIfExists: true) : [],
-            tools.logo_file ? file(tools.logo_file, checkIfExists: true) : [],
-            tools.css_file ? file(tools.css_file, checkIfExists: true) : [],
-            tools.citations_file ? file(tools.citations_file, checkIfExists: true) : []
-        ]] }
-
     // ========================================================================
     // Handle contrasts
     // ========================================================================
@@ -511,6 +502,27 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
 
     // ========================================================================
+    // Other analyses
+    // ========================================================================
+
+    // Run IMMUNEDECONV
+
+    ch_immunedeconv_input = ch_raw
+        .filter{meta, raw -> meta.immunedeconv_run}
+        .multiMap{meta, raw ->
+            input: [meta, raw, meta.immunedeconv_method, meta.immunedeconv_function]
+            name_col: meta.features_name_col
+        }
+
+    IMMUNEDECONV(
+        ch_immunedeconv_input.input,
+        ch_immunedeconv_input.name_col
+    )
+
+    ch_versions = ch_versions
+        .mix(IMMUNEDECONV.out.versions)
+
+    // ========================================================================
     // Plot figures
     // ========================================================================
 
@@ -571,6 +583,14 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(VALIDATOR.out.versions)
         .mix(PLOT_EXPLORATORY.out.versions)
         .mix(PLOT_DIFFERENTIAL.out.versions)
+
+    // Gather software versions
+
+    ch_versions = ch_versions
+        .mix(VALIDATOR.out.versions)
+        .mix(PLOT_EXPLORATORY.out.versions)
+        .mix(PLOT_DIFFERENTIAL.out.versions)
+
 }
 
 /*
