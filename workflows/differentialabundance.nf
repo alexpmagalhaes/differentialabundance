@@ -130,17 +130,16 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_contrast_variables_input = ch_contrasts_file_with_extension
         .branch{ tools, file, extension ->
-            yml: extension == 'yml'
+            yml: extension == 'yml' || extension == 'yaml'
             csv: extension == 'csv'
             tsv: extension == 'tsv'
         }
 
     ch_contrasts_variables_from_yml = ch_contrast_variables_input.yml
-        //.view()
         .map { tools, yaml_file, ext ->
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
-                tuple('id': contrast.comparison[0], saved_meta = tools)
+                tuple('id': contrast.comparison[0], 'study_meta': tools)
             }
         }
         .flatten()
@@ -149,7 +148,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_contrasts_variables_from_other = ch_contrast_variables_input.csv.splitCsv(header:true)
         .mix(ch_contrast_variables_input.tsv.splitCsv(header:true, sep:'\t'))
         .map { tools, row, ext ->
-            ['id': row.variable, saved_meta: tools]
+            ['id': row.variable, study_meta: tools]
         }
         .unique()
 
@@ -210,12 +209,12 @@ workflow DIFFERENTIALABUNDANCE {
     ch_in_raw = ch_input.rnaseq
         .map{meta, file -> [meta, meta.matrix]}
         .mix(AFFY_JUSTRMA_RAW.out.expression)
-        .mix(PROTEUS.out.raw_tab.first().map{ meta, matrix -> tuple(meta.saved_meta, matrix) })
+        .mix(PROTEUS.out.raw_tab.first().map{ meta, matrix -> tuple(meta.study_meta, matrix) })
 
     // Normalised inputs
 
     ch_in_norm = AFFY_JUSTRMA_NORM.out.expression
-        .mix(PROTEUS.out.norm_tab.first().map{ meta, matrix -> tuple(meta.saved_meta, matrix) })
+        .mix(PROTEUS.out.norm_tab.first().map{ meta, matrix -> tuple(meta.study_meta, matrix) })
         .mix(GEOQUERY_GETGEO.out.expression)
 
     //// Fetch or derive a feature annotation table
@@ -336,8 +335,10 @@ workflow DIFFERENTIALABUNDANCE {
             normalised: assay.name =~ /normali[sz]ed/
         }
 
-    //ch_raw = ch_multi_validated_assays.raw
-    //    .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type== 'rnaseq'})
+    // Get raw matrices from the validation
+
+    ch_raw = ch_multi_validated_assays.raw
+        .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type== 'rnaseq'})
 
     // For RNASeq and GEO soft file we've validated a single matrix, raw in the
     // case of RNASeq and norm in the case of GEO soft file, and these are the
@@ -378,7 +379,7 @@ workflow DIFFERENTIALABUNDANCE {
         ch_matrixfilter_input.samplesheet
     )
 
-        // ========================================================================
+    // ========================================================================
     // Differential analysis
     // ========================================================================
 
@@ -418,7 +419,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // collect differential results
 
-    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise
+    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise//.view()
     ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered
     ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
     ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
@@ -509,6 +510,67 @@ workflow DIFFERENTIALABUNDANCE {
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
 
+    // ========================================================================
+    // Plot figures
+    // ========================================================================
+
+    // For geoquery we've done no matrix processing and been supplied with the
+    // normalised matrix, which can be passed through to downstream analysis
+
+    ch_mat = ch_norm.filter{meta, matrix -> meta.study_type == 'geo_soft_file'}
+        .map{meta, norm -> [meta, [norm]]}
+        .mix(
+            ch_raw
+                .filter{meta, raw -> meta.study_type != 'geo_soft_file'}
+                .join(ch_processed_matrices)
+                .map { meta, raw, matrices ->
+                    [meta, [raw] + matrices]
+                }
+        )
+
+    ch_all_matrices = VALIDATOR.out.sample_meta              // meta_exp, samples
+        .join(VALIDATOR.out.feature_meta)                    // meta_exp, samples, features
+        .join(ch_mat)                                        // meta_mat, list of matrices (raw, norm, variance stabilized)
+        .map { meta, samples, features, matrices ->
+            return [meta, samples, features, matrices]
+        }
+
+    // Exploratory analysis
+
+    ch_exploratory_input = ch_contrast_variables         // [meta]
+        .map{meta -> [ meta.study_meta, meta.id] }       // [study_meta, variable]
+        .groupTuple()                                    // [study_meta, [variable]]
+        .combine(ch_all_matrices.groupTuple(), by: 0)    // [study_meta, [variable], [samples, features, [matrices]]]
+        .transpose()                                     // [study_meta, variable, samples, features, [matrices]]
+        .map{study_meta, variable, samples, features, matrices ->
+            [['id': variable] + ['study_meta': study_meta], samples, features, matrices]
+        }
+
+    PLOT_EXPLORATORY(
+        ch_exploratory_input
+    )
+
+    // Plot differential analysis results
+
+    ch_plot_differential_input = ch_differential_results
+        .map{meta, differential_results -> [meta.study_meta, meta, differential_results]}
+        .combine(ch_all_matrices, by: 0)
+        .multiMap{study_meta, meta, differential_results, samples, features, matrices ->
+            differential_results: [meta, differential_results]
+            samples_features_matrices: [meta, samples, features, matrices]
+        }
+
+    PLOT_DIFFERENTIAL(
+        ch_plot_differential_input.differential_results,
+        ch_plot_differential_input.samples_features_matrices
+    )
+
+    // Gather software versions
+
+    ch_versions = ch_versions
+        .mix(VALIDATOR.out.versions)
+        .mix(PLOT_EXPLORATORY.out.versions)
+        .mix(PLOT_DIFFERENTIAL.out.versions)
 }
 
 /*
