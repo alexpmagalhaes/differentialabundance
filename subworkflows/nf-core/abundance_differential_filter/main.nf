@@ -12,7 +12,11 @@ include { CUSTOM_FILTERDIFFERENTIALTABLE      } from '../../../modules/nf-core/c
 // Combine meta maps, including merging non-identical values of shared keys (e.g. 'id')
 def mergeMaps(meta, meta2){
     (meta + meta2).collectEntries { k, v ->
-        meta[k] && meta[k] != v ? [k, "${meta[k]}_${v}"] : [k, v]
+        if (!(v instanceof Map) && meta[k] && meta[k] != v) {
+            [k, "${meta[k]}_${v}"]
+        } else {
+            [k, v]
+        }
     }
 }
 
@@ -25,13 +29,13 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     ch_samplesheet           // [ meta_exp, samplesheet ]
     ch_transcript_lengths    // [ meta_exp, transcript_lengths]
     ch_control_features      // [meta_exp, control_features]
-    ch_contrasts             // [[ meta_contrast, contrast_variable, reference, target ]]
+    ch_contrasts             // [[ [meta_contrast], [contrast_variable], [reference], [target] ]]
 
     main:
 
     // Set up how the channels crossed below will be used to generate channels for processing
     def criteria = multiMapCriteria { meta_input, abundance, analysis_method, fc_threshold, stat_threshold, meta_exp, samplesheet, meta_contrasts, variable, reference, target ->
-        def meta_for_diff = mergeMaps(meta_contrasts, meta_input) + [ 'method_differential': analysis_method ]
+        def meta_for_diff = meta_contrasts + meta_input + [ 'method_differential': analysis_method ]
         def meta_input_new = meta_input + [ 'method_differential': analysis_method ]
         samples_and_matrix:
             [ meta_input_new, samplesheet, abundance ]
@@ -47,7 +51,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // run differential analysis for every combination of matrix and contrast
     inputs = ch_input
         .combine(ch_samplesheet)
-        .combine(ch_contrasts)
+        .combine(ch_contrasts.transpose())
         .multiMap(criteria)
 
     // We only need a normalised matrix from one contrast. The reason we don't
@@ -56,7 +60,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // not returning the full normalized matrix as NORM modules would do.
     norm_inputs = ch_input
         .combine(ch_samplesheet)
-        .combine(ch_contrasts.first()) // Just taking the first contrast
+        .combine(ch_contrasts.first().transpose()) // Just taking the first contrast
         .multiMap(criteria)
 
     // ----------------------------------------------------

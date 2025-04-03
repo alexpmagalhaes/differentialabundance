@@ -96,30 +96,22 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Create optional parameter channels based on ch_tools
     ch_transcript_lengths = ch_tools_with_id
-        .filter { it.transcript_length_matrix }
-        .map { tools -> [ tools, file(tools.transcript_length_matrix, checkIfExists: true) ] }
-        .ifEmpty { Channel.of([[], []]) }
+        .map { tools -> [ tools, tools.transcript_length_matrix ? file(tools.transcript_length_matrix, checkIfExists: true) : [] ] }
 
     ch_control_features = ch_tools_with_id
-        .filter { it.control_features }
-        .map { tools -> [ tools, file(tools.control_features, checkIfExists: true) ] }
-        .ifEmpty { Channel.of([[], []]) }
+        .map { tools -> [ tools, tools.control_features ? file(tools.control_features, checkIfExists: true) : [] ] }
 
     ch_gene_sets = ch_tools_with_id
-        .filter { it.gene_sets_files }
-        .map { tools -> tools.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } }
-        .ifEmpty { Channel.of([[]]) }
+        .map { tools -> [ tools, tools.gene_sets_files ? tools.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
 
     // Report related files
     ch_report_files = ch_tools_with_id
-        .map { tools ->
-            [
-                file(tools.report_file, checkIfExists: true),
-                file(tools.logo_file, checkIfExists: true),
-                file(tools.css_file, checkIfExists: true),
-                file(tools.citations_file, checkIfExists: true)
-            ]
-        }
+        .map { tools -> [ tools, [
+            tools.report_file ? file(tools.report_file, checkIfExists: true) : [],
+            tools.logo_file ? file(tools.logo_file, checkIfExists: true) : [],
+            tools.css_file ? file(tools.css_file, checkIfExists: true) : [],
+            tools.citations_file ? file(tools.citations_file, checkIfExists: true) : []
+        ]] }
 
     // ========================================================================
     // Handle contrasts
@@ -331,6 +323,97 @@ workflow DIFFERENTIALABUNDANCE {
         validator_input.samplesheet_matrices,
         validator_input.features_file,
         validator_input.contrasts_file
+    )
+
+    // For Affy, we've validated multiple input matrices for raw and norm,
+    // we'll separate them out again here
+
+    ch_multi_validated_assays = VALIDATOR.out.assays
+        .filter{meta, assays -> meta.study_type == 'affy_array' || meta.study_type == 'maxquant'}
+        .transpose()
+        .branch { meta, assay ->
+            raw: assay.name.contains('raw')
+            normalised: assay.name =~ /normali[sz]ed/
+        }
+
+    //ch_raw = ch_multi_validated_assays.raw
+    //    .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type== 'rnaseq'})
+
+    // For RNASeq and GEO soft file we've validated a single matrix, raw in the
+    // case of RNASeq and norm in the case of GEO soft file, and these are the
+    // matrices we'll use for differential abundance testing. For affy or maxquant
+    // we'll use the normalised matrices.
+
+    ch_matrix_for_differential = ch_multi_validated_assays.normalised
+        .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type == 'rnaseq' || meta.study_type == 'geo_soft_file'})
+
+    // Split the contrasts up so we can run differential analyses and
+    // downstream plots separately.
+    // Replace NA strings that might have snuck into the blocking column
+
+    ch_contrasts = VALIDATOR.out.contrasts
+        .splitCsv ( header:true, sep:'\t' )
+        .map{study_meta, contrast ->
+            contrast.blocking = contrast.blocking.replaceAll('^NA$', '')
+            if (!contrast.id){
+                contrast.id = contrast.values().join('_')
+            }
+            meta = contrast + [study_meta: study_meta]
+            tuple(study_meta, meta,contrast.variable, contrast.reference, contrast.target)
+        }
+        .groupTuple() // [study_meta, [meta], [variable], [reference], [target]]
+        .map{ study_meta, meta, variable, reference, target -> [study_meta, [meta, variable, reference, target]]}
+
+    // Firstly Filter the input matrix
+
+    ch_matrixfilter_input = ch_matrix_for_differential
+        .join(VALIDATOR.out.sample_meta)
+        .multiMap{meta, matrix, samplesheet ->
+            matrix: [meta, matrix]
+            samplesheet: [meta, samplesheet]
+        }
+
+    CUSTOM_MATRIXFILTER(
+        ch_matrixfilter_input.matrix,
+        ch_matrixfilter_input.samplesheet
+    )
+
+        // ========================================================================
+    // Differential analysis
+    // ========================================================================
+
+    // Prepare inputs for differential processes
+
+    ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
+        .map { meta, matrix ->
+            [
+                meta,
+                matrix,
+                meta.differential_method,
+                meta.differential_min_fold_change,
+                meta.differential_max_qval
+            ]
+        }
+        .join(VALIDATOR.out.sample_meta)
+        .join(ch_transcript_lengths)
+        .join(ch_control_features)
+        .join(ch_contrasts)
+        .multiMap{meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
+            input: [meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold]
+            samplesheet: [meta, samplesheet]
+            transcript_lengths: [meta, transcript_lengths]
+            control_features: [meta, control_features]
+            contrasts: [meta, contrasts]
+        }
+
+    // Run differential analysis
+
+    ABUNDANCE_DIFFERENTIAL_FILTER(
+        ch_differential_input.input,
+        ch_differential_input.samplesheet,
+        ch_differential_input.transcript_lengths,
+        ch_differential_input.control_features,
+        ch_differential_input.contrasts.map{ study_meta, contrasts -> contrasts }
     )
 }
 
