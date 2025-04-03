@@ -591,6 +591,44 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(PLOT_EXPLORATORY.out.versions)
         .mix(PLOT_DIFFERENTIAL.out.versions)
 
+    // ========================================================================
+    // Generate report
+    // ========================================================================
+
+    // Collate and save software versions
+
+    softwareVersionsToYAML(ch_versions)
+        .collectFile(
+            storeDir: "${params.outdir}/pipeline_info",
+            name: 'nf_core_'  +  'differentialabundance_software_'  + 'versions.yml',
+            sort: true,
+            newLine: true
+        ).set { ch_collated_versions }
+
+    ch_collated_versions = softwareVersionsToYAML(ch_versions)
+        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'collated_versions.yml', sort: true, newLine: true)
+
+    // Derive the report file
+
+    ch_report_file = ch_tools_with_id
+        .map{ tools -> tuple(tools, tools.report_file) }
+
+    // Generate a list of files that will be used by the markdown report
+
+    ch_report_files = ch_tools_with_id
+        .map { tools ->
+            [ tools, [
+                file(tools.report_file, checkIfExists: true),
+                file(tools.logo_file, checkIfExists: true),
+                file(tools.css_file, checkIfExists: true),
+                file(tools.citations_file, checkIfExists: true)
+            ]]
+        }
+        .join(ch_all_matrices)
+        .join(VALIDATOR.out.contrasts)
+        .join(ch_differential_results.map{meta, differential_results -> [meta.study_meta, differential_results]})
+
+
 }
 
 /*
