@@ -415,6 +415,100 @@ workflow DIFFERENTIALABUNDANCE {
         ch_differential_input.control_features,
         ch_differential_input.contrasts.map{ study_meta, contrasts -> contrasts }
     )
+
+    // collect differential results
+
+    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise
+    ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered
+    ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
+    ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
+    ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix
+
+    ch_versions = ch_versions
+        .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
+
+    // Derive a channel of normalised matrices
+    // - from differential analysis for RNASeq
+    // - from normalisedvalidated assays for Affy and MaxQuant
+    // - from validated assays for GEO soft file
+
+    ch_norm = ch_differential_norm
+        .filter{meta, matrix -> meta.study_type == 'rnaseq'}
+        .mix(ch_multi_validated_assays.normalised)
+        .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type == 'geo_soft_file'})
+
+    // Prepare channel with normalized matrix, and variance stabilized matrices when available
+    ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
+        .map { meta, norm, vs ->
+            def matrices = vs ? [norm] + vs : [norm]
+            [meta, matrices]
+        }
+
+    // ========================================================================
+    // Functional analysis
+    // ========================================================================
+
+    // Prepare background file - for the moment it is only needed for gprofiler2
+
+    ch_background = CUSTOM_MATRIXFILTER.out.filtered
+        .filter{meta, matrix -> meta.functional_method == 'gprofiler2' && params.gprofiler2_background_file == "auto"}
+        .mix(
+            ch_tools_with_id
+                .filter{tools -> tools.functional_method == 'gprofiler2' && ! tools.gprofiler2_background_file }
+                .map{tools -> [tools, file(tools.gprofiler2_background_file, checkIfExists: true)]}
+        )
+        .mix(
+            ch_tools_with_id
+                .filter{ tools -> tools.functional_method != 'gprofiler2'}
+                .map{tools -> [tools, []]}
+        )
+
+    // Prepare input for functional analysis
+
+    ch_functional_analysis_matrices = ch_norm
+        .filter{meta, matrix -> meta.functional_method == 'gsea'}
+        .mix(
+            ch_differential_results_filtered
+                .filter{meta, input -> meta.functional_method == 'gprofiler2'}
+        )
+
+    ch_functional_input = ch_functional_analysis_matrices
+        .join(ch_gene_sets)
+        .join(ch_background)
+        .join(ch_contrasts)
+        .join(VALIDATOR.out.sample_meta)
+        .join(VALIDATOR.out.feature_meta)
+        .multiMap{meta, input, gene_sets, background, contrasts, samplesheet, features ->
+            input: [meta, input, gene_sets, background, meta.functional_method]
+            contrasts: [meta, contrasts]
+            samplesheet: [meta, samplesheet]
+            features: [meta, features, meta.features_id_col, meta.features_name_col]
+        }
+
+    // Run functional analysis
+
+    DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
+        ch_functional_input.input,
+        ch_functional_input.contrasts.map{study_meta, contrasts -> contrasts},
+        ch_functional_input.samplesheet,
+        ch_functional_input.features
+    )
+
+    // Collect functional analysis results
+
+    ch_gsea_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report
+    gprofiler2_plot_html = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
+    gprofiler2_all_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich
+    gprofiler2_sub_enrich = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich
+
+    ch_functional_results = gprofiler2_plot_html
+        .join(gprofiler2_all_enrich, remainder: true)
+        .join(gprofiler2_sub_enrich, remainder: true)
+        .mix(ch_gsea_results)
+
+    ch_versions = ch_versions
+        .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
+
 }
 
 /*
