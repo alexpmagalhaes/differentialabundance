@@ -1,0 +1,54 @@
+{
+    "Test rnaseq dream profile": {
+        "content": [
+            8,
+            {
+                "CUSTOM_FILTERDIFFERENTIALTABLE": {
+                    "pandas": "1.5.2"
+                },
+                "GTF_TO_TABLE": {
+                    "atlas-gene-annotation-manipulation": "1.1.1"
+                },
+                "GUNZIP_GTF": {
+                    "gunzip": 1.1
+                },
+                "VALIDATOR": {
+                    "r-shinyngs": "2.2.2"
+                },
+                "VARIANCEPARTITION_DREAM": {
+                    "r-base": "4.3.3",
+                    "bioconductor-edger": "4.0.16",
+                    "variancePartition": "1.32.2"
+                },
+                "Workflow": {
+                    "nf-core/differentialabundance": "v1.6.0dev"
+                }
+            },
+            [
+                "pipeline_info",
+                "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
+                "tables",
+                "tables/annotation",
+                "tables/annotation/Mus_musculus.anno.tsv",
+                "tables/differential",
+                "tables/differential/treatment_mCherry_hND6__SRP254919.dream.results.tsv",
+                "tables/differential/treatment_mCherry_hND6__SRP254919.dream.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.dream.results.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.dream.results_filtered.tsv"
+            ],
+            [
+                "Mus_musculus.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
+                "treatment_mCherry_hND6__SRP254919.dream.results.tsv:md5,dec8a5007db590486bf2c6ee49564327",
+                "treatment_mCherry_hND6__SRP254919.dream.results_filtered.tsv:md5,2882175ce3930af457addbe732309bee",
+                "treatment_mCherry_hND6_sample_number_SRP254919.dream.results.tsv:md5,212ff42de3e40d1bb4cc31b3d4bca28d",
+                "treatment_mCherry_hND6_sample_number_SRP254919.dream.results_filtered.tsv:md5,2882175ce3930af457addbe732309bee"
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.5"
+        },
+        "timestamp": "2025-04-02T13:24:02.028163829"
+    }
+}

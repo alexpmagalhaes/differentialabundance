@@ -3,6 +3,9 @@
         "content": [
             10,
             {
+                "CUSTOM_FILTERDIFFERENTIALTABLE": {
+                    "pandas": "1.5.2"
+                },
                 "GEOQUERY_GETGEO": {
                     "r-base": "4.3.2",
                     "bioconductor-geoquery": "2.70.0"
@@ -18,7 +21,7 @@
                     "r-shinyngs": "2.2.0"
                 },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.2.0"
+                    "r-shinyngs": "2.2.2"
                 },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
@@ -83,8 +86,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.4"
+            "nextflow": "24.10.5"
         },
-        "timestamp": "2025-02-27T17:56:20.053351"
+        "timestamp": "2025-04-02T13:52:16.624113744"
     }
 }

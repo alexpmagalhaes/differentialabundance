@@ -92,9 +92,9 @@ if (params.study_type == 'rnaseq') {
 // Use 'limma' for specific study types or RNAseq with limma flag; else 'deseq2'
 // Also set fold change and q-value thresholds.
 tools_differential = [
-    method        : ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
-                    (params.study_type == 'rnaseq' && params.differential_use_limma))
-                    ? 'limma' : 'deseq2',
+    method: (params.study_type == 'rnaseq' && params.differential_use_dream) ? 'dream' :
+            ((params.study_type in ['affy_array', 'geo_soft_file', 'maxquant']) ||
+            (params.study_type == 'rnaseq' && params.differential_use_limma)) ? 'limma' : 'deseq2',
     fc_threshold  : params.differential_min_fold_change,
     stat_threshold: params.differential_max_qval
 ]
@@ -376,7 +376,8 @@ workflow DIFFERENTIALABUNDANCE {
             if (!it.id){
                 it.id = it.values().join('_')
             }
-            tuple(it, it.variable, it.reference, it.target)
+            it.formula = it.formula?.trim() ? it.formula.trim() : null
+            tuple(it, it.variable, it.reference, it.target, it.formula)
         }
 
     // Firstly Filter the input matrix
