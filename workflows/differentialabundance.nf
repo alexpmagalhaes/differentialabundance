@@ -46,7 +46,7 @@ include { DIFFERENTIAL_FUNCTIONAL_ENRICHMENT                } from '../subworkfl
 workflow DIFFERENTIALABUNDANCE {
 
     take:
-    ch_tools
+    ch_paramsets
 
     main:
 
@@ -57,13 +57,13 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
 
     // Add id to meta once at the beginning
-    ch_tools_with_id = ch_tools
-        .map { tools -> tools + [id: tools.study_name] }
+    ch_paramsets_with_id = ch_paramsets
+        .map { paramset -> paramset + [id: paramset.study_name] }
 
     // Get the sample sheets
-    ch_samplesheet = ch_tools_with_id
-        .map { tools ->
-            [ tools, file(tools.input, checkIfExists: true) ]
+    ch_samplesheet = ch_paramsets_with_id
+        .map { paramset ->
+            [ paramset, file(paramset.input, checkIfExists: true) ]
         }
 
     // Create input channels based on study type
@@ -94,43 +94,43 @@ workflow DIFFERENTIALABUNDANCE {
             [ meta, meta.querygse ]
         }
 
-    // Create optional parameter channels based on ch_tools
-    ch_transcript_lengths = ch_tools_with_id
-        .map { tools -> [ tools, tools.transcript_length_matrix ? file(tools.transcript_length_matrix, checkIfExists: true) : [] ] }
+    // Create optional parameter channels based on ch_paramsets
+    ch_transcript_lengths = ch_paramsets_with_id
+        .map { paramset -> [ paramset, paramset.transcript_length_matrix ? file(paramset.transcript_length_matrix, checkIfExists: true) : [] ] }
 
-    ch_control_features = ch_tools_with_id
-        .map { tools -> [ tools, tools.control_features ? file(tools.control_features, checkIfExists: true) : [] ] }
+    ch_control_features = ch_paramsets_with_id
+        .map { paramset -> [ paramset, paramset.control_features ? file(paramset.control_features, checkIfExists: true) : [] ] }
 
-    ch_gene_sets = ch_tools_with_id
-        .map { tools -> [ tools, tools.gene_sets_files ? tools.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
+    ch_gene_sets = ch_paramsets_with_id
+        .map { paramset -> [ paramset, paramset.gene_sets_files ? paramset.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
 
     // ========================================================================
     // Handle contrasts
     // ========================================================================
 
     // Create contrasts channels
-    ch_contrasts_file = ch_tools_with_id
-        .map { tools ->
-            [ tools, file(tools.contrasts_yml ?: tools.contrasts, checkIfExists: true) ]
+    ch_contrasts_file = ch_paramsets_with_id
+        .map { paramset ->
+            [ paramset, file(paramset.contrasts_yml ?: paramset.contrasts, checkIfExists: true) ]
         }
 
     ch_contrasts_file_with_extension = ch_contrasts_file
         .map {
-            tools, file -> [tools, file, file.extension]
+            paramset, file -> [paramset, file, file.extension]
         }
 
     ch_contrast_variables_input = ch_contrasts_file_with_extension
-        .branch{ tools, file, extension ->
+        .branch{ paramset, file, extension ->
             yml: extension == 'yml' || extension == 'yaml'
             csv: extension == 'csv'
             tsv: extension == 'tsv'
         }
 
     ch_contrasts_variables_from_yml = ch_contrast_variables_input.yml
-        .map { tools, yaml_file, ext ->
+        .map { paramset, yaml_file, ext ->
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
-                tuple('id': contrast.comparison[0], 'study_meta': tools)
+                tuple('id': contrast.comparison[0], 'study_meta': paramset)
             }
         }
         .flatten()
@@ -138,8 +138,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_contrasts_variables_from_other = ch_contrast_variables_input.csv.splitCsv(header:true)
         .mix(ch_contrast_variables_input.tsv.splitCsv(header:true, sep:'\t'))
-        .map { tools, row, ext ->
-            ['id': row.variable, study_meta: tools]
+        .map { paramset, row, ext ->
+            ['id': row.variable, study_meta: paramset]
         }
         .unique()
 
@@ -210,8 +210,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     //// Fetch or derive a feature annotation table
 
-    // Branch ch_tools_with_id based on feature source
-    ch_feature_sources = ch_tools_with_id
+    // Branch ch_paramsets_with_id based on feature source
+    ch_feature_sources = ch_paramsets_with_id
         .branch {
             user_features: it.features
             affy_features: it.study_type == 'affy_array'
@@ -222,19 +222,19 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Handle user-provided feature annotations
     ch_user_features = ch_feature_sources.user_features
-        .map { tools -> [ tools, file(tools.features, checkIfExists: true) ] }
+        .map { paramset -> [ paramset, file(paramset.features, checkIfExists: true) ] }
 
     // Handle Affy array platform features
     ch_affy_features = ch_feature_sources.affy_features
-        .map { tools -> ch_affy_platform_features }
+        .map { paramset -> ch_affy_platform_features }
 
     // Handle GEO soft file features
     ch_geo_features = ch_feature_sources.geo_features
-        .map { tools -> ch_soft_features }
+        .map { paramset -> ch_soft_features }
 
     // Handle GTF-based feature annotations
     ch_gtf_files = ch_feature_sources.gtf_features
-        .map { tools -> [ tools, file(tools.gtf, checkIfExists: true) ] }
+        .map { paramset -> [ paramset, file(paramset.gtf, checkIfExists: true) ] }
 
     // Process GTF files if needed
     ch_gtf_for_processing = ch_gtf_files
@@ -256,8 +256,8 @@ workflow DIFFERENTIALABUNDANCE {
     ch_gtf_features = GTF_TO_TABLE.out.feature_annotation
     ch_versions = ch_versions.mix(GTF_TO_TABLE.out.versions)
 
-    ch_pre_matrix_features = ch_feature_sources.matrix_features.branch{ tools ->
-        maxquant: tools.study_type == 'maxquant'
+    ch_pre_matrix_features = ch_feature_sources.matrix_features.branch{ paramset ->
+        maxquant: paramset.study_type == 'maxquant'
         other: true
     }
     ch_matrix_features = ch_pre_matrix_features.maxquant.join(ch_in_norm)
@@ -279,7 +279,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Check compatibility of FOM elements and contrasts
 
-    ch_matrix_sources = ch_tools_with_id.branch{
+    ch_matrix_sources = ch_paramsets_with_id.branch{
         affy_or_maxquant: params.study_type == 'affy_array' || params.study_type == 'maxquant'
         geo_soft_file: params.study_type == 'geo_soft_file'
         other: true
@@ -445,14 +445,14 @@ workflow DIFFERENTIALABUNDANCE {
     ch_background = CUSTOM_MATRIXFILTER.out.filtered
         .filter{meta, matrix -> meta.functional_method == 'gprofiler2' && params.gprofiler2_background_file == "auto"}
         .mix(
-            ch_tools_with_id
-                .filter{tools -> tools.functional_method == 'gprofiler2' && ! tools.gprofiler2_background_file }
-                .map{tools -> [tools, file(tools.gprofiler2_background_file, checkIfExists: true)]}
+            ch_paramsets_with_id
+                .filter{paramset -> paramset.functional_method == 'gprofiler2' && ! paramset.gprofiler2_background_file }
+                .map{paramset -> [paramset, file(paramset.gprofiler2_background_file, checkIfExists: true)]}
         )
         .mix(
-            ch_tools_with_id
-                .filter{ tools -> tools.functional_method != 'gprofiler2'}
-                .map{tools -> [tools, []]}
+            ch_paramsets_with_id
+                .filter{ paramset -> paramset.functional_method != 'gprofiler2'}
+                .map{paramset -> [paramset, []]}
         )
 
     // Prepare input for functional analysis
@@ -610,18 +610,18 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Derive the report file
 
-    ch_report_file = ch_tools_with_id
-        .map{ tools -> tuple(tools, tools.report_file) }
+    ch_report_file = ch_paramsets_with_id
+        .map{ paramset -> tuple(paramset, paramset.report_file) }
 
     // Generate a list of files that will be used by the markdown report
 
-    ch_report_files = ch_tools_with_id
-        .map { tools ->
-            [ tools, [
-                file(tools.report_file, checkIfExists: true),
-                file(tools.logo_file, checkIfExists: true),
-                file(tools.css_file, checkIfExists: true),
-                file(tools.citations_file, checkIfExists: true)
+    ch_report_files = ch_paramsets_with_id
+        .map { paramset ->
+            [ paramset, [
+                file(paramset.report_file, checkIfExists: true),
+                file(paramset.logo_file, checkIfExists: true),
+                file(paramset.css_file, checkIfExists: true),
+                file(paramset.citations_file, checkIfExists: true)
             ]]
         }
         .join(ch_all_matrices)
