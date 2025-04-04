@@ -374,44 +374,28 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
 
     // Prepare inputs for differential processes
-
-    ch_pre_differential_input = CUSTOM_MATRIXFILTER.out.filtered
-        .map { meta, matrix ->
-            [
-                meta,
-                matrix,
-                meta.differential_method,
-                meta.differential_min_fold_change,
-                meta.differential_max_qval
-            ]
-        }
+    ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
         .join(VALIDATOR.out.sample_meta)
         .join(ch_transcript_lengths)
         .join(ch_control_features)
         .join(ch_contrasts)
 
-    // Deduplicate differential analysis runs by:
-    // 1. Subsetting meta to only relevant parameters
-    // 2. Grouping by the simplified meta
-    // 2. Preserving original analysis names for later parameter re-application
-    // This prevents redundant runs when multiple tool sheet rows require the same analysis
-
-    ch_deduplicated_differential_input = ch_pre_differential_input
-        .map{meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
+    // Deduplicate differential analysis runs
+    ch_deduplicated_differential_input = ch_differential_input
+        .map{ meta, matrix, samplesheet, transcript_lengths, control_features, contrasts ->
             def simplified_meta = subsetMeta(meta, 'differential')
-            [simplified_meta, meta.analysis_name, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts]
+            [simplified_meta, meta.analysis_name, matrix, samplesheet, transcript_lengths, control_features, contrasts]
         }
         .groupTuple()
-        .map{diff_meta, analysis_names, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
+        .map{ diff_meta, analysis_names, matrix, samplesheet, transcript_lengths, control_features, contrasts ->
             diff_meta.analysis_names = analysis_names
-            [diff_meta] + [matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts].collect{ it[0] }
+            [diff_meta, matrix[0], samplesheet[0], transcript_lengths[0], control_features[0], contrasts[0]]
         }
 
     // Use a multiMap to generate synched channels for differential analysis
-
     ch_differential_input = ch_deduplicated_differential_input
-        .multiMap{meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
-            input: [meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold]
+        .multiMap{ meta, matrix, samplesheet, transcript_lengths, control_features, contrasts ->
+            input: [meta, matrix, meta.differential_method, meta.differential_min_fold_change, meta.differential_max_qval]
             samplesheet: [meta, samplesheet]
             transcript_lengths: [meta, transcript_lengths]
             control_features: [meta, control_features]
