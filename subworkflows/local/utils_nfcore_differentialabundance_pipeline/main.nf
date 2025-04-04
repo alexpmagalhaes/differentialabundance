@@ -78,10 +78,10 @@ workflow PIPELINE_INITIALISATION {
     // ===========================================================================
 
     // Define tool settings based on analysis name or default parameters
-    ch_tools = Channel.fromList(getToolConfigurations())
+    ch_paramsets = Channel.fromList(getToolConfigurations())
 
     emit:
-    tools       = ch_tools
+    paramsets = ch_paramsets
     versions    = ch_versions
 }
 
@@ -304,6 +304,57 @@ def methodsDescriptionText(mqc_methods_yaml) {
     return description_html.toString()
 }
 
+// Split parameters into different sets based on prefixes and analysis type
+def splitParameters(params) {
+    // Base parameters are everything not in other sets
+    def baseParams = [:]
+    def differentialParams = [:]
+    def functionalParams = [:]
+
+    // First collect all differential parameters
+    params.each { key, value ->
+        if (key.startsWith('differential_') || key.startsWith('limma_') || key.startsWith('deseq2_')) {
+            differentialParams[key] = value
+        }
+    }
+
+    // Then collect functional parameters based on method
+    if (params.functional_method == 'gprofiler2') {
+        // For gprofiler2, include both base and differential params
+        params.each { key, value ->
+            if (key.startsWith('functional_') || key.startsWith('gprofiler2_')) {
+                functionalParams[key] = value
+            }
+        }
+        // Add all differential params to functional params for gprofiler2
+        functionalParams.putAll(differentialParams)
+    } else if (params.functional_method == 'gsea') {
+        // For GSEA, only include functional params
+        params.each { key, value ->
+            if (key.startsWith('functional_') || key.startsWith('gsea_')) {
+                functionalParams[key] = value
+            }
+        }
+    }
+
+    // Base params are everything not in other sets
+    params.each { key, value ->
+        if (!differentialParams.containsKey(key) && !functionalParams.containsKey(key)) {
+            baseParams[key] = value
+        }
+    }
+
+    // Add base params to both differential and functional
+    differentialParams.putAll(baseParams)
+    functionalParams.putAll(baseParams)
+
+    return [
+        base: baseParams,
+        differential: differentialParams,
+        functional: functionalParams
+    ]
+}
+
 // Get tool configurations based on whether analysis_name is provided
 def getToolConfigurations() {
     // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
@@ -389,6 +440,58 @@ def createToolsheetSchema() {
     return temp_schema.absolutePath
 }
 
+// Simplify meta map to only include parameters relevant for a specific analysis type
+def subsetMeta(meta, analysis_type) {
+    def relevantParams = [:]
+
+    // Define static lists of parameter prefixes for different analysis types
+    def differentialPrefixes = ['differential_', 'limma_', 'deseq2_']
+    def functionalPrefixes = ['functional_']
+    def gseaPrefixes = ['gsea_']
+    def gprofiler2Prefixes = ['gprofiler2_']
+    def basicFields = ['id', 'study_name', 'study_type', 'analysis_name']
+
+    // Always include basic fields
+    basicFields.each { field ->
+        if (meta.containsKey(field)) {
+            relevantParams[field] = meta[field]
+        }
+    }
+
+    // Add parameters based on analysis type
+    switch(analysis_type) {
+        case 'differential':
+            // Include differential-specific parameters
+            meta.each { key, value ->
+                if (differentialPrefixes.any { key.startsWith(it) }) {
+                    relevantParams[key] = value
+                }
+            }
+            break
+
+        case 'functional':
+            // Include functional-specific parameters
+            meta.each { key, value ->
+                if (functionalPrefixes.any { key.startsWith(it) } ||
+                    (meta.functional_method == 'gsea' && gseaPrefixes.any { key.startsWith(it) }) ||
+                    (meta.functional_method == 'gprofiler2' && gprofiler2Prefixes.any { key.startsWith(it) })) {
+                    relevantParams[key] = value
+                }
+            }
+
+            // For gprofiler2, also include differential parameters
+            if (meta.functional_method == 'gprofiler2') {
+                meta.each { key, value ->
+                    if (differentialPrefixes.any { key.startsWith(it) }) {
+                        relevantParams[key] = value
+                    }
+                }
+            }
+            break
+    }
+    return relevantParams
+}
+
 // Get configurations from toolsheet
 def getToolsheetConfigurations() {
     // Load toolsheet
@@ -417,10 +520,22 @@ def getToolsheetConfigurations() {
         }
     }
 
-    return toolsheet.collect{ row -> (params.findAll { k, v -> k != 'trace_report_suffix' } + row[0]) }
+    def staticparams = params.findAll { k, v -> k != 'trace_report_suffix' } as Map
+    return toolsheet.collect{ row ->
+        ['id': staticparams.study_name] +staticparams + row[0]
+    }
 }
 
 // Get default configurations from pipeline parameters
 def getDefaultConfigurations() {
-    return [params]
+    return [params + ['id': params.study_name]]
+}
+
+// Helper function to re-apply full parameters to deduplicated results
+def reapplyParams(channel, paramsets_by_name) {
+    channel
+        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
+        .transpose()
+        .join(paramsets_by_name)
+        .map{analysis_names, meta, differential_results, paramset -> [meta + ['study_meta': paramset], differential_results]}
 }

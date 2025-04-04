@@ -4,6 +4,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+include { subsetMeta } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
+include { reapplyParams } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,17 +53,14 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
+    ch_paramsets_by_name = ch_paramsets.map{paramset -> [paramset.analysis_name, paramset]}
 
     // ========================================================================
     // Handle input parameters
     // ========================================================================
 
-    // Add id to meta once at the beginning
-    ch_paramsets_with_id = ch_paramsets
-        .map { paramset -> paramset + [id: paramset.study_name] }
-
     // Get the sample sheets
-    ch_samplesheet = ch_paramsets_with_id
+    ch_samplesheet = ch_paramsets
         .map { paramset ->
             [ paramset, file(paramset.input, checkIfExists: true) ]
         }
@@ -95,13 +94,13 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // Create optional parameter channels based on ch_paramsets
-    ch_transcript_lengths = ch_paramsets_with_id
+    ch_transcript_lengths = ch_paramsets
         .map { paramset -> [ paramset, paramset.transcript_length_matrix ? file(paramset.transcript_length_matrix, checkIfExists: true) : [] ] }
 
-    ch_control_features = ch_paramsets_with_id
+    ch_control_features = ch_paramsets
         .map { paramset -> [ paramset, paramset.control_features ? file(paramset.control_features, checkIfExists: true) : [] ] }
 
-    ch_gene_sets = ch_paramsets_with_id
+    ch_gene_sets = ch_paramsets
         .map { paramset -> [ paramset, paramset.gene_sets_files ? paramset.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
 
     // ========================================================================
@@ -109,7 +108,7 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
 
     // Create contrasts channels
-    ch_contrasts_file = ch_paramsets_with_id
+    ch_contrasts_file = ch_paramsets
         .map { paramset ->
             [ paramset, file(paramset.contrasts_yml ?: paramset.contrasts, checkIfExists: true) ]
         }
@@ -210,8 +209,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     //// Fetch or derive a feature annotation table
 
-    // Branch ch_paramsets_with_id based on feature source
-    ch_feature_sources = ch_paramsets_with_id
+    // Branch ch_paramsets based on feature source
+    ch_feature_sources = ch_paramsets
         .branch {
             user_features: it.features
             affy_features: it.study_type == 'affy_array'
@@ -279,7 +278,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Check compatibility of FOM elements and contrasts
 
-    ch_matrix_sources = ch_paramsets_with_id.branch{
+    ch_matrix_sources = ch_paramsets.branch{
         affy_or_maxquant: params.study_type == 'affy_array' || params.study_type == 'maxquant'
         geo_soft_file: params.study_type == 'geo_soft_file'
         other: true
@@ -376,7 +375,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Prepare inputs for differential processes
 
-    ch_differential_input = CUSTOM_MATRIXFILTER.out.filtered
+    ch_pre_differential_input = CUSTOM_MATRIXFILTER.out.filtered
         .map { meta, matrix ->
             [
                 meta,
@@ -390,6 +389,27 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_transcript_lengths)
         .join(ch_control_features)
         .join(ch_contrasts)
+
+    // Deduplicate differential analysis runs by:
+    // 1. Subsetting meta to only relevant parameters
+    // 2. Grouping by the simplified meta
+    // 2. Preserving original analysis names for later parameter re-application
+    // This prevents redundant runs when multiple tool sheet rows require the same analysis
+
+    ch_deduplicated_differential_input = ch_pre_differential_input
+        .map{meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
+            def simplified_meta = subsetMeta(meta, 'differential')
+            [simplified_meta, meta.analysis_name, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts]
+        }
+        .groupTuple()
+        .map{diff_meta, analysis_names, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
+            diff_meta.analysis_names = analysis_names
+            [diff_meta] + [matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts].collect{ it[0] }
+        }
+
+    // Use a multiMap to generate synched channels for differential analysis
+
+    ch_differential_input = ch_deduplicated_differential_input
         .multiMap{meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold, samplesheet, transcript_lengths, control_features, contrasts ->
             input: [meta, matrix, diff_method, diff_fc_threshold, diff_qval_threshold]
             samplesheet: [meta, samplesheet]
@@ -408,13 +428,20 @@ workflow DIFFERENTIALABUNDANCE {
         ch_differential_input.contrasts.map{ study_meta, contrasts -> contrasts }
     )
 
-    // collect differential results
+    // Collect differential results
+    // reapplyParams fetches back the study_meta from the paramset
 
-    ch_differential_results = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise//.view()
-    ch_differential_results_filtered = ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered
+    ch_differential_results = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets_by_name)
+    ch_differential_results_filtered = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets_by_name)
+
+    // Processed matrices, one pers study/ toolsheet row, so we can reset the meta to the study_meta
+
+    ch_differential_norm = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets_by_name)
+        .map{meta, matrix -> [meta.study_meta, matrix]}
+    ch_differential_varstab = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets_by_name)
+        .map{meta, matrix -> [meta.study_meta, matrix]}
+
     ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
-    ch_differential_norm = ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix
-    ch_differential_varstab = ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -430,9 +457,10 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(VALIDATOR.out.assays.filter{meta, assay -> meta.study_type == 'geo_soft_file'})
 
     // Prepare channel with normalized matrix, and variance stabilized matrices when available
+
     ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
         .map { meta, norm, vs ->
-            def matrices = vs ? [norm] + vs : [norm]
+            def matrices = vs ? [norm, vs] : [norm]
             [meta, matrices]
         }
 
@@ -445,12 +473,12 @@ workflow DIFFERENTIALABUNDANCE {
     ch_background = CUSTOM_MATRIXFILTER.out.filtered
         .filter{meta, matrix -> meta.functional_method == 'gprofiler2' && params.gprofiler2_background_file == "auto"}
         .mix(
-            ch_paramsets_with_id
+            ch_paramsets
                 .filter{paramset -> paramset.functional_method == 'gprofiler2' && ! paramset.gprofiler2_background_file }
                 .map{paramset -> [paramset, file(paramset.gprofiler2_background_file, checkIfExists: true)]}
         )
         .mix(
-            ch_paramsets_with_id
+            ch_paramsets
                 .filter{ paramset -> paramset.functional_method != 'gprofiler2'}
                 .map{paramset -> [paramset, []]}
         )
@@ -584,13 +612,6 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(PLOT_EXPLORATORY.out.versions)
         .mix(PLOT_DIFFERENTIAL.out.versions)
 
-    // Gather software versions
-
-    ch_versions = ch_versions
-        .mix(VALIDATOR.out.versions)
-        .mix(PLOT_EXPLORATORY.out.versions)
-        .mix(PLOT_DIFFERENTIAL.out.versions)
-
     // ========================================================================
     // Generate report
     // ========================================================================
@@ -610,12 +631,12 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Derive the report file
 
-    ch_report_file = ch_paramsets_with_id
+    ch_report_file = ch_paramsets
         .map{ paramset -> tuple(paramset, paramset.report_file) }
 
     // Generate a list of files that will be used by the markdown report
 
-    ch_report_files = ch_paramsets_with_id
+    ch_report_files = ch_paramsets
         .map { paramset ->
             [ paramset, [
                 file(paramset.report_file, checkIfExists: true),

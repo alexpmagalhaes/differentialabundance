@@ -78,7 +78,7 @@ workflow {
     //
 
     NFCORE_DIFFERENTIALABUNDANCE (
-        PIPELINE_INITIALISATION.out.tools
+        PIPELINE_INITIALISATION.out.paramsets
     )
 
     //
