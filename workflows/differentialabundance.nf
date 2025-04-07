@@ -5,7 +5,10 @@
 */
 
 include { subsetMeta } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
-include { reapplyParams } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
+include { GROUP_BY_ANALYSIS as GROUP_BY_ANALYSIS_DIFFERENTIAL_RESULTS } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
+include { GROUP_BY_ANALYSIS as GROUP_BY_ANALYSIS_DIFFERENTIAL_FILTERED } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
+include { GROUP_BY_ANALYSIS as GROUP_BY_ANALYSIS_DIFFERENTIAL_NORM } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
+include { GROUP_BY_ANALYSIS as GROUP_BY_ANALYSIS_DIFFERENTIAL_VARSTAB } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -413,17 +416,35 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect differential results
-    // reapplyParams fetches back the study_meta from the paramset
+    // S
 
-    ch_differential_results = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets_by_name)
-    ch_differential_results_filtered = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets_by_name)
+    GROUP_BY_ANALYSIS_DIFFERENTIAL_RESULTS(
+        ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise,
+        ch_paramsets_by_name
+    )
+    ch_differential_results = GROUP_BY_ANALYSIS_DIFFERENTIAL_RESULTS.out.with_study_meta
+
+    GROUP_BY_ANALYSIS_DIFFERENTIAL_FILTERED(
+        ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered,
+        ch_paramsets_by_name
+    )
+    ch_differential_results_filtered = GROUP_BY_ANALYSIS_DIFFERENTIAL_FILTERED.out.with_study_meta
 
     // Processed matrices, one pers study/ toolsheet row, so we can reset the meta to the study_meta
 
-    ch_differential_norm = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets_by_name)
-        .map{meta, matrix -> [meta.study_meta, matrix]}
-    ch_differential_varstab = reapplyParams(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets_by_name)
-        .map{meta, matrix -> [meta.study_meta, matrix]}
+    GROUP_BY_ANALYSIS_DIFFERENTIAL_NORM(
+        ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix,
+        ch_paramsets_by_name
+    )
+    ch_differential_norm = GROUP_BY_ANALYSIS_DIFFERENTIAL_NORM.out.with_study_meta
+        .map{study_meta, metas, matrix -> [study_meta, matrix]}
+
+    GROUP_BY_ANALYSIS_DIFFERENTIAL_VARSTAB(
+        ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix,
+        ch_paramsets_by_name
+    )
+    ch_differential_varstab = GROUP_BY_ANALYSIS_DIFFERENTIAL_VARSTAB.out.with_study_meta
+        .map{study_meta, metas, matrix -> [study_meta, matrix]}
 
     ch_differential_model = ABUNDANCE_DIFFERENTIAL_FILTER.out.model
 
@@ -473,7 +494,9 @@ workflow DIFFERENTIALABUNDANCE {
         .filter{meta, matrix -> meta.functional_method == 'gsea'}
         .mix(
             ch_differential_results_filtered
-                .filter{meta, input -> meta.functional_method == 'gprofiler2'}
+                .filter{study_meta, meta, results -> meta.functional_method == 'gprofiler2'}
+                .map{study_meta, metas, results -> [study_meta, input]}
+                .transpose()
         )
 
     ch_functional_input = ch_functional_analysis_matrices
@@ -577,7 +600,6 @@ workflow DIFFERENTIALABUNDANCE {
     // Plot differential analysis results
 
     ch_plot_differential_input = ch_differential_results
-        .map{meta, differential_results -> [meta.study_meta, meta, differential_results]}
         .combine(ch_all_matrices, by: 0)
         .multiMap{study_meta, meta, differential_results, samples, features, matrices ->
             differential_results: [meta, differential_results]
@@ -631,7 +653,7 @@ workflow DIFFERENTIALABUNDANCE {
         }
         .join(ch_all_matrices)
         .join(VALIDATOR.out.contrasts)
-        .join(ch_differential_results.map{meta, differential_results -> [meta.study_meta, differential_results]})
+        .combine(ch_differential_results, by: 0)
 
 
 }

@@ -134,6 +134,38 @@ workflow PIPELINE_COMPLETION {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SUBWORKFLOW FOR GROUPING BY ANALYSIS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Toolsheet usage means that we sometimes group multiple analyses into a single run
+where the input parameterisation would have been the same. There may also be multiple
+results per group where we have multiple contrasts. To use these results downstream
+we must 'expand' results back to the original groupings, but also group by the
+individual analysis such that e.g. the results from multiple contrasts travel
+through the workflow together.
+*/
+
+workflow GROUP_BY_ANALYSIS {
+
+    take:
+    channel_in
+    paramsets_by_name
+
+    main:
+
+    channel_out = channel_in
+        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
+        .transpose()
+        .join(paramsets_by_name)
+        .map{analysis_name, meta, differential_results, paramset -> [paramset, meta, differential_results]}
+
+
+    emit:
+    with_study_meta = channel_out
+}
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
