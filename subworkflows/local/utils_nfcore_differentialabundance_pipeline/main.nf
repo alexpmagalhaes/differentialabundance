@@ -55,6 +55,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
+    validate_params = (params.validate_params && !params.analysis_name && !params.toolsheet_custom) ? true : false  // the validation will be done through toolsheet, when provided
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
         validate_params,
@@ -82,7 +83,7 @@ workflow PIPELINE_INITIALISATION {
 
     emit:
     paramsets = ch_paramsets
-    versions    = ch_versions
+    versions  = ch_versions
 }
 
 /*
@@ -336,6 +337,203 @@ def methodsDescriptionText(mqc_methods_yaml) {
     return description_html.toString()
 }
 
+// Get tool configurations based on whether analysis_name is provided
+def getToolConfigurations() {
+    // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
+    return (params.analysis_name || params.toolsheet_custom) ?
+        getToolsheetConfigurations() :
+        getDefaultConfigurations()
+}
+
+// Get configurations from toolsheet
+def getToolsheetConfigurations() {
+    // get toolsheet path
+    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
+    // get toolsheet configurations - and validate
+    def toolsheet = getToolsheetConfigurationsOnly(toolsheet_path)
+    // get toolsheet configurations merged with pipeline params - and validate
+    def toolsheet_full = getToolsheetConfigurationsFull(toolsheet)
+
+    return toolsheet_full
+}
+
+// parse the params from toolsheet, and validate each of them
+def getToolsheetConfigurationsOnly(toolsheet_path) {
+    // Create temporary schema for validation - with only the fields in the toolsheet
+    def schema_path = createToolsheetSchema(toolsheet_path)
+
+    // Load toolsheet and validate each row against the transformed schema
+    def raw_toolsheet = samplesheetToList(toolsheet_path, schema_path)
+
+    def toolsheet = raw_toolsheet
+        .findAll { row ->
+            // If analysis_name is set, only keep matching rows
+            if (params.analysis_name) {
+                return row[0].analysis_name == params.analysis_name
+            }
+            return true
+        }
+
+    if (toolsheet.isEmpty()) {
+        if (params.analysis_name) {
+            error("No configuration found in toolsheet for analysis_name '${params.analysis_name}'")
+        } else {
+            error("No valid configurations found in toolsheet")
+        }
+    }
+
+    return toolsheet
+}
+
+// merge the toolsheet params with pipeline params and validate them
+def getToolsheetConfigurationsFull(toolsheet) {
+    // gather toolsheet params with pipeline params - to create full paramsets
+    paramsets = toolsheet
+        .collect { row ->
+            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']  // these are not in the schema
+            def paramsets = params + row[0]  // merge pipeline params with toolsheet params
+            return paramsets.findAll { k,v ->
+                // Only include parameters that are not in the ignore list
+                !ignore.contains(k)
+            }
+        }
+
+    // write the full paramsets to a temporary json file
+    def tempFile = new File("${projectDir}/extended.json")
+    tempFile.text = new groovy.json.JsonBuilder(paramsets).toPrettyString()
+    def full_toolsheet_path = tempFile.absolutePath
+
+    // create temporary toolsheet schema with all the parameters
+    def full_schema_path = createToolsheetSchema(null)
+
+    // validate the full paramsets
+    def paramsets_validated = samplesheetToList(full_toolsheet_path, full_schema_path)
+
+    // use only the static params, otherwise it causes issues with cache
+    def staticparams = params.findAll { k, v -> k != 'trace_report_suffix' } as Map
+    return paramsets_validated
+        .collect{ row ->
+            return ['id': staticparams.study_name] + staticparams + row[0]
+        }
+}
+
+// Get default configurations from pipeline parameters
+def getDefaultConfigurations() {
+    return [['id': params.study_name] + params]
+}
+
+// Create a temporary schema file for toolsheet validation
+// This schema is derived from the pipeline's nextflow_schema.json,
+// to create a schema with toolsheet structure that can be used to
+// run samplesheetToList. When the toolsheet is provided, it will
+// also filter the properties to only include those present in the
+// toolsheet. Concrete steps are:
+// 1. Extracting properties from the pipeline schema
+// 2. Determining which properties and required fields to keep, if
+// toolsheet provided
+// 3. Creating a schema that allows for an array of objects
+// 4. Adding meta fields to all properties
+// @return The absolute path to the temporary schema file
+def createToolsheetSchema(toolsheet_path) {
+    // Load and parse pipeline schema
+    def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
+    def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
+
+    // Determine which properties and required fields to keep, if toolsheet is provided
+    def keep_properties = null
+    def keep_required = null
+    if (toolsheet_path) {
+        def toolsheet_lines = new File(toolsheet_path).readLines()
+        def headers = toolsheet_lines[0].split(',')
+        // Ensure analysis_name is in headers
+        if (!headers.contains('analysis_name')) {
+            error("The toolsheet must contain an 'analysis_name' column")
+        }
+        keep_properties = headers
+        keep_required = ['analysis_name']
+    }
+
+    // Extract properties and required fields from schema
+    def all_properties = extractPropertiesFromSchema(schema_json, keep_properties)
+    def all_required = extractRequiredFromSchema(schema_json, keep_required)
+
+    // Create samplesheet schema with filtered properties and analysis_name as required
+    def samplesheet_schema = [
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        'title': 'nf-core/differentialabundance - toolsheet schema',
+        'description': 'Schema for validating the toolsheet configuration',
+        'type': 'array',
+        'items': [
+            'type': 'object',
+            'properties': all_properties,
+            'required': ['analysis_name']
+        ]
+    ]
+
+    // Write temporary schema file
+    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
+    def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
+    temp_schema.text = schema_string
+
+    return temp_schema.absolutePath
+}
+
+// extract properties from schema
+// if keep is provided, keep only those properties
+def extractPropertiesFromSchema(schema, keep) {
+    def all_properties = [:]
+
+    // Extract properties from schema
+    schema.$defs.each { group_name, group_def ->
+        if (group_def.properties) {
+            group_def.properties.each { prop_name, prop_def ->
+                // Only include properties that are in the toolsheet headers,
+                // if toolsheet is provided
+                if (!keep || keep.contains(prop_name)) {
+                    // Add meta field to each property
+                    def prop_with_meta = prop_def + [meta: [prop_name]]
+                    all_properties[prop_name] = prop_with_meta
+                }
+            }
+        }
+    }
+
+    // Ensure analysis_name property exists in schema
+    if (!all_properties.containsKey('analysis_name')) {
+        // Find analysis_name definition in pipeline schema
+        def analysis_name_def = null
+        schema.$defs.each { group_name, group_def ->
+            if (group_def.properties && group_def.properties.containsKey('analysis_name')) {
+                analysis_name_def = group_def.properties['analysis_name']
+            }
+        }
+
+        if (!analysis_name_def) {
+            error("Could not find analysis_name definition in pipeline schema")
+        }
+
+        // Add analysis_name to properties with meta field
+        all_properties['analysis_name'] = analysis_name_def + [meta: ['analysis_name']]
+    }
+
+    return all_properties
+}
+
+// extract required fields from schema
+def extractRequiredFromSchema(schema, keep) {
+    def all_required = []
+    schema.$defs.each { group_name, group_def ->
+        if (group_def.required) {
+            group_def.required.each { req_prop ->
+                if (!keep || keep.contains(req_prop)) {
+                    all_required << req_prop
+                }
+            }
+        }
+    }
+    return all_required
+}
+
 // Split parameters into different sets based on prefixes and analysis type
 def splitParameters(params) {
     // Base parameters are everything not in other sets
@@ -385,91 +583,6 @@ def splitParameters(params) {
         differential: differentialParams,
         functional: functionalParams
     ]
-}
-
-// Get tool configurations based on whether analysis_name is provided
-def getToolConfigurations() {
-    // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
-    return (params.analysis_name || params.toolsheet_custom) ?
-        getToolsheetConfigurations() :
-        getDefaultConfigurations()
-}
-
-// Create a temporary schema file for toolsheet validation
-// This schema is derived from the pipeline's nextflow_schema.json by:
-// 1. Reading the toolsheet headers to determine which fields to include
-// 2. Extracting only those properties from the pipeline schema
-// 3. Creating a schema that allows for an array of objects
-// 4. Making analysis_name the only required field
-// 5. Adding meta fields to all properties
-// @return The absolute path to the temporary schema file
-def createToolsheetSchema() {
-    // Load toolsheet and get headers
-    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
-    def toolsheet_lines = new File(toolsheet_path).readLines()
-    def headers = toolsheet_lines[0].split(',')
-
-    // Ensure analysis_name is in headers
-    if (!headers.contains('analysis_name')) {
-        error("The toolsheet must contain an 'analysis_name' column")
-    }
-
-    // Load and parse pipeline schema
-    def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
-    def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
-
-    // Extract only the properties that are present in the toolsheet
-    def all_properties = [:]
-    schema_json.$defs.each { group_name, group_def ->
-        if (group_def.properties) {
-            group_def.properties.each { prop_name, prop_def ->
-                // Only include properties that are in the toolsheet headers
-                if (headers.contains(prop_name)) {
-                    // Add meta field to each property
-                    def prop_with_meta = prop_def + [meta: [prop_name]]
-                    all_properties[prop_name] = prop_with_meta
-                }
-            }
-        }
-    }
-
-    // Ensure analysis_name property exists in schema
-    if (!all_properties.containsKey('analysis_name')) {
-        // Find analysis_name definition in pipeline schema
-        def analysis_name_def = null
-        schema_json.$defs.each { group_name, group_def ->
-            if (group_def.properties && group_def.properties.containsKey('analysis_name')) {
-                analysis_name_def = group_def.properties['analysis_name']
-            }
-        }
-
-        if (!analysis_name_def) {
-            error("Could not find analysis_name definition in pipeline schema")
-        }
-
-        // Add analysis_name to properties with meta field
-        all_properties['analysis_name'] = analysis_name_def + [meta: ['analysis_name']]
-    }
-
-    // Create samplesheet schema with filtered properties and analysis_name as required
-    def samplesheet_schema = [
-        '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        'title': 'nf-core/differentialabundance - toolsheet schema',
-        'description': 'Schema for validating the toolsheet configuration',
-        'type': 'array',
-        'items': [
-            'type': 'object',
-            'properties': all_properties,
-            'required': ['analysis_name']
-        ]
-    ]
-
-    // Write temporary schema file
-    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
-    def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
-    temp_schema.text = schema_string
-
-    return temp_schema.absolutePath
 }
 
 // Simplify meta map to only include parameters relevant for a specific analysis type
@@ -522,45 +635,6 @@ def subsetMeta(meta, analysis_type) {
             break
     }
     return relevantParams
-}
-
-// Get configurations from toolsheet
-def getToolsheetConfigurations() {
-    // Load toolsheet
-    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
-
-    // Create temporary schema for validation
-    def schema_path = createToolsheetSchema()
-
-    // Load toolsheet and validate each row against the transformed schema
-    def raw_toolsheet = samplesheetToList(toolsheet_path, schema_path)
-
-    def toolsheet = raw_toolsheet
-        .findAll { row ->
-            // If analysis_name is set, only keep matching rows
-            if (params.analysis_name) {
-                return row[0].analysis_name == params.analysis_name
-            }
-            return true
-        }
-
-    if (toolsheet.isEmpty()) {
-        if (params.analysis_name) {
-            error("No configuration found in toolsheet for analysis_name '${params.analysis_name}'")
-        } else {
-            error("No valid configurations found in toolsheet")
-        }
-    }
-
-    def staticparams = params.findAll { k, v -> k != 'trace_report_suffix' } as Map
-    return toolsheet.collect{ row ->
-        ['id': staticparams.study_name] +staticparams + row[0]
-    }
-}
-
-// Get default configurations from pipeline parameters
-def getDefaultConfigurations() {
-    return [params + ['id': params.study_name]]
 }
 
 // Helper function to re-apply full parameters to deduplicated results
