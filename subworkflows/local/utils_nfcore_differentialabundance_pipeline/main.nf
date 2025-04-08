@@ -70,16 +70,15 @@ workflow PIPELINE_INITIALISATION {
     )
 
     //
-    // Custom validation for pipeline parameters
+    // Get paramsets based on toolsheet or default parameters
     //
-    validateInputParameters()
+    paramsets = getToolConfigurations()
+    ch_paramsets = Channel.fromList(paramsets)
 
-    // ===========================================================================
-    // Handle toolsheet
-    // ===========================================================================
-
-    // Define tool settings based on analysis name or default parameters
-    ch_paramsets = Channel.fromList(getToolConfigurations())
+    //
+    // Custom validate input parameters
+    //
+    validateInputParameters(paramsets)
 
     emit:
     paramsets = ch_paramsets
@@ -173,64 +172,61 @@ workflow GROUP_BY_ANALYSIS {
 //
 // Check and validate pipeline parameters
 //
-def validateInputParameters() {
+def validateInputParameters(paramsets) {
+
     genomeExistsError()
 
-    // Check file existence for input parameters
-    def checkPathParamList = [ params.input ]
-    for (param in checkPathParamList) {
-        if (param) {
-            file(param, checkIfExists: true)
-        }
-    }
+    // check the params in each of the paramsets
+    paramsets.each { row ->
 
-    // Check mandatory parameters
-    if (!params.input) {
-        error("Input samplesheet not specified!")
-    }
+        // check file existence for input parameters
+        if (row.input) {
+            file(row.input, checkIfExists: true)
+        }
 
-    // Validate study type specific parameters
-    if (params.study_type == 'affy_array') {
-        if (!params.affy_cel_files_archive) {
-            error("CEL files archive not specified!")
-        }
-    } else if (params.study_type == 'maxquant') {
-        if (params.functional_method) {
-            error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
-        }
-        if (!params.matrix) {
-            error("Input matrix not specified!")
-        }
-    } else if (params.study_type == 'geo_soft_file') {
-        if (!params.querygse || !params.features_metadata_cols) {
-            error("Query GSE not specified or features metadata columns not specified")
-        }
-    } else if (params.study_type == "rnaseq") {
-        if (!params.matrix) {
-            error("Input matrix not specified!")
-        }
-    }
-
-    // Validate functional analysis parameters
-    if (params.functional_method) {
-        if (params.functional_method == 'gsea' && !params.gene_sets_files) {
-            error("GSEA activated but gene set file not specified!")
-        } else if (params.functional_method == 'gprofiler2') {
-            if (!params.gprofiler2_token && !params.gprofiler2_organism) {
-                error("To run gprofiler2, please provide a run token, GMT file or organism!")
+        // Validate study type spepecific parameters
+        if (row.study_type == 'affy_array') {
+            if (!row.affy_cel_files_archive) {
+                error("CEL files archive not specified!")
             }
-            if (params.gene_sets_files && params.gene_sets_files.split(",").size() > 1) {
-                error("gprofiler2 can currently only work with a single gene set file")
+        } else if (row.study_type == 'maxquant') {
+            if (row.functional_method) {
+                error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
+            }
+            if (!row.matrix) {
+                error("Input matrix not specified!")
+            }
+        } else if (row.study_type == 'geo_soft_file') {
+            if (!row.querygse || !row.features_metadata_cols) {
+                error("Query GSE not specified or features metadata columns not specified")
+            }
+        } else if (row.study_type == "rnaseq") {
+            if (!row.matrix) {
+                error("Input matrix not specified!")
             }
         }
-    }
 
-    // Validate contrasts parameters
-    if (params.contrasts_yml && params.contrasts) {
-        error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
-    }
-    if (!(params.contrasts_yml || params.contrasts)) {
-        error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
+        // Validate functional analysis parameters
+        if (row.functional_method) {
+            if (row.functional_method == 'gsea' && !row.gene_sets_files) {
+                error("GSEA activated but gene set file not specified!")
+            } else if (row.functional_method == 'gprofiler2') {
+                if (!row.gprofiler2_token && !row.gprofiler2_organism) {
+                    error("To run gprofiler2, please provide a run token, GMT file or organism!")
+                }
+                if (row.gene_sets_files && row.gene_sets_files.split(",").size() > 1) {
+                    error("gprofiler2 can currently only work with a single gene set file")
+                }
+            }
+        }
+
+        // Validate contrasts parameters
+        if (row.contrasts_yml && row.contrasts) {
+            error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
+        }
+        if (!(row.contrasts_yml || row.contrasts)) {
+            error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
+        }
     }
 }
 
