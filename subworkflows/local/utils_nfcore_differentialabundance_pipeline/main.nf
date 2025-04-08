@@ -35,6 +35,11 @@ workflow PIPELINE_INITIALISATION {
 
     main:
 
+    // Check that params is available
+    if (!params) {
+        error("Pipeline parameters not initialized. This is a critical error.")
+    }
+
     ch_versions = Channel.empty()
 
     //
@@ -68,13 +73,15 @@ workflow PIPELINE_INITIALISATION {
     //
     validateInputParameters()
 
-    //
+    // ===========================================================================
+    // Handle toolsheet
+    // ===========================================================================
+
     // Define tool settings based on analysis name or default parameters
-    //
-    ch_tools = Channel.of(getToolConfigurations())
+    ch_paramsets = Channel.fromList(getToolConfigurations())
 
     emit:
-    tools       = ch_tools
+    paramsets = ch_paramsets
     versions    = ch_versions
 }
 
@@ -127,6 +134,38 @@ workflow PIPELINE_COMPLETION {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SUBWORKFLOW FOR GROUPING BY ANALYSIS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Toolsheet usage means that we sometimes group multiple analyses into a single run
+where the input parameterisation would have been the same. There may also be multiple
+results per group where we have multiple contrasts. To use these results downstream
+we must 'expand' results back to the original groupings, but also group by the
+individual analysis such that e.g. the results from multiple contrasts travel
+through the workflow together.
+*/
+
+workflow GROUP_BY_ANALYSIS {
+
+    take:
+    channel_in
+    paramsets_by_name
+
+    main:
+
+    channel_out = channel_in
+        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
+        .transpose()
+        .join(paramsets_by_name)
+        .map{analysis_name, meta, differential_results, paramset -> [paramset, meta, differential_results]}
+
+
+    emit:
+    with_study_meta = channel_out
+}
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -135,6 +174,63 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputParameters() {
     genomeExistsError()
+
+    // Check file existence for input parameters
+    def checkPathParamList = [ params.input ]
+    for (param in checkPathParamList) {
+        if (param) {
+            file(param, checkIfExists: true)
+        }
+    }
+
+    // Check mandatory parameters
+    if (!params.input) {
+        error("Input samplesheet not specified!")
+    }
+
+    // Validate study type specific parameters
+    if (params.study_type == 'affy_array') {
+        if (!params.affy_cel_files_archive) {
+            error("CEL files archive not specified!")
+        }
+    } else if (params.study_type == 'maxquant') {
+        if (params.functional_method) {
+            error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
+        }
+        if (!params.matrix) {
+            error("Input matrix not specified!")
+        }
+    } else if (params.study_type == 'geo_soft_file') {
+        if (!params.querygse || !params.features_metadata_cols) {
+            error("Query GSE not specified or features metadata columns not specified")
+        }
+    } else if (params.study_type == "rnaseq") {
+        if (!params.matrix) {
+            error("Input matrix not specified!")
+        }
+    }
+
+    // Validate functional analysis parameters
+    if (params.functional_method) {
+        if (params.functional_method == 'gsea' && !params.gene_sets_files) {
+            error("GSEA activated but gene set file not specified!")
+        } else if (params.functional_method == 'gprofiler2') {
+            if (!params.gprofiler2_token && !params.gprofiler2_organism) {
+                error("To run gprofiler2, please provide a run token, GMT file or organism!")
+            }
+            if (params.gene_sets_files && params.gene_sets_files.split(",").size() > 1) {
+                error("gprofiler2 can currently only work with a single gene set file")
+            }
+        }
+    }
+
+    // Validate contrasts parameters
+    if (params.contrasts_yml && params.contrasts) {
+        error("Both '--contrasts' and '--contrasts_yml' parameters are set. Please specify only one of these options to define contrasts.")
+    }
+    if (!(params.contrasts_yml || params.contrasts)) {
+        error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
+    }
 }
 
 //
@@ -240,167 +336,238 @@ def methodsDescriptionText(mqc_methods_yaml) {
     return description_html.toString()
 }
 
-/**
-* Parse a string of arguments into a map.
-* @param argsStr The string of arguments to parse.
-* @return A map of parameters.
-* @example
-* parseStrArgsToMap("--arg1 aa --arg2 bb --arg4 cc") => [arg1: aa, arg2: bb, arg4: cc]
-*/
-def parseStrArgsToMap(String argsStr) {
-    if (!argsStr) return [:]                     // if null return empty
-    def tokens = argsStr.split().findAll { it }  // Split and remove empty strings
-    def pairs = tokens.collate(2)                // Group into pairs
-    return pairs.collectEntries {
-        [(it[0].replaceAll('^-+', '')): it[1]]   // Remove leading dashes
+// Split parameters into different sets based on prefixes and analysis type
+def splitParameters(params) {
+    // Base parameters are everything not in other sets
+    def baseParams = [:]
+    def differentialParams = [:]
+    def functionalParams = [:]
+
+    // First collect all differential parameters
+    params.each { key, value ->
+        if (key.startsWith('differential_') || key.startsWith('limma_') || key.startsWith('deseq2_')) {
+            differentialParams[key] = value
+        }
     }
+
+    // Then collect functional parameters based on method
+    if (params.functional_method == 'gprofiler2') {
+        // For gprofiler2, include both base and differential params
+        params.each { key, value ->
+            if (key.startsWith('functional_') || key.startsWith('gprofiler2_')) {
+                functionalParams[key] = value
+            }
+        }
+        // Add all differential params to functional params for gprofiler2
+        functionalParams.putAll(differentialParams)
+    } else if (params.functional_method == 'gsea') {
+        // For GSEA, only include functional params
+        params.each { key, value ->
+            if (key.startsWith('functional_') || key.startsWith('gsea_')) {
+                functionalParams[key] = value
+            }
+        }
+    }
+
+    // Base params are everything not in other sets
+    params.each { key, value ->
+        if (!differentialParams.containsKey(key) && !functionalParams.containsKey(key)) {
+            baseParams[key] = value
+        }
+    }
+
+    // Add base params to both differential and functional
+    differentialParams.putAll(baseParams)
+    functionalParams.putAll(baseParams)
+
+    return [
+        base: baseParams,
+        differential: differentialParams,
+        functional: functionalParams
+    ]
 }
 
-/**
-* Parse the parameters for a specific analysis type and method.
-* @param analysisType The analysis type. Eg. 'differential', 'functional'.
-* @param method The method to use for the analysis.
-* @param argsStr The string of arguments to parse.
-* @return A map of parameters.
-*/
-def parseParams(String analysisType, String method, String argsStr){
-    def parsed_params = [:]
-
-    // parse the params specific to the analysis type from the pipeline params
-    parsed_params += params.findAll { k, v -> k.matches(~/(${analysisType}).*/) }
-
-    // parse the params specific to the method
-    // First it gets the default values as specified by the pipeline params scope,
-    // and then overwrite with the values specified in the argsStr (highest priority),
-    // when provided
-    if (method) {
-        parsed_params += params.findAll { k, v -> k.matches(~/(${method}).*/) }
-        parsed_params["${analysisType}_method"] = method
-    }
-    if (argsStr) {
-        parsed_params += parseStrArgsToMap(argsStr)
-    }
-
-    return parsed_params
-}
-
-/**
-* Get tool configurations based on whether analysis_name is provided
-* @return A channel with tool configurations.
-*/
+// Get tool configurations based on whether analysis_name is provided
 def getToolConfigurations() {
-    if (params.analysis_name) {
-        return getToolsheetConfigurations()
-    } else {
-        return getDefaultConfigurations()
-    }
+    // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
+    return (params.analysis_name || params.toolsheet_custom) ?
+        getToolsheetConfigurations() :
+        getDefaultConfigurations()
 }
 
-/**
-* Get configurations from toolsheet
-* @return A list of tool configurations by parsing toolsheet.
-*/
+// Create a temporary schema file for toolsheet validation
+// This schema is derived from the pipeline's nextflow_schema.json by:
+// 1. Reading the toolsheet headers to determine which fields to include
+// 2. Extracting only those properties from the pipeline schema
+// 3. Creating a schema that allows for an array of objects
+// 4. Making analysis_name the only required field
+// 5. Adding meta fields to all properties
+// @return The absolute path to the temporary schema file
+def createToolsheetSchema() {
+    // Load toolsheet and get headers
+    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
+    def toolsheet_lines = new File(toolsheet_path).readLines()
+    def headers = toolsheet_lines[0].split(',')
+
+    // Ensure analysis_name is in headers
+    if (!headers.contains('analysis_name')) {
+        error("The toolsheet must contain an 'analysis_name' column")
+    }
+
+    // Load and parse pipeline schema
+    def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
+    def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
+
+    // Extract only the properties that are present in the toolsheet
+    def all_properties = [:]
+    schema_json.$defs.each { group_name, group_def ->
+        if (group_def.properties) {
+            group_def.properties.each { prop_name, prop_def ->
+                // Only include properties that are in the toolsheet headers
+                if (headers.contains(prop_name)) {
+                    // Add meta field to each property
+                    def prop_with_meta = prop_def + [meta: [prop_name]]
+                    all_properties[prop_name] = prop_with_meta
+                }
+            }
+        }
+    }
+
+    // Ensure analysis_name property exists in schema
+    if (!all_properties.containsKey('analysis_name')) {
+        // Find analysis_name definition in pipeline schema
+        def analysis_name_def = null
+        schema_json.$defs.each { group_name, group_def ->
+            if (group_def.properties && group_def.properties.containsKey('analysis_name')) {
+                analysis_name_def = group_def.properties['analysis_name']
+            }
+        }
+
+        if (!analysis_name_def) {
+            error("Could not find analysis_name definition in pipeline schema")
+        }
+
+        // Add analysis_name to properties with meta field
+        all_properties['analysis_name'] = analysis_name_def + [meta: ['analysis_name']]
+    }
+
+    // Create samplesheet schema with filtered properties and analysis_name as required
+    def samplesheet_schema = [
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        'title': 'nf-core/differentialabundance - toolsheet schema',
+        'description': 'Schema for validating the toolsheet configuration',
+        'type': 'array',
+        'items': [
+            'type': 'object',
+            'properties': all_properties,
+            'required': ['analysis_name']
+        ]
+    ]
+
+    // Write temporary schema file
+    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
+    def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
+    temp_schema.text = schema_string
+
+    return temp_schema.absolutePath
+}
+
+// Simplify meta map to only include parameters relevant for a specific analysis type
+def subsetMeta(meta, analysis_type) {
+    def relevantParams = [:]
+
+    // Define static lists of parameter prefixes for different analysis types
+    def differentialPrefixes = ['differential_', 'limma_', 'deseq2_']
+    def functionalPrefixes = ['functional_']
+    def gseaPrefixes = ['gsea_']
+    def gprofiler2Prefixes = ['gprofiler2_']
+    def basicFields = ['id', 'study_name', 'study_type', 'analysis_name']
+
+    // Always include basic fields
+    basicFields.each { field ->
+        if (meta.containsKey(field)) {
+            relevantParams[field] = meta[field]
+        }
+    }
+
+    // Add parameters based on analysis type
+    switch(analysis_type) {
+        case 'differential':
+            // Include differential-specific parameters
+            meta.each { key, value ->
+                if (differentialPrefixes.any { key.startsWith(it) }) {
+                    relevantParams[key] = value
+                }
+            }
+            break
+
+        case 'functional':
+            // Include functional-specific parameters
+            meta.each { key, value ->
+                if (functionalPrefixes.any { key.startsWith(it) } ||
+                    (meta.functional_method == 'gsea' && gseaPrefixes.any { key.startsWith(it) }) ||
+                    (meta.functional_method == 'gprofiler2' && gprofiler2Prefixes.any { key.startsWith(it) })) {
+                    relevantParams[key] = value
+                }
+            }
+
+            // For gprofiler2, also include differential parameters
+            if (meta.functional_method == 'gprofiler2') {
+                meta.each { key, value ->
+                    if (differentialPrefixes.any { key.startsWith(it) }) {
+                        relevantParams[key] = value
+                    }
+                }
+            }
+            break
+    }
+    return relevantParams
+}
+
+// Get configurations from toolsheet
 def getToolsheetConfigurations() {
-    // Load appropriate toolsheet based on study type
-    def toolsheet_path = getToolsheetPath()
+    // Load toolsheet
+    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
 
-    // Load and filter toolsheet for specific analysis
-    def toolsheet = samplesheetToList(toolsheet_path, "${projectDir}/assets/schema_tools.json")
-        .find { it[0].analysis_name == params.analysis_name }
-        ?: error("Analysis '${params.analysis_name}' not found in toolsheet")
+    // Create temporary schema for validation
+    def schema_path = createToolsheetSchema()
 
-    // Construct tool configurations
-    def tool_config = toolsheet[0]
-    return [
-        getNormalizationConfig(tool_config),
-        getDifferentialConfig(tool_config),
-        getFunctionalConfig(tool_config)
-    ]
+    // Load toolsheet and validate each row against the transformed schema
+    def raw_toolsheet = samplesheetToList(toolsheet_path, schema_path)
+
+    def toolsheet = raw_toolsheet
+        .findAll { row ->
+            // If analysis_name is set, only keep matching rows
+            if (params.analysis_name) {
+                return row[0].analysis_name == params.analysis_name
+            }
+            return true
+        }
+
+    if (toolsheet.isEmpty()) {
+        if (params.analysis_name) {
+            error("No configuration found in toolsheet for analysis_name '${params.analysis_name}'")
+        } else {
+            error("No valid configurations found in toolsheet")
+        }
+    }
+
+    def staticparams = params.findAll { k, v -> k != 'trace_report_suffix' } as Map
+    return toolsheet.collect{ row ->
+        ['id': staticparams.study_name] +staticparams + row[0]
+    }
 }
 
-/**
-* Get default configurations from pipeline parameters
-* @return A list of default tool configurations.
-*/
+// Get default configurations from pipeline parameters
 def getDefaultConfigurations() {
-    return [
-        getNormalizationConfig(null),
-        getDifferentialConfig(null),
-        getFunctionalConfig(null)
-    ]
+    return [params + ['id': params.study_name]]
 }
 
-/**
-* Get the appropriate toolsheet path.
-* @return The path to the toolsheet.
-*/
-def getToolsheetPath() {
-    // use user-provided toolsheet if available
-    if (params.toolsheet) {
-        return params.toolsheet
-    }
-    // use default toolsheet based on study type
-    switch (params.study_type) {
-        case 'rnaseq':
-            return "${projectDir}/assets/toolsheet_rnaseq.csv"
-        case ['affy_array', 'geo_soft_file']:
-            return "${projectDir}/assets/toolsheet_affy.csv"
-        case 'maxquant':
-            return "${projectDir}/assets/toolsheet_maxquant.csv"
-        default:
-            error("Invalid study_type. Must be one of: 'rnaseq', 'affy_array', 'geo_soft_file', 'maxquant'")
-    }
-}
-
-/**
-* Get normalization tool configuration
-* @param tool_config The tool configuration.
-* @return A map of normalization configuration.
-*/
-def getNormalizationConfig(tool_config) {
-    // non-rnaseq studies use directly the normalized matrix output from the VALIDATOR module
-    if (params.study_type != 'rnaseq') {
-        return [method: 'validator', args: [:]]
-    }
-    // for rna-seq studies, use the differential method specified in the toolsheet
-    // or the default differential method specified in the pipeline parameters
-    def method = tool_config?.diff_method ?: params.differential_method
-    def args = parseParams('differential', method, tool_config?.diff_args ?: null)
-    return [method: method, args: args]
-}
-
-/**
-* Get differential analysis tool configuration
-* @param tool_config The tool configuration.
-* @return A map of differential analysis configuration.
-*/
-def getDifferentialConfig(tool_config) {
-    def method = tool_config?.diff_method ?: params.differential_method
-    def args = parseParams('differential', method, tool_config?.diff_args ?: null)
-    def fc_threshold = args.differential_min_fold_change
-    def stat_threshold = args.differential_max_qval
-    return [
-        method: method,
-        args: args,
-        fc_threshold: fc_threshold,
-        stat_threshold: stat_threshold
-    ]
-}
-
-/**
-* Get functional analysis tool configuration
-* @param tool_config The tool configuration.
-* @return A map of functional analysis configuration.
-*/
-def getFunctionalConfig(tool_config) {
-    def method = tool_config?.func_method ?: params.functional_method
-    def args = parseParams('functional', method, tool_config?.func_args ?: null)
-    def input_type = method == 'gprofiler2' ? 'filtered' :
-                    method == 'gsea' ? 'norm' :
-                    null
-    return [
-        method: method,
-        args: args,
-        input_type: input_type
-    ]
+// Helper function to re-apply full parameters to deduplicated results
+def reapplyParams(channel, paramsets_by_name) {
+    channel
+        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
+        .transpose()
+        .join(paramsets_by_name)
+        .map{analysis_names, meta, differential_results, paramset -> [meta + ['study_meta': paramset], differential_results]}
 }
