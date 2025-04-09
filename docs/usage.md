@@ -197,6 +197,8 @@ The necessary fields in order are:
 
 You can optionally supply:
 
+- `formula` - A string representation of the model formula. It is used to build the design matrix.
+- `string` - An optional explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to `limma::makeContrasts()` in `VARIANCEPARTITION_DREAM`. This field provides full control for complex designs. Requires `formula`.
 - `blocking_factors` - Any additional variables (also observation columns) that should be modelled alongside the contrast variable
 - `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be excluded prior to analysis of a given contrast.
 
