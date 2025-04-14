@@ -627,6 +627,7 @@ def getRelevantMeta (meta, module) {
             break
         case 'immunedeconv':
             prefix += ['immunedeconv_']
+            keys += ['features_name_col']
             break
         default:
             error("Module '${module}' not recognized by getRelevantMeta.")

@@ -592,26 +592,28 @@ workflow DIFFERENTIALABUNDANCE {
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
 
-    // // ========================================================================
-    // // Other analyses
-    // // ========================================================================
+    // ========================================================================
+    // Other analyses
+    // ========================================================================
 
-    // // Run IMMUNEDECONV
+    // Run IMMUNEDECONV
 
-    // ch_immunedeconv_input = ch_raw
-    //     .filter{meta, raw -> meta.immunedeconv_run}
-    //     .multiMap{meta, raw ->
-    //         input: [meta, raw, meta.immunedeconv_method, meta.immunedeconv_function]
-    //         name_col: meta.features_name_col
-    //     }
+    ch_immunedeconv_input = ch_in_raw
+        .filter{meta, raw -> meta.immunedeconv_run}
 
-    // IMMUNEDECONV(
-    //     ch_immunedeconv_input.input,
-    //     ch_immunedeconv_input.name_col
-    // )
+    ch_immunedeconv_input = prepareModuleInput(ch_immunedeconv_input, 'immunedeconv')
+        .multiMap{meta, raw ->
+            input: [meta, raw, meta.immunedeconv_method, meta.immunedeconv_function]
+            name_col: meta.features_name_col
+        }
 
-    // ch_versions = ch_versions
-    //     .mix(IMMUNEDECONV.out.versions)
+    IMMUNEDECONV(
+        ch_immunedeconv_input.input,
+        ch_immunedeconv_input.name_col
+    )
+
+    ch_versions = ch_versions
+        .mix(IMMUNEDECONV.out.versions)
 
     // ========================================================================
     // Plot figures
