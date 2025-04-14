@@ -198,9 +198,21 @@ The necessary fields in order are:
 You can optionally supply:
 
 - `formula` - A string representation of the model formula. It is used to build the design matrix.
-- `string` - An optional explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to `limma::makeContrasts()` in `VARIANCEPARTITION_DREAM`. This field provides full control for complex designs. Requires `formula`.
+- `make_contrasts_str` - An optional explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to `limma::makeContrasts()` in `VARIANCEPARTITION_DREAM`. This field provides full control for complex designs. Requires `formula`.
 - `blocking_factors` - Any additional variables (also observation columns) that should be modelled alongside the contrast variable
 - `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be excluded prior to analysis of a given contrast.
+
+Beyond the basic one-factor comparison, the YAML contrasts format supports advanced experimental designs through the use of interaction terms and custom contrast strings. These are particularly useful in multifactorial experiments where the effect of one variable may depend on the level of another (e.g. genotype × treatment). To model an interaction between genotype and treatment, use a formula like `~ genotype * treatment`, which expands the yaml to:
+
+```yaml
+contrasts:
+  - id: genotype_WT_KO_treatment_Control_Treated
+    formula: "~ genotype * treatment"
+    comparison: ["genotype", "WT", "KO"]
+    make_contrasts_str: "genotypeKO.treatmentTreated"
+```
+
+To facilitate constructing and validating such models and contrast strings, consider using the [`ExploreModelMatrix`](https://www.bioconductor.org/packages/release/bioc/html/ExploreModelMatrix.html) Shiny app to have visual inspection of the design matrix and interactive contrast building. Another helpful resource is the [guide to creating design matrices for gene expression experiments](https://bioconductor.org/packages/release/workflows/vignettes/RNAseq123/inst/doc/designmatrices.html).
 
 ## Feature annotations
 
