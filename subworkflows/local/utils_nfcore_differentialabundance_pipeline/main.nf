@@ -74,7 +74,6 @@ workflow PIPELINE_INITIALISATION {
     //
     paramsets = getToolConfigurations()
     ch_paramsets = Channel.fromList(paramsets)
-    ch_paramsets.view()
 
     //
     // Custom validate input parameters
@@ -131,38 +130,6 @@ workflow PIPELINE_COMPLETION {
     workflow.onError {
         log.error "Pipeline failed. Please refer to troubleshooting docs: https://nf-co.re/docs/usage/troubleshooting"
     }
-}
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    SUBWORKFLOW FOR GROUPING BY ANALYSIS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Toolsheet usage means that we sometimes group multiple analyses into a single run
-where the input parameterisation would have been the same. There may also be multiple
-results per group where we have multiple contrasts. To use these results downstream
-we must 'expand' results back to the original groupings, but also group by the
-individual analysis such that e.g. the results from multiple contrasts travel
-through the workflow together.
-*/
-
-workflow GROUP_BY_ANALYSIS {
-
-    take:
-    channel_in
-    paramsets_by_name
-
-    main:
-
-    channel_out = channel_in
-        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
-        .transpose()
-        .join(paramsets_by_name)
-        .map{analysis_name, meta, differential_results, paramset -> [paramset, meta, differential_results]}
-
-
-    emit:
-    with_study_meta = channel_out
 }
 
 /*
@@ -424,9 +391,14 @@ def getToolsheetConfigurationsFull(toolsheet) {
         .collect{ row ->
             // replace empty values [] by null
             def cleanparams = row.collectEntries { k, v -> [(k): (v == [] ? null : v)] }
+            // sort toolsheet params based on pipeline params order
+            def paramKeysList = params.keySet().toList()
+            def sortedparams = cleanparams.sort { a, b ->
+                    paramKeysList.indexOf(a.key) <=> paramKeysList.indexOf(b.key)
+                } as Map
             // use only the static params, otherwise it causes issues with cache
-            def staticparams = cleanparams.findAll { k, v -> k != 'trace_report_suffix' } as Map
-            return ['id': staticparams.study_name] + staticparams
+            def staticparams = sortedparams.findAll { k, v -> k != 'trace_report_suffix' } as Map
+            return staticparams
         }
 }
 
@@ -434,7 +406,7 @@ def getToolsheetConfigurationsFull(toolsheet) {
 def getDefaultConfigurations() {
     def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
     def nonstaticparams = ['trace_report_suffix']
-    return [['id': params.study_name] + params.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map]
+    return [params.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map]
 }
 
 // Create a temporary schema file for toolsheet validation
@@ -546,114 +518,134 @@ def extractRequiredFromSchema(schema) {
     return all_required
 }
 
-// Split parameters into different sets based on prefixes and analysis type
-def splitParameters(params) {
-    // Base parameters are everything not in other sets
-    def baseParams = [:]
-    def differentialParams = [:]
-    def functionalParams = [:]
-
-    // First collect all differential parameters
-    params.each { key, value ->
-        if (key.startsWith('differential_') || key.startsWith('limma_') || key.startsWith('deseq2_')) {
-            differentialParams[key] = value
+// prepare the input for the module by keeping only the relevant params
+// in the meta and group channel by simplified meta and unique inputs
+// @param channel: the input channel
+// @param module: the simplified module name
+// @param size: the number of elements in the channel
+def prepareModuleInput(channel, module='base', size=2) {
+    return channel
+        .map {
+            // clean the meta by keeping only the relevant params
+            def meta = getRelevantMeta(it[0], module)
+            // and add analysis name
+            [meta] + it.tail() + [it[0].analysis_name]
         }
-    }
-
-    // Then collect functional parameters based on method
-    if (params.functional_method == 'gprofiler2') {
-        // For gprofiler2, include both base and differential params
-        params.each { key, value ->
-            if (key.startsWith('functional_') || key.startsWith('gprofiler2_')) {
-                functionalParams[key] = value
-            }
+        // groupTuple by simplified meta and unique inputs
+        // Note that the same simplified meta relevant to the module may have
+        // input files originated from different upstream processes/params
+        .groupTuple(by: 0..(size-1))  // -1 because it is 0-based indexing
+        .map {
+            def meta = it[0] + [analysis_name: it[-1]]
+            [meta] + it[1..-2]
         }
-        // Add all differential params to functional params for gprofiler2
-        functionalParams.putAll(differentialParams)
-    } else if (params.functional_method == 'gsea') {
-        // For GSEA, only include functional params
-        params.each { key, value ->
-            if (key.startsWith('functional_') || key.startsWith('gsea_')) {
-                functionalParams[key] = value
-            }
-        }
-    }
-
-    // Base params are everything not in other sets
-    params.each { key, value ->
-        if (!differentialParams.containsKey(key) && !functionalParams.containsKey(key)) {
-            baseParams[key] = value
-        }
-    }
-
-    // Add base params to both differential and functional
-    differentialParams.putAll(baseParams)
-    functionalParams.putAll(baseParams)
-
-    return [
-        base: baseParams,
-        differential: differentialParams,
-        functional: functionalParams
-    ]
 }
 
-// Simplify meta map to only include parameters relevant for a specific analysis type
-def subsetMeta(meta, analysis_type) {
+// prepare the output for the module by adding back the full paramsets
+// based on the analysis_name
+def prepareModuleOutput(channel, paramsets_by_name) {
+    channel_by_name = channel
+        // first parse the channel to have analysis_name as key
+        .map { [it[0].analysis_name] + it }
+        // transpose the list of analysis_name
+        .transpose()
+        .map {
+            // remap single analysis_name string into the meta
+            def meta = it[1] + [analysis_name: it[0]]
+            [it[0], meta] + it[2..-1]  // [analysis_name, meta, files ...]
+        }
+    return paramsets_by_name
+        // we use combine instead of join, because for the same analysis_name,
+        // different meta and files may have been generated because of the different contrasts
+        .combine(channel_by_name, by:0)
+        .map {
+            // use full paramsets as meta
+            def meta_full = it[1] + it[2]
+            [meta_full] + it[3..-1]    // [meta with full paramsets, files ...]
+        }
+}
+
+// get the relevant meta for the module
+// @params meta: the meta map
+// @params module: the simplified module name
+def getRelevantMeta (meta, module) {
     def relevantParams = [:]
 
-    // Define static lists of parameter prefixes for different analysis types
-    def differentialPrefixes = ['differential_', 'limma_', 'deseq2_']
-    def functionalPrefixes = ['functional_']
-    def gseaPrefixes = ['gsea_']
-    def gprofiler2Prefixes = ['gprofiler2_']
-    def basicFields = ['id', 'study_name', 'study_type', 'analysis_name']
+    // define the base keys and prefix
+    def keys_base = ['study_name', 'study_type']
+    def keys_contrast = ['variable', 'reference', 'target', 'blocking', 'formula'] // also always keep contrast keys, if available
+    def keys = ['id'] + keys_base + keys_contrast
+    def prefix = []
 
-    // Always include basic fields
-    basicFields.each { field ->
-        if (meta.containsKey(field)) {
-            relevantParams[field] = meta[field]
-        }
+    // add prefix and keys based on module
+    switch(module) {
+        case 'base':
+            break
+        case 'affy':
+            prefix += ['affy_']
+            keys += ['observations_id_col','observations_name_col']
+            break
+        case 'proteus':
+            prefix += ['proteus_']
+            keys += ['observations_id_col','features_id_col','report_round_digits']
+            break
+        case 'geoquery':
+            keys += ['features_metadata_cols']
+            break
+        case 'gtf':
+            prefix += ['features_gtf_']
+            break
+        case 'validator':
+            keys += ['observations_id_col','features_id_col']
+            break
+        case 'matrixfilter':
+            prefix += ['filtering_']
+            keys += ['observations_id_col']
+            break
+        case 'differential':
+            prefix += ['differential_', meta.differential_method+'_', 'exclude_samples_']
+            keys += ['features_id_col', 'observations_id_col', 'report_round_digits', 'sizefactors_from_controls']
+            break
+        case 'functional':
+            prefix += ['functional_', meta.functional_method+'_']
+            keys += ['features_id_col', 'features_name_col']
+            break
+        case 'exploratory':
+            prefix += ['exploratory_']
+            keys += ['features_id_col', 'observations_id_col']
+            break
+        case 'plot_differential':
+            prefix += ['differential_']
+            keys += ['features_id_col']
+            break
+        case 'shiny':
+            prefix += ['shinyngs_']
+            break
+        case 'report':
+            prefix += ['report_']
+            keys += ['logo_file', 'css_file', 'citations_file']
+            break
+        case 'immunedeconv':
+            prefix += ['immunedeconv_']
+            break
+        default:
+            error("Module '${module}' not recognized by getRelevantMeta.")
     }
 
-    // Add parameters based on analysis type
-    switch(analysis_type) {
-        case 'differential':
-            // Include differential-specific parameters
-            meta.each { key, value ->
-                if (differentialPrefixes.any { key.startsWith(it) }) {
-                    relevantParams[key] = value
-                }
-            }
-            break
-
-        case 'functional':
-            // Include functional-specific parameters
-            meta.each { key, value ->
-                if (functionalPrefixes.any { key.startsWith(it) } ||
-                    (meta.functional_method == 'gsea' && gseaPrefixes.any { key.startsWith(it) }) ||
-                    (meta.functional_method == 'gprofiler2' && gprofiler2Prefixes.any { key.startsWith(it) })) {
-                    relevantParams[key] = value
-                }
-            }
-
-            // For gprofiler2, also include differential parameters
-            if (meta.functional_method == 'gprofiler2') {
-                meta.each { key, value ->
-                    if (differentialPrefixes.any { key.startsWith(it) }) {
-                        relevantParams[key] = value
-                    }
-                }
-            }
-            break
+    // get key, value pairs from meta that start with the prefix
+    // or contain the keys in the keys list
+    meta.each { k, v ->
+        if ( (prefix.any { k.startsWith(it) }) || (keys.contains(k)) ) {
+            relevantParams[k] = v
+        }
     }
     return relevantParams
 }
 
-// Helper function to re-apply full parameters to deduplicated results
-def reapplyParams(channel, paramsets_by_name) {
-    channel
-        .map{meta, differential_results -> [meta.analysis_names, meta, differential_results]}
-        .transpose()
-        .join(paramsets_by_name)
-        .map{analysis_names, meta, differential_results, paramset -> [meta + ['study_meta': paramset], differential_results]}
+// get the meta excluding the keys related to contrast
+def getMetaWithoutContrast(meta) {
+    def key_contrast = ['id', 'variable', 'reference', 'target', 'blocking', 'formula']
+    return meta.findAll { key, value ->
+        ! key_contrast.contains(key)
+    }
 }

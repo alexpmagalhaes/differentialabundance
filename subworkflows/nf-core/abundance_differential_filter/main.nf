@@ -9,33 +9,22 @@ include { DESEQ2_DIFFERENTIAL as DESEQ2_NORM  } from '../../../modules/nf-core/d
 include { PROPR_PROPD                         } from '../../../modules/nf-core/propr/propd/main'
 include { CUSTOM_FILTERDIFFERENTIALTABLE      } from '../../../modules/nf-core/custom/filterdifferentialtable/main'
 
-// Combine meta maps, including merging non-identical values of shared keys (e.g. 'id')
-def mergeMaps(meta, meta2){
-    (meta + meta2).collectEntries { k, v ->
-        if (!(v instanceof Map) && meta[k] && meta[k] != v) {
-            [k, "${meta[k]}_${v}"]
-        } else {
-            [k, v]
-        }
-    }
-}
-
 workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     take:
     // Things we may need to iterate
-    ch_input                 // [[meta_input], counts, analysis method, fc_threshold, stat_threshold]
+    ch_input                 // [ meta_input, abundance, analysis method, fc_threshold, stat_threshold ]
 
     // Workflow-wide things, we don't need to iterate
-    ch_samplesheet           // [ meta_exp, samplesheet ]
-    ch_transcript_lengths    // [ meta_exp, transcript_lengths]
-    ch_control_features      // [meta_exp, control_features]
-    ch_contrasts             // [[ [meta_contrast], [contrast_variable], [reference], [target] ]]
+    ch_samplesheet           // [ meta_input, samplesheet ]
+    ch_transcript_lengths    // [ meta_input, transcript_lengths]
+    ch_control_features      // [ meta_input, control_features ]
+    ch_contrasts             // [ meta_input, [contrast], [variable], [reference], [target] ]
 
     main:
 
     // Set up how the channels crossed below will be used to generate channels for processing
-    def criteria = multiMapCriteria { meta_input, abundance, analysis_method, fc_threshold, stat_threshold, meta_exp, samplesheet, meta_contrasts, variable, reference, target ->
-        def meta_for_diff = meta_contrasts + meta_input + [ 'differential_method': analysis_method ]
+    def criteria = multiMapCriteria { meta_input, abundance, analysis_method, fc_threshold, stat_threshold, samplesheet, transcript_length, control_features, contrast, variable, reference, target ->
+        def meta_for_diff = meta_input + [ 'differential_method': analysis_method ] + contrast
         def meta_input_new = meta_input + [ 'differential_method': analysis_method ]
         samples_and_matrix:
             [ meta_input_new, samplesheet, abundance ]
@@ -45,13 +34,19 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
             [ meta_for_diff, [ 'fc_threshold': fc_threshold, 'stat_threshold': stat_threshold ]]
         contrasts_for_norm:
             [ meta_input_new, variable, reference, target ]
+        transcript_length:
+            [ meta_input_new, transcript_length ]
+        control_features:
+            [ meta_input_new, control_features ]
     }
 
     // For DIFFERENTIAL modules we need to cross the things we're iterating so we
     // run differential analysis for every combination of matrix and contrast
     inputs = ch_input
-        .combine(ch_samplesheet)
-        .combine(ch_contrasts.transpose())
+        .join(ch_samplesheet)
+        .join(ch_transcript_lengths)
+        .join(ch_control_features)
+        .combine(ch_contrasts.transpose(), by:0)
         .multiMap(criteria)
 
     // We only need a normalised matrix from one contrast. The reason we don't
@@ -59,8 +54,11 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // on the contrast setting etc, these modules may subset matrices, hence
     // not returning the full normalized matrix as NORM modules would do.
     norm_inputs = ch_input
-        .combine(ch_samplesheet)
-        .combine(ch_contrasts.transpose().first()) // Just taking the first contrast
+        .join(ch_samplesheet)
+        .join(ch_transcript_lengths)
+        .join(ch_control_features)
+        .combine(ch_contrasts.transpose().first(), by:0) // Just taking the first contrast
+        .unique()
         .multiMap(criteria)
 
     // ----------------------------------------------------
@@ -98,15 +96,15 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     DESEQ2_NORM(
         norm_inputs.contrasts_for_norm.filter{it[0].differential_method == 'deseq2'},
         norm_inputs.samples_and_matrix.filter{it[0].differential_method == 'deseq2'},
-        ch_control_features.first(),
-        ch_transcript_lengths.first()
+        norm_inputs.control_features.filter{it[0].differential_method == 'deseq2'},
+        norm_inputs.transcript_length.filter{it[0].differential_method == 'deseq2'}
     )
 
     DESEQ2_DIFFERENTIAL(
         inputs.contrasts_for_diff.filter{it[0].differential_method == 'deseq2'},
         inputs.samples_and_matrix.filter{it[0].differential_method == 'deseq2'},
-        ch_control_features.first(),
-        ch_transcript_lengths.first()
+        inputs.control_features.filter{it[0].differential_method == 'deseq2'},
+        inputs.transcript_length.filter{it[0].differential_method == 'deseq2'}
     )
 
     // ----------------------------------------------------

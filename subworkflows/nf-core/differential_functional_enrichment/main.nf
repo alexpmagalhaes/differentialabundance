@@ -9,12 +9,6 @@ include { CUSTOM_TABULARTOGSEACHIP } from '../../../modules/nf-core/custom/tabul
 include { GSEA_GSEA                } from '../../../modules/nf-core/gsea/gsea/main.nf'
 include { PROPR_GREA               } from "../../../modules/nf-core/propr/grea/main.nf"
 
-// Combine meta maps, including merging non-identical values of shared keys (e.g. 'id')
-def mergeMaps(meta, meta2){
-    (meta + meta2).collectEntries { k, v ->
-        meta[k] && meta[k] != v ? [k, "${meta[k]}_${v}"] : [k, v]
-    }
-}
 
 workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     take:
@@ -26,9 +20,9 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // other - for the moment these files are only needed for GSEA
     // as it is the only one that takes expression data as input
     // if in the future this setting is changed, this section could be removed
-    ch_contrasts             // [ meta_contrast, contrast_variable, reference, target ]
-    ch_samplesheet           // [ meta_exp, samples sheet ]
-    ch_featuresheet          // [ meta_exp, features sheet, features id, features symbol ]
+    ch_contrasts             // [ meta_input, [contrast], [variable], [reference], [target] ]
+    ch_samplesheet           // [ meta_input, samples sheet ]
+    ch_featuresheet          // [ meta_input, features sheet, features id, features symbol ]
 
     main:
 
@@ -53,9 +47,8 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // In the case of GSEA, it needs additional files coming from other channels that other methods don't use
     // here we define the input channel for the GSEA section
 
-    def criteria = multiMapCriteria { meta_input, input, genesets, meta_exp, samplesheet, featuresheet, features_id, features_symbol, meta_contrasts, variable, reference, target ->
-        def meta_contrasts_new = meta_contrasts + [ 'variable': variable, 'reference': reference, 'target': target ]  // make sure variable, reference, target are in the meta
-        def meta_all = mergeMaps(meta_contrasts_new, meta_input)
+    def criteria = multiMapCriteria { meta_input, input, genesets, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
+        def meta_all = meta_input + contrast + [ 'variable': variable, 'reference': reference, 'target': target ]  // make sure variable, reference, target are in the meta
         input:
             [ meta_all, input ]
         genesets:
@@ -63,15 +56,16 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         contrasts_and_samples:
             [ meta_all, samplesheet ]
         features:
-            [ meta_exp, featuresheet ]
+            [ meta_input, featuresheet ]
         features_cols:
             [ features_id, features_symbol ]
     }
     ch_preinput_for_gsea = ch_input.input
         .join(ch_input.genesets)
         .filter{ it[0].functional_method == 'gsea' }
-        .combine(ch_samplesheet.join(ch_featuresheet))
-        .combine(ch_contrasts.transpose())
+        .join(ch_samplesheet)
+        .join(ch_featuresheet)
+        .combine(ch_contrasts.transpose(), by:0)
         .multiMap(criteria)
 
     // ----------------------------------------------------
