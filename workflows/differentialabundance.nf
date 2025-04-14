@@ -377,8 +377,8 @@ workflow DIFFERENTIALABUNDANCE {
                 it.id = it.values().join('_')
             }
             it.formula = it.formula?.trim() ? it.formula.trim() : null
-            it.string = it.string?.trim() ? it.string.trim() : null
-            tuple(it, it.variable, it.reference, it.target, it.formula, it.string)
+            it.make_contrasts_str = it.make_contrasts_str?.trim() ? it.make_contrasts_str.trim() : null
+            tuple(it, it.variable, it.reference, it.target, it.formula, it.make_contrasts_str)
         }
 
     // Firstly Filter the input matrix
