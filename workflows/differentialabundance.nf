@@ -705,12 +705,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_collated_versions = softwareVersionsToYAML(ch_versions)
         .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'collated_versions.yml', sort: true, newLine: true)
 
-    // Derive the report file
-
-    ch_report_file = ch_paramsets
-        .map{ paramset -> tuple(paramset, paramset.report_file) }
-
-    // Generate a list of files that will be used by the markdown report
+    // Get the report file, logo, css, and citations
 
     ch_report_files = ch_paramsets
         .map { paramset ->
@@ -721,17 +716,60 @@ workflow DIFFERENTIALABUNDANCE {
                 file(paramset.citations_file, checkIfExists: true)
             ]]
         }
-        .join(ch_all_matrices)
-        .join(ch_validated_contrast)
-        .join(
-            ch_differential_results
-                .map { meta, differential_results ->
-                    def paramset = getMetaWithoutContrast(meta)
-                    [paramset, differential_results]
-                }
-                .groupTuple()
-        )
 
+    // Group differential and functional results by paramset
+    // So all the files generated with the same paramset will go together to report
+
+    ch_differential_grouped = ch_differential_results
+        .join(ch_differential_model)
+        .map { meta, results, model ->
+            def paramset = getMetaWithoutContrast(meta)
+            [paramset, results, model]
+        }
+        .groupTuple()
+        .map { [it[0], it.tail().flatten()] }  // [ paramset, [differential results and models] ]
+
+    ch_functional_grouped = ch_functional_results
+        .map {
+            def paramset = getMetaWithoutContrast(it[0])
+            [paramset, it.tail()]
+        }
+        .groupTuple()
+        .map { [it[0], it.tail().flatten()] }  // [ paramset, [functional results] ]
+
+    // Prepare input for report generation
+    // Each paramset will generate one markdown report by gathering all
+    // the files created with the same paramset
+
+    ch_report_input = ch_report_files    // [paramset, [report_file, logo_file, css_file, citations_file]]
+        .combine(ch_collated_versions)   // [versions file]
+        .join(ch_all_matrices)           // [paramset, samplesheet, features, [matrices]]
+        .join(ch_validated_contrast)     // [paramset, contrast file]
+        .join(ch_differential_grouped)   // [paramset, [differential results and models]]
+        .join(ch_functional_grouped, remainder: true) // [paramset, [functional results]]
+        .map { [it[0], it.tail().flatten()] }                    // [paramset, [files]]
+        .map { meta, files -> [meta, files[0], files.tail()] }   // [paramset, report_file, [files]]
+        .multiMap { paramset, report_file, files ->
+            report_file:
+            [paramset, report_file]
+
+            report_params:
+            def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
+                paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
+                [ 'contrasts_file' ]
+            paramset + [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
+
+            input_files:
+            files
+        }
+
+    // Render the final report
+
+    RMARKDOWNNOTEBOOK(
+        ch_report_input.report_file,
+        ch_report_input.report_params,
+        ch_report_input.input_files
+    )
 }
 
 /*
