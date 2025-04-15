@@ -55,7 +55,6 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    validate_params = (params.validate_params && !params.analysis_name && !params.toolsheet_custom) ? true : false  // the validation will be done through toolsheet, when provided
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
         validate_params,
@@ -313,25 +312,12 @@ def getToolConfigurations() {
 // To be able to retrieve a full set of parameters considering both toolsheet rows
 // (highest priority) and pipeline params scope and validate them all together,
 // we need to do the following:
-// 1. get and validate toolsheet configurations only
-// 2. get and validate toolsheet configurations merged with pipeline params
-// The second step involves creating a temporary json file with the full paramsets
-// and a temporary schema file with all the parameters, and use samplesheetToList
-// to validate them. In order to create this temporary json file, we need to first
-// retrieve the toolsheet configurations with the proper schema. This is why this
-// is done in two steps.
+// 1. get and validate toolsheet configurations
+// 2. fill missing params with pipeline params
 def getToolsheetConfigurations() {
     // get toolsheet path
     def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
-    // get toolsheet configurations - and validate
-    def toolsheet = getToolsheetConfigurationsOnly(toolsheet_path)
-    // get toolsheet configurations merged with pipeline params - and validate
-    def toolsheet_full = getToolsheetConfigurationsFull(toolsheet)
-    return toolsheet_full
-}
 
-// parse the params from toolsheet, and validate each of them
-def getToolsheetConfigurationsOnly(toolsheet_path) {
     // Create temporary schema for validation - with only the fields in the toolsheet
     def schema_path = createToolsheetSchema(toolsheet_path)
 
@@ -359,46 +345,24 @@ def getToolsheetConfigurationsOnly(toolsheet_path) {
         }
     }
 
+    // return paramset with toolsheet params (highest priority) and pipeline params
     return toolsheet
-}
-
-// merge the toolsheet params with pipeline params and validate them
-def getToolsheetConfigurationsFull(toolsheet) {
-
-    // gather toolsheet params with pipeline params - to create full paramsets
-    paramsets = toolsheet
-        .collect { row ->
-            // merge pipeline params with toolsheet params. Toolsheet params
-            // override pipeline params as they have highest priority
-            def paramset = params + row
-            // Only include parameters that are not in the ignore list
-            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
-            return paramset.findAll { k,v -> !ignore.contains(k) } as Map
-        }
-
-    // write the full paramsets to a temporary json file
-    def tempFile = new File("${projectDir}/extended.json")
-    tempFile.text = new groovy.json.JsonBuilder(paramsets).toPrettyString()
-    def full_toolsheet_path = tempFile.absolutePath
-
-    // create temporary toolsheet schema with all the parameters
-    def full_schema_path = createToolsheetSchema(null)
-
-    // load and validate the full paramsets
-    def paramsets_validated = samplesheetToList(full_toolsheet_path, full_schema_path).collect { it -> it[0] }
-
-    return paramsets_validated
         .collect{ row ->
-            // replace empty values [] by null
-            def cleanparams = row.collectEntries { k, v -> [(k): (v == [] ? null : v)] }
+            // clean empty values with []
+            def cleanparams = row.findAll { k, v -> v != [] } as Map
+            // add missing params from pipeline params
+            def fullparams = params + cleanparams
             // sort toolsheet params based on pipeline params order
             def paramKeysList = params.keySet().toList()
-            def sortedparams = cleanparams.sort { a, b ->
+            def sortedparams = fullparams.sort { a, b ->
                     paramKeysList.indexOf(a.key) <=> paramKeysList.indexOf(b.key)
                 } as Map
             // use only the static params, otherwise it causes issues with cache
             def staticparams = sortedparams.findAll { k, v -> k != 'trace_report_suffix' } as Map
-            return staticparams
+            // remove useless keys
+            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
+            def paramset = staticparams.findAll { k, v -> !(ignore).contains(k) } as Map
+            return paramset
         }
 }
 
@@ -410,38 +374,32 @@ def getDefaultConfigurations() {
 }
 
 // Create a temporary schema file for toolsheet validation
-// This schema is derived from the pipeline's nextflow_schema.json,
-// to create a schema with toolsheet structure that can be used to
-// run samplesheetToList. When the toolsheet is provided, it will
-// also filter the properties to only include those present in the
-// toolsheet. Concrete steps are:
-// 1. Extracting properties from the pipeline schema
-// 2. Determining which properties and required fields to keep, if
-// toolsheet provided
+// This schema is derived from the pipeline's nextflow_schema.json by:
+// 1. Reading the toolsheet headers to determine which fields to include
+// 2. Extracting only those properties (also adding them as meta) and
+// required fields from the pipeline schema
 // 3. Creating a schema that allows for an array of objects
-// 4. Adding meta fields to all properties
 // @return The absolute path to the temporary schema file
 def createToolsheetSchema(toolsheet_path) {
     // Load and parse pipeline schema
     def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
     def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
 
-    // Determine which properties and required fields to keep, if toolsheet is provided
-    def keep_properties = null
-    def keep_required = null
-    if (toolsheet_path) {
-        def toolsheet_lines = new File(toolsheet_path).readLines()
-        def headers = toolsheet_lines[0].split(',')
-        // Ensure analysis_name is in headers
-        if (!headers.contains('analysis_name')) {
-            error("The toolsheet must contain an 'analysis_name' column")
-        }
-        keep_properties = headers
+    // Get headers from toolsheet
+    def toolsheet_lines = new File(toolsheet_path).readLines()
+    def headers = toolsheet_lines[0].split(',')
+    // Ensure analysis_name is in headers
+    if (!headers.contains('analysis_name')) {
+        error("The toolsheet must contain an 'analysis_name' column")
     }
 
-    // Extract properties and required fields from schema
-    def all_properties = extractPropertiesFromSchema(schema_json, keep_properties)
-    def all_required = (toolsheet_path) ? ['analysis_name'] : extractRequiredFromSchema(schema_json)
+    // Extract all properties and required fields from schema
+    def all_properties = extractPropertiesFromSchema(schema_json)
+    def all_required = extractRequiredFromSchema(schema_json)
+
+    // Restrict properties and required fields to those in the toolsheet
+    def filtered_properties = all_properties.findAll { k, v -> headers.contains(k) }
+    def filtered_required = all_required.findAll { k -> headers.contains(k) }
 
     // Create samplesheet schema with filtered properties and analysis_name as required
     def samplesheet_schema = [
@@ -451,14 +409,13 @@ def createToolsheetSchema(toolsheet_path) {
         'type': 'array',
         'items': [
             'type': 'object',
-            'properties': all_properties,
-            'required': ['analysis_name']
+            'properties': filtered_properties,
+            'required': filtered_required
         ]
     ]
 
     // Write temporary schema file
-    // def temp_schema = File.createTempFile("samplesheet_schema", ".json")
-    def temp_schema = new File("${projectDir}/schema_tools.json")
+    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
     def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
     temp_schema.text = schema_string
 
@@ -466,42 +423,17 @@ def createToolsheetSchema(toolsheet_path) {
 }
 
 // extract properties from schema
-// if keep is provided, keep only those properties
-def extractPropertiesFromSchema(schema, keep) {
+def extractPropertiesFromSchema(schema) {
     def all_properties = [:]
-
-    // Extract properties from schema
     schema.$defs.each { group_name, group_def ->
         if (group_def.properties) {
             group_def.properties.each { prop_name, prop_def ->
-                // if keep list is provided, only keep those properties
-                if (!keep || keep.contains(prop_name)) {
-                    // Add meta field to each property
-                    def prop_with_meta = prop_def + [meta: [prop_name]]
-                    all_properties[prop_name] = prop_with_meta
-                }
+                // Add meta field to each property
+                def prop_with_meta = prop_def + [meta: [prop_name]]
+                all_properties[prop_name] = prop_with_meta
             }
         }
     }
-
-    // Ensure analysis_name property exists in schema
-    if (!all_properties.containsKey('analysis_name')) {
-        // Find analysis_name definition in pipeline schema
-        def analysis_name_def = null
-        schema.$defs.each { group_name, group_def ->
-            if (group_def.properties && group_def.properties.containsKey('analysis_name')) {
-                analysis_name_def = group_def.properties['analysis_name']
-            }
-        }
-
-        if (!analysis_name_def) {
-            error("Could not find analysis_name definition in pipeline schema")
-        }
-
-        // Add analysis_name to properties with meta field
-        all_properties['analysis_name'] = analysis_name_def + [meta: ['analysis_name']]
-    }
-
     return all_properties
 }
 
@@ -514,6 +446,9 @@ def extractRequiredFromSchema(schema) {
                 all_required << req_prop
             }
         }
+    }
+    if (!all_required.contains('analysis_name')) {
+        all_required << 'analysis_name'
     }
     return all_required
 }
