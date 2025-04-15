@@ -32,7 +32,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // This information is used later to determine which method to run for each input
     // Also, reorganize the structure to match them with the modules' input organization
 
-    ch_input = ch_input
+    ch_input_for_other = ch_input
         .multiMap {
             meta_input, file, genesets, background, analysis_method ->
             def meta_new = meta_input + [ 'functional_method': analysis_method ]
@@ -47,8 +47,8 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // In the case of GSEA, it needs additional files coming from other channels that other methods don't use
     // here we define the input channel for the GSEA section
 
-    def criteria = multiMapCriteria { meta_input, input, genesets, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
-        def meta_all = meta_input + contrast + [ 'variable': variable, 'reference': reference, 'target': target ]  // make sure variable, reference, target are in the meta
+    def criteria = multiMapCriteria { meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
+        def meta_all = meta_input + contrast + [ 'variable': variable, 'reference': reference, 'target': target ] + ['functional_method': 'gsea']
         input:
             [ meta_all, input ]
         genesets:
@@ -60,12 +60,12 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         features_cols:
             [ features_id, features_symbol ]
     }
-    ch_preinput_for_gsea = ch_input.input
-        .join(ch_input.genesets)
-        .filter{ it[0].functional_method == 'gsea' }
+    ch_input_for_gsea = ch_input
         .join(ch_samplesheet)
         .join(ch_featuresheet)
         .combine(ch_contrasts.transpose(), by:0)
+        .filter{ meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
+            method == 'gsea' }
         .multiMap(criteria)
 
     // ----------------------------------------------------
@@ -73,9 +73,9 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // ----------------------------------------------------
 
     GPROFILER2_GOST(
-        ch_input.input.filter{ it[0].functional_method == 'gprofiler2' },
-        ch_input.genesets.filter{ it[0].functional_method == 'gprofiler2'},
-        ch_input.background.filter{ it[0].functional_method == 'gprofiler2'}
+        ch_input_for_other.input.filter{ it[0].functional_method == 'gprofiler2' },
+        ch_input_for_other.genesets.filter{ it[0].functional_method == 'gprofiler2'},
+        ch_input_for_other.background.filter{ it[0].functional_method == 'gprofiler2'}
     )
 
     // ----------------------------------------------------
@@ -86,18 +86,18 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // CLS input can be as many as combinations of input x contrasts
     // Whereas features can be only one file.
 
-    CUSTOM_TABULARTOGSEAGCT(ch_preinput_for_gsea.input)
+    CUSTOM_TABULARTOGSEAGCT(ch_input_for_gsea.input)
 
-    CUSTOM_TABULARTOGSEACLS(ch_preinput_for_gsea.contrasts_and_samples)
+    CUSTOM_TABULARTOGSEACLS(ch_input_for_gsea.contrasts_and_samples)
 
     CUSTOM_TABULARTOGSEACHIP(
-        ch_preinput_for_gsea.features.first(),
-        ch_preinput_for_gsea.features_cols.first()
+        ch_input_for_gsea.features.first(),
+        ch_input_for_gsea.features_cols.first()
     )
 
     ch_input_for_gsea = CUSTOM_TABULARTOGSEAGCT.out.gct
         .join(CUSTOM_TABULARTOGSEACLS.out.cls)
-        .join( ch_preinput_for_gsea.genesets )
+        .join( ch_input_for_gsea.genesets )
 
     GSEA_GSEA(
         ch_input_for_gsea,
@@ -110,8 +110,8 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // ----------------------------------------------------
 
     PROPR_GREA(
-        ch_input.input.filter{ it[0].functional_method == 'grea' },
-        ch_input.genesets.filter{ it[0].functional_method == 'grea' }
+        ch_input_for_other.input.filter{ it[0].functional_method == 'grea' },
+        ch_input_for_other.genesets.filter{ it[0].functional_method == 'grea' }
     )
 
     // collect versions info

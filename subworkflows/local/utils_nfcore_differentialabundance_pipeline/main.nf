@@ -73,6 +73,10 @@ workflow PIPELINE_INITIALISATION {
     //
     paramsets = getToolConfigurations()
     ch_paramsets = Channel.fromList(paramsets)
+        .map { paramset -> [
+            analysis_name: paramset.analysis_name,
+            params: paramset.findAll{ k,v -> k != 'analysis_name' }
+        ]}
 
     //
     // Custom validate input parameters
@@ -370,7 +374,7 @@ def getToolsheetConfigurations() {
 def getDefaultConfigurations() {
     def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
     def nonstaticparams = ['trace_report_suffix']
-    return [params.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map]
+    return [ params.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map + [analysis_name: 'null'] ]
 }
 
 // Create a temporary schema file for toolsheet validation
@@ -457,53 +461,71 @@ def extractRequiredFromSchema(schema) {
 // in the meta and group channel by simplified meta and unique inputs
 // @param channel: the input channel
 // @param module: the simplified module name
-// @param size: the number of elements in the channel
-def prepareModuleInput(channel, module='base', size=2) {
+// @return a channel with [simplified meta, files ...]
+def prepareModuleInput(channel, module='base') {
     return channel
         .map {
-            // clean the meta by keeping only the relevant params
-            def meta = getRelevantMeta(it[0], module)
-            // and add analysis name
-            [meta] + it.tail() + [it[0].analysis_name]
+            def analysis_name = it[0].analysis_name
+            // clean the params by keeping only the relevant params
+            def simplifiedparams = getRelevantParams(it[0].params, module)
+            // parse to proper meta structure
+            def simplifiedmeta = [analysis_name: analysis_name, params: simplifiedparams] +
+                it[0].findAll { key, value ->
+                    ! ['analysis_name', 'params'].contains(key)
+                }
+            // define key as simplified meta + input files
+            def key = [simplifiedmeta, it[1..-1]]
+
+            [key, analysis_name]   // [ [simplified meta, files ...], analysis_name ]
         }
-        // groupTuple by simplified meta and unique inputs
-        // Note that the same simplified meta relevant to the module may have
-        // input files originated from different upstream processes/params
-        .groupTuple(by: 0..(size-1))  // -1 because it is 0-based indexing
+        .groupTuple()
         .map {
-            def meta = it[0] + [analysis_name: it[-1]]
-            [meta] + it[1..-2]
+            def simplifiedmeta = it[0][0]
+            def files = it[0][1]
+            def analysis_names = it[1]
+            // replace analysis_name by analysis_names
+            def meta = [analysis_names: analysis_names] + simplifiedmeta.findAll{ k,v -> k != 'analysis_name'}
+            [meta] + files
         }
 }
 
 // prepare the output for the module by adding back the full paramsets
 // based on the analysis_name
-def prepareModuleOutput(channel, paramsets_by_name) {
+def prepareModuleOutput(channel, paramsets) {
     channel_by_name = channel
-        // first parse the channel to have analysis_name as key
-        .map { [it[0].analysis_name] + it }
-        // transpose the list of analysis_name
+        // first parse the channel to have analysis_names as key
+        .map { [it[0].analysis_names] + it }
+        // transpose the list of analysis_names
         .transpose()
         .map {
-            // remap single analysis_name string into the meta
-            def meta = it[1] + [analysis_name: it[0]]
+            // replace analysis_names by analysis_name in the meta
+            def meta = [analysis_name: it[0]] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
+            // put analysis name as key
             [it[0], meta] + it[2..-1]  // [analysis_name, meta, files ...]
         }
-    return paramsets_by_name
+    return paramsets
+        .map { [it.analysis_name, it] }
         // we use combine instead of join, because for the same analysis_name,
         // different meta and files may have been generated because of the different contrasts
         .combine(channel_by_name, by:0)
         .map {
-            // use full paramsets as meta
-            def meta_full = it[1] + it[2]
+            // get full meta
+            def paramset = it[1].params + it[2].params
+            def sortedparamset = paramset.sort { a, b ->
+                paramset.keySet().toList().indexOf(a.key) <=> paramset.keySet().toList().indexOf(b.key)
+            } as Map
+            def meta_full = [analysis_name: it[0], params: sortedparamset] +
+                it[2].findAll { key, value ->
+                    ! ['analysis_name', 'params'].contains(key)
+                }
             [meta_full] + it[3..-1]    // [meta with full paramsets, files ...]
         }
 }
 
-// get the relevant meta for the module
+// get the relevant params for the module
 // @params meta: the meta map
 // @params module: the simplified module name
-def getRelevantMeta (meta, module) {
+def getRelevantParams (meta, module) {
     def relevantParams = [:]
 
     // define the base keys and prefix
@@ -571,12 +593,4 @@ def getRelevantMeta (meta, module) {
         }
     }
     return relevantParams
-}
-
-// get the meta excluding the keys related to contrast
-def getMetaWithoutContrast(meta) {
-    def key_contrast = ['id', 'variable', 'reference', 'target', 'blocking', 'formula']
-    return meta.findAll { key, value ->
-        ! key_contrast.contains(key)
-    }
 }

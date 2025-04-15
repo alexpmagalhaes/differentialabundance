@@ -6,7 +6,6 @@
 
 include { prepareModuleInput     } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
 include { prepareModuleOutput    } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
-include { getMetaWithoutContrast } from '../subworkflows/local/utils_nfcore_differentialabundance_pipeline/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,7 +53,6 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
-    ch_paramsets_by_name = ch_paramsets.map{paramset -> [paramset.analysis_name, paramset]}
 
     // ========================================================================
     // Handle input
@@ -62,46 +60,52 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Get the sample sheets
     ch_samplesheet = ch_paramsets
-        .map { paramset ->
-            [ paramset, file(paramset.input, checkIfExists: true) ]
+        .map { meta ->
+            [ meta, file(meta.params.input, checkIfExists: true) ]
         }
 
     // Create input channels based on study type
     ch_input = ch_samplesheet
         .branch { meta, input ->
-            affy_array: meta.study_type == 'affy_array'
-            maxquant: meta.study_type == 'maxquant'
-            geo_soft_file: meta.study_type == 'geo_soft_file'
-            rnaseq: meta.study_type == 'rnaseq'
+            affy_array: meta.params.study_type == 'affy_array'
+            maxquant: meta.params.study_type == 'maxquant'
+            geo_soft_file: meta.params.study_type == 'geo_soft_file'
+            rnaseq: meta.params.study_type == 'rnaseq'
         }
 
     // Handle Affy array inputs
     ch_celfiles = ch_input.affy_array
         .map { meta, input ->
-            [ meta, file(meta.affy_cel_files_archive, checkIfExists: true) ]
+            [ meta, file(meta.params.affy_cel_files_archive, checkIfExists: true) ]
         }
 
     // Handle Maxquant inputs
     ch_maxquant_inputs = ch_input.maxquant
         .map { meta, input ->
-            [ meta, input, file(meta.matrix, checkIfExists: true) ]
+            [ meta, input, file(meta.params.matrix, checkIfExists: true) ]
         }
 
     // Handle GEO soft file inputs
     ch_querygse = ch_input.geo_soft_file
         .map { meta, input ->
-            [ meta, meta.querygse ]
+            [ meta, meta.params.querygse ]
         }
 
     // Create optional parameter channels based on ch_paramsets
     ch_transcript_lengths = ch_paramsets
-        .map { paramset -> [ paramset, paramset.transcript_length_matrix ? file(paramset.transcript_length_matrix, checkIfExists: true) : [] ] }
+        .map { meta ->
+            [ meta, meta.params.transcript_length_matrix ? file(meta.params.transcript_length_matrix, checkIfExists: true) : [] ]
+        }
 
     ch_control_features = ch_paramsets
-        .map { paramset -> [ paramset, paramset.control_features ? file(paramset.control_features, checkIfExists: true) : [] ] }
+        .map { meta ->
+            [ meta, meta.params.control_features ? file(meta.params.control_features, checkIfExists: true) : [] ]
+        }
 
     ch_gene_sets = ch_paramsets
-        .map { paramset -> [ paramset, paramset.gene_sets_files ? paramset.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ] }
+        .map { meta ->
+            [ meta, meta.params.gene_sets_files ? meta.params.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ]
+        }
 
     // ========================================================================
     // Handle contrasts
@@ -109,36 +113,36 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Create contrasts channels
     ch_contrasts_file = ch_paramsets
-        .map { paramset ->
-            [ paramset, file(paramset.contrasts_yml ?: paramset.contrasts, checkIfExists: true) ]
+        .map { meta ->
+            [ meta, file(meta.params.contrasts_yml ?: meta.params.contrasts, checkIfExists: true) ]
         }
 
     ch_contrasts_file_with_extension = ch_contrasts_file
-        .map {
-            paramset, file -> [paramset, file, file.extension]
+        .map { meta, file ->
+            [ meta, file, file.extension ]
         }
 
     ch_contrast_variables_input = ch_contrasts_file_with_extension
-        .branch{ paramset, file, extension ->
+        .branch{ meta, file, extension ->
             yml: extension == 'yml' || extension == 'yaml'
             csv: extension == 'csv'
             tsv: extension == 'tsv'
         }
 
     ch_contrasts_variables_from_yml = ch_contrast_variables_input.yml
-        .map { paramset, yaml_file, ext ->
+        .map { meta, yaml_file, ext ->
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
-                tuple(paramset, contrast.comparison[0])
+                tuple(meta, contrast.comparison[0])
             }
         }
-        .map{it[0]}
+        .map{it[0]}  // convert list of list into a list
         .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
 
     ch_contrasts_variables_from_other = ch_contrast_variables_input.csv.splitCsv(header:true)
         .mix(ch_contrast_variables_input.tsv.splitCsv(header:true, sep:'\t'))
-        .map { paramset, row, ext ->
-            [paramset, row.variable]
+        .map { meta, row, ext ->
+            [ meta, row.variable ]
         }
         .unique()
 
@@ -161,13 +165,13 @@ workflow DIFFERENTIALABUNDANCE {
 
     UNTAR ( ch_untar_input )
 
-    ch_untar_out = prepareModuleOutput(UNTAR.out.untar, ch_paramsets_by_name)
+    ch_untar_out = prepareModuleOutput(UNTAR.out.untar, ch_paramsets)
 
     // run affy
 
     ch_affy_input = ch_input.affy_array
         .join(ch_untar_out)
-    ch_affy_input = prepareModuleInput(ch_affy_input, 'affy', size=3)
+    ch_affy_input = prepareModuleInput(ch_affy_input, 'affy')
 
     AFFY_JUSTRMA_RAW (
         ch_affy_input,
@@ -178,9 +182,9 @@ workflow DIFFERENTIALABUNDANCE {
         [[],[]]
     )
 
-    ch_affy_raw = prepareModuleOutput(AFFY_JUSTRMA_RAW.out.expression, ch_paramsets_by_name)
-    ch_affy_norm = prepareModuleOutput(AFFY_JUSTRMA_NORM.out.expression, ch_paramsets_by_name)
-    ch_affy_platform_features = prepareModuleOutput(AFFY_JUSTRMA_RAW.out.annotation, ch_paramsets_by_name)
+    ch_affy_raw = prepareModuleOutput(AFFY_JUSTRMA_RAW.out.expression, ch_paramsets)
+    ch_affy_norm = prepareModuleOutput(AFFY_JUSTRMA_NORM.out.expression, ch_paramsets)
+    ch_affy_platform_features = prepareModuleOutput(AFFY_JUSTRMA_RAW.out.annotation, ch_paramsets)
 
     ch_versions = ch_versions
         .mix(AFFY_JUSTRMA_RAW.out.versions)
@@ -190,28 +194,28 @@ workflow DIFFERENTIALABUNDANCE {
     // We'll be running Proteus once per unique contrast variable to generate plots
     //
 
-    ch_proteus_input = prepareModuleInput(ch_maxquant_inputs, 'proteus', size=3)
-
     // add contrast variable
-    ch_proteus_input = ch_proteus_input
+    ch_proteus_input = ch_maxquant_inputs
         .join(ch_contrast_variables)
         .map { meta, input, matrix, contrast ->
             def meta_new = meta + [contrast: contrast]
             [meta_new, input, matrix]
         }
 
+    ch_proteus_input = prepareModuleInput(ch_proteus_input, 'proteus')
+
     // Run proteus to import protein abundances
     PROTEUS( ch_proteus_input )
 
     // Note that the tables are the same across contrasts, only one table will be necessary
     // that is why here we take the first one and remove the contrast variable from meta
-    ch_proteus_raw = prepareModuleOutput(PROTEUS.out.raw_tab, ch_paramsets_by_name)
+    ch_proteus_raw = prepareModuleOutput(PROTEUS.out.raw_tab, ch_paramsets)
         .first()
         .map { meta, matrix ->
             def meta_new = meta.findAll { key, value -> key != 'contrast' }
             [meta_new, matrix]
         }
-    ch_proteus_norm = prepareModuleOutput(PROTEUS.out.norm_tab, ch_paramsets_by_name)
+    ch_proteus_norm = prepareModuleOutput(PROTEUS.out.norm_tab, ch_paramsets)
         .first()
         .map { meta, matrix ->
             def meta_new = meta.findAll { key, value -> key != 'contrast' }
@@ -229,8 +233,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     GEOQUERY_GETGEO(ch_geoquery_input)
 
-    ch_soft_norm = prepareModuleOutput(GEOQUERY_GETGEO.out.expression, ch_paramsets_by_name)
-    ch_soft_features = prepareModuleOutput(GEOQUERY_GETGEO.out.annotation, ch_paramsets_by_name)
+    ch_soft_norm = prepareModuleOutput(GEOQUERY_GETGEO.out.expression, ch_paramsets)
+    ch_soft_features = prepareModuleOutput(GEOQUERY_GETGEO.out.annotation, ch_paramsets)
 
     ch_versions = ch_versions
         .mix(GEOQUERY_GETGEO.out.versions)
@@ -246,7 +250,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Raw inputs
 
     ch_in_raw = ch_input.rnaseq
-        .map{meta, file -> [meta, meta.matrix]}
+        .map{meta, file -> [meta, meta.params.matrix]}
         .mix(ch_affy_raw)
         .mix(ch_proteus_raw)
 
@@ -263,28 +267,28 @@ workflow DIFFERENTIALABUNDANCE {
     // Branch ch_paramsets based on feature source
     ch_feature_sources = ch_paramsets
         .branch {
-            user_features: it.features
-            affy_features: it.study_type == 'affy_array'
-            geo_features: it.study_type == 'geo_soft_file'
-            gtf_features: it.gtf
+            user_features: it.params.features
+            affy_features: it.params.study_type == 'affy_array'
+            geo_features: it.params.study_type == 'geo_soft_file'
+            gtf_features: it.params.gtf
             matrix_features: true
         }
 
     // Handle user-provided feature annotations
     ch_user_features = ch_feature_sources.user_features
-        .map { paramset -> [ paramset, file(paramset.features, checkIfExists: true) ] }
+        .map { meta -> [ meta, file(meta.params.features, checkIfExists: true) ] }
 
     // Handle Affy array platform features
     ch_affy_features = ch_feature_sources.affy_features
-        .map { paramset -> ch_affy_platform_features }
+        .map { meta -> ch_affy_platform_features }
 
     // Handle GEO soft file features
     ch_geo_features = ch_feature_sources.geo_features
-        .map { paramset -> ch_soft_features }
+        .map { meta -> ch_soft_features }
 
     // Handle GTF-based feature annotations
     ch_gtf_files = ch_feature_sources.gtf_features
-        .map { paramset -> [ paramset, file(paramset.gtf, checkIfExists: true) ] }
+        .map { meta -> [ meta, file(meta.params.gtf, checkIfExists: true) ] }
 
     // Process GTF files if needed
     ch_gtf_for_processing = ch_gtf_files
@@ -296,7 +300,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Decompress GTF files if needed
     ch_gunzip_input = prepareModuleInput(ch_gtf_for_processing.compressed)
     GUNZIP_GTF( ch_gunzip_input )
-    ch_gunzip_out = prepareModuleOutput(GUNZIP_GTF.out.gunzip, ch_paramsets_by_name)
+    ch_gunzip_out = prepareModuleOutput(GUNZIP_GTF.out.gunzip, ch_paramsets)
     ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
 
     // Combine compressed and uncompressed GTF files
@@ -309,14 +313,14 @@ workflow DIFFERENTIALABUNDANCE {
         ch_gtf_input,
         [tuple('id':""), []]
     )
-    ch_gtf_features = prepareModuleOutput(GTF_TO_TABLE.out.feature_annotation, ch_paramsets_by_name)
+    ch_gtf_features = prepareModuleOutput(GTF_TO_TABLE.out.feature_annotation, ch_paramsets)
     ch_versions = ch_versions.mix(GTF_TO_TABLE.out.versions)
 
     // extract features from matrix
     // note that in the case of maxquant we use the normalised matrix
     // whereas for other study types we use the raw matrix
-    ch_pre_matrix_features = ch_feature_sources.matrix_features.branch{ paramset ->
-        maxquant: paramset.study_type == 'maxquant'
+    ch_pre_matrix_features = ch_feature_sources.matrix_features.branch{ meta ->
+        maxquant: meta.params.study_type == 'maxquant'
         other: true
     }
     ch_matrix_features = ch_pre_matrix_features.maxquant.join(ch_in_norm)
@@ -341,9 +345,9 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Check compatibility of FOM elements and contrasts
 
-    ch_matrix_sources = ch_paramsets.branch{
-        affy_or_maxquant: params.study_type == 'affy_array' || params.study_type == 'maxquant'
-        geo_soft_file: params.study_type == 'geo_soft_file'
+    ch_matrix_sources = ch_paramsets.branch{ meta ->
+        affy_or_maxquant: meta.params.study_type == 'affy_array' || meta.params.study_type == 'maxquant'
+        geo_soft_file: meta.params.study_type == 'geo_soft_file'
         other: true
     }
 
@@ -366,7 +370,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_features)
         .join(ch_contrasts_file)
 
-    validator_input = prepareModuleInput(validator_input, 'validator', size=5)
+    validator_input = prepareModuleInput(validator_input, 'validator')
         .multiMap{meta, samplesheet, matrices, features_file, contrasts_file ->
             samplesheet_matrices: [meta, samplesheet, matrices]
             features_file: [meta, features_file]
@@ -379,16 +383,16 @@ workflow DIFFERENTIALABUNDANCE {
         validator_input.contrasts_file
     )
 
-    ch_validated_assays = prepareModuleOutput(VALIDATOR.out.assays, ch_paramsets_by_name)
-    ch_validated_contrast = prepareModuleOutput(VALIDATOR.out.contrasts, ch_paramsets_by_name)
-    ch_validated_samplemeta = prepareModuleOutput(VALIDATOR.out.sample_meta, ch_paramsets_by_name)
-    ch_validated_featuremeta = prepareModuleOutput(VALIDATOR.out.feature_meta, ch_paramsets_by_name)
+    ch_validated_assays = prepareModuleOutput(VALIDATOR.out.assays, ch_paramsets)
+    ch_validated_contrast = prepareModuleOutput(VALIDATOR.out.contrasts, ch_paramsets)
+    ch_validated_samplemeta = prepareModuleOutput(VALIDATOR.out.sample_meta, ch_paramsets)
+    ch_validated_featuremeta = prepareModuleOutput(VALIDATOR.out.feature_meta, ch_paramsets)
 
     // For Affy, we've validated multiple input matrices for raw and norm,
     // we'll separate them out again here
 
     ch_multi_validated_assays = ch_validated_assays
-        .filter{meta, assays -> meta.study_type == 'affy_array' || meta.study_type == 'maxquant'}
+        .filter{meta, assays -> meta.params.study_type == 'affy_array' || meta.params.study_type == 'maxquant'}
         .transpose()
         .branch { meta, assay ->
             raw: assay.name.contains('raw')
@@ -398,7 +402,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Get raw matrices from the validation
 
     ch_raw = ch_multi_validated_assays.raw
-        .mix(ch_validated_assays.filter{meta, assay -> meta.study_type == 'rnaseq'})
+        .mix(ch_validated_assays.filter{meta, assay -> meta.params.study_type == 'rnaseq'})
 
     // For RNASeq and GEO soft file we've validated a single matrix, raw in the
     // case of RNASeq and norm in the case of GEO soft file, and these are the
@@ -406,7 +410,7 @@ workflow DIFFERENTIALABUNDANCE {
     // we'll use the normalised matrices.
 
     ch_matrix_for_differential = ch_multi_validated_assays.normalised
-        .mix(ch_validated_assays.filter{meta, assay -> meta.study_type == 'rnaseq' || meta.study_type == 'geo_soft_file'})
+        .mix(ch_validated_assays.filter{meta, assay -> meta.params.study_type == 'rnaseq' || meta.params.study_type == 'geo_soft_file'})
 
     // Split the contrasts up so we can run differential analyses and
     // downstream plots separately.
@@ -414,14 +418,14 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_contrasts = ch_validated_contrast
         .splitCsv ( header:true, sep:'\t' )
-        .map{paramset, contrast ->
+        .map{meta, contrast ->
             contrast.blocking = contrast.blocking.replaceAll('^NA$', '')
             if (!contrast.id){
                 contrast.id = contrast.values().join('_')
             }
-            return [paramset, contrast, contrast.variable, contrast.reference, contrast.target]
+            return [meta, contrast, contrast.variable, contrast.reference, contrast.target]
         }
-        .groupTuple() // [paramset, [contrast], [variable], [reference], [target]]
+        .groupTuple() // [meta, [contrast], [variable], [reference], [target]]
 
     // ========================================================================
     // Filter matrix
@@ -430,7 +434,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_matrixfilter_input = ch_matrix_for_differential
         .join(ch_validated_samplemeta)
 
-    ch_matrixfilter_input = prepareModuleInput(ch_matrixfilter_input, 'matrixfilter', size=3)
+    ch_matrixfilter_input = prepareModuleInput(ch_matrixfilter_input, 'matrixfilter')
         .multiMap{meta, matrix, samplesheet ->
             matrix: [meta, matrix]
             samplesheet: [meta, samplesheet]
@@ -441,7 +445,7 @@ workflow DIFFERENTIALABUNDANCE {
         ch_matrixfilter_input.samplesheet
     )
 
-    ch_filtered_matrix = prepareModuleOutput(CUSTOM_MATRIXFILTER.out.filtered, ch_paramsets_by_name)
+    ch_filtered_matrix = prepareModuleOutput(CUSTOM_MATRIXFILTER.out.filtered, ch_paramsets)
 
     // ========================================================================
     // Differential analysis
@@ -454,9 +458,9 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_contrasts)
 
     // Use a multiMap to generate synched channels for differential analysis
-    ch_differential_input = prepareModuleInput(ch_differential_input, 'differential', size=9)
+    ch_differential_input = prepareModuleInput(ch_differential_input, 'differential')
         .multiMap{ meta, matrix, samplesheet, transcript_lengths, control_features, contrast, variable, reference, target ->
-            input: [meta, matrix, meta.differential_method, meta.differential_min_fold_change, meta.differential_max_qval]
+            input: [meta, matrix, meta.params.differential_method, meta.params.differential_min_fold_change, meta.params.differential_max_qval]
             samplesheet: [meta, samplesheet]
             transcript_lengths: [meta, transcript_lengths]
             control_features: [meta, control_features]
@@ -474,15 +478,37 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect differential results
+    // note that 'differential_method' is additionally added to the meta in the differential subworkflow
+    // remove it to keep a consistent meta structure
 
-    // note that these channels, the meta contain contrast info too
-    ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets_by_name)
-    ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets_by_name)
-    ch_differential_model = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, ch_paramsets_by_name)
+    // note that these channels, the meta contain contrast info
+    ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets)
+        .map {meta, results ->
+            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
+            [meta_new, results]
+        }
+    ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets)
+        .map {meta, results ->
+            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
+            [meta_new, results]
+        }
+    ch_differential_model = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, ch_paramsets)
+        .map {meta, results ->
+            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
+            [meta_new, results]
+        }
 
     // whereas these channels, the meta do not contain contrast info, as they come from the NORM modules instead of DIFFERENTIAL modules
-    ch_differential_norm = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets_by_name)
-    ch_differential_varstab = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets_by_name)
+    ch_differential_norm = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets)
+        .map {meta, results ->
+            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
+            [meta_new, results]
+        }
+    ch_differential_varstab = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets)
+        .map {meta, results ->
+            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
+            [meta_new, results]
+        }
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -493,9 +519,9 @@ workflow DIFFERENTIALABUNDANCE {
     // - from validated assays for GEO soft file
 
     ch_norm = ch_differential_norm
-        .filter{meta, matrix -> meta.study_type == 'rnaseq'}
+        .filter{meta, matrix -> meta.params.study_type == 'rnaseq'}
         .mix(ch_multi_validated_assays.normalised)
-        .mix(ch_validated_assays.filter{meta, assay -> meta.study_type == 'geo_soft_file'})
+        .mix(ch_validated_assays.filter{meta, assay -> meta.params.study_type == 'geo_soft_file'})
 
     // Prepare channel with normalized matrix, and variance stabilized matrices when available
 
@@ -516,53 +542,50 @@ workflow DIFFERENTIALABUNDANCE {
     // - empty, if not gprofiler2
 
     ch_background = ch_filtered_matrix
-        .filter{meta, matrix -> meta.functional_method == 'gprofiler2' && params.gprofiler2_background_file == "auto"}
+        .filter{meta, matrix -> meta.params.functional_method == 'gprofiler2' && meta.params.gprofiler2_background_file == "auto"}
         .mix(
             ch_paramsets
-                .filter{paramset -> paramset.functional_method == 'gprofiler2' && paramset.gprofiler2_background_file }
-                .map{paramset -> [paramset, file(paramset.gprofiler2_background_file, checkIfExists: true)]}
+                .filter{meta -> meta.params.functional_method == 'gprofiler2' && meta.params.gprofiler2_background_file }
+                .map{meta -> [meta, file(meta.params.gprofiler2_background_file, checkIfExists: true)]}
         )
         .mix(
             ch_paramsets
-                .filter{ paramset -> paramset.functional_method != 'gprofiler2'}
-                .map{paramset -> [paramset, []]}
+                .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
+                .map{meta -> [meta, []]}
         )
 
     // Prepare input for functional analysis
+
     // - use normalized matrix, if method is gsea
     // - use filtered differential results, if method is gprofiler2
-
     ch_functional_analysis_matrices = ch_norm
-        .filter{meta, matrix -> meta.functional_method == 'gsea'}
-        .map { meta, matrix ->
-            def paramset = meta  // in this case paramset is the same as meta
-            [paramset, meta, matrix]
-        }
+        .filter{meta, matrix -> meta.params.functional_method == 'gsea'}
         .mix(
             ch_differential_results_filtered
-                .filter{meta, results -> meta.functional_method == 'gprofiler2'}
-                // note that differential analysis results contain the contrast info in the meta
-                // we need to remove it to allow proper join in the next step
-                .map{ meta, file ->
-                    def paramset = getMetaWithoutContrast(meta)
-                    [paramset, meta, file]
-                }
+                .filter{meta, results -> meta.params.functional_method == 'gprofiler2'}
         )
 
     ch_functional_input = ch_functional_analysis_matrices
-        .join(ch_gene_sets)  // [meta, [gmt files]]
-        .join(ch_background)
-        .join(ch_contrasts)
-        .join(ch_validated_samplemeta)
-        .join(ch_validated_featuremeta)
-        .map { it.tail() }  // remove paramset, and keep meta
+        // Note that differential results contain contrast info in the meta, whereas
+        // ch_norm do not. Hence, parse meta to keep only analysis name and params
+        // to use it as key for combine
+        .map { meta, file ->
+            def key = [analysis_name: meta.analysis_name, params: meta.params]
+            [key, meta, file]
+        }
+        .combine(ch_gene_sets, by:0)             // meta, [gmt files]
+        .combine(ch_background, by:0)            // meta, background
+        .combine(ch_contrasts, by:0)             // meta, [contrast], [variable], [reference], [target]
+        .combine(ch_validated_samplemeta, by:0)  // meta, samplesheet
+        .combine(ch_validated_featuremeta, by:0) // meta, features
+        .map { it.tail() } // remove key
 
-    ch_functional_input = prepareModuleInput(ch_functional_input, 'functional', size=10)
-        .multiMap{meta, input, gene_sets, background, contrasts, variable, reference, target, samplesheet, features ->
-            input: [meta, input, gene_sets, background, meta.functional_method]
+    ch_functional_input = prepareModuleInput(ch_functional_input, 'functional')
+        .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, samplesheet, features ->
+            input: [meta, input, gene_sets, background, meta.params.functional_method]
             contrasts: [meta, contrasts, variable, reference, target]
             samplesheet: [meta, samplesheet]
-            features: [meta, features, meta.features_id_col, meta.features_name_col]
+            features: [meta, features, meta.params.features_id_col, meta.params.features_name_col]
         }
 
     // Run functional analysis
@@ -576,18 +599,17 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Collect functional analysis results
 
-    // note that gsea results, as they were derived from the normalised matrix, meta does not contain contrast info
-    ch_gsea_results = prepareModuleOutput(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report, ch_paramsets_by_name)
-
-    // note that gprofiler2 results, as they were derived from the differential results, meta contains contrast info
-    gprofiler2_plot_html = prepareModuleOutput(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html, ch_paramsets_by_name)
-    gprofiler2_all_enrich = prepareModuleOutput(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, ch_paramsets_by_name)
-    gprofiler2_sub_enrich = prepareModuleOutput(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, ch_paramsets_by_name)
-
-    ch_functional_results = gprofiler2_plot_html
-        .join(gprofiler2_all_enrich, remainder: true)
-        .join(gprofiler2_sub_enrich, remainder: true)
-        .mix(ch_gsea_results)
+    ch_functional_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
+        .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, remainder: true)
+        .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, remainder: true)
+        .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report)
+        // note that 'functional_method' is additionally added to the meta in the functional subworkflow
+        // remove it to keep a consistent meta structure
+        .map {
+            def meta = it[0].findAll { k,v -> k != 'functional_method' }
+            [meta] + it.tail()
+        }
+    ch_functional_results = prepareModuleOutput(ch_functional_results, ch_paramsets)
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
@@ -599,12 +621,12 @@ workflow DIFFERENTIALABUNDANCE {
     // Run IMMUNEDECONV
 
     ch_immunedeconv_input = ch_in_raw
-        .filter{meta, raw -> meta.immunedeconv_run}
+        .filter{meta, raw -> meta.params.immunedeconv_run}
 
     ch_immunedeconv_input = prepareModuleInput(ch_immunedeconv_input, 'immunedeconv')
         .multiMap{meta, raw ->
-            input: [meta, raw, meta.immunedeconv_method, meta.immunedeconv_function]
-            name_col: meta.features_name_col
+            input: [meta, raw, meta.params.immunedeconv_method, meta.params.immunedeconv_function]
+            name_col: meta.params.features_name_col
         }
 
     IMMUNEDECONV(
@@ -622,11 +644,11 @@ workflow DIFFERENTIALABUNDANCE {
     // For geoquery we've done no matrix processing and been supplied with the
     // normalised matrix, which can be passed through to downstream analysis
 
-    ch_mat = ch_norm.filter{meta, matrix -> meta.study_type == 'geo_soft_file'}
+    ch_mat = ch_norm.filter{meta, matrix -> meta.params.study_type == 'geo_soft_file'}
         .map{meta, norm -> [meta, [norm]]}
         .mix(
             ch_raw
-                .filter{meta, raw -> meta.study_type != 'geo_soft_file'}
+                .filter{meta, raw -> meta.params.study_type != 'geo_soft_file'}
                 .join(ch_processed_matrices)
                 .map { meta, raw, matrices ->
                     [meta, [raw] + matrices]
@@ -651,7 +673,7 @@ workflow DIFFERENTIALABUNDANCE {
             [meta_new, samples, features, matrices]
         }
 
-    ch_exploratory_input = prepareModuleInput(ch_exploratory_input, 'exploratory', size=5)
+    ch_exploratory_input = prepareModuleInput(ch_exploratory_input, 'exploratory')
 
     PLOT_EXPLORATORY(
         ch_exploratory_input
@@ -661,16 +683,15 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_plot_differential_input = ch_differential_results
         .map { meta, differential_results ->
-            // differential_results meta contain contrast info
-            // whereas ch_all_matrices meta do not
-            // we need to remove the contrast info from meta
-            def paramset = getMetaWithoutContrast(meta)
-            [paramset, meta, differential_results]
+            // differential_results meta contain contrast info whereas ch_all_matrices meta do not
+            // here we parse analysis_name and params as key to combine
+            def key = [analysis_name: meta.analysis_name, params: meta.params]
+            [key, meta, differential_results]
         }
         .combine(ch_all_matrices, by: 0)
-        .map{it.tail()}  // remove paramset, and keep meta
+        .map{it.tail()}  // remove key
 
-    ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'plot_differential', size=5)
+    ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'plot_differential')
         .multiMap{meta, differential_results, samples, features, matrices ->
             differential_results: [meta, differential_results]
             samples_features_matrices: [meta, samples, features, matrices]
@@ -708,52 +729,53 @@ workflow DIFFERENTIALABUNDANCE {
     // Get the report file, logo, css, and citations
 
     ch_report_files = ch_paramsets
-        .map { paramset ->
-            [ paramset, [
-                file(paramset.report_file, checkIfExists: true),
-                file(paramset.logo_file, checkIfExists: true),
-                file(paramset.css_file, checkIfExists: true),
-                file(paramset.citations_file, checkIfExists: true)
+        .map { meta ->
+            [ meta, [
+                file(meta.params.report_file, checkIfExists: true),
+                file(meta.params.logo_file, checkIfExists: true),
+                file(meta.params.css_file, checkIfExists: true),
+                file(meta.params.citations_file, checkIfExists: true)
             ]]
         }
 
-    // Group differential and functional results by paramset
-    // So all the files generated with the same paramset will go together to report
+    // Group differential and functional results by base paramset meta [analysis_name, params]
+    // So all the files generated with the same paramset meta will go together to report
 
     ch_differential_grouped = ch_differential_results
         .join(ch_differential_model)
         .map { meta, results, model ->
-            def paramset = getMetaWithoutContrast(meta)
-            [paramset, results, model]
+            def meta_paramset = [analysis_name: meta.analysis_name, params: meta.params]
+            [meta_paramset, results, model]
         }
         .groupTuple()
-        .map { [it[0], it.tail().flatten()] }  // [ paramset, [differential results and models] ]
+        .map { [it[0], it.tail().flatten()] }  // [ meta paramset, [differential results and models] ]
 
     ch_functional_grouped = ch_functional_results
         .map {
-            def paramset = getMetaWithoutContrast(it[0])
-            [paramset, it.tail()]
+            def meta_paramset = [analysis_name: it[0].analysis_name, params: it[0].params]
+            [meta_paramset, it.tail()]
         }
         .groupTuple()
-        .map { [it[0], it.tail().flatten()] }  // [ paramset, [functional results] ]
+        .map { [it[0], it.tail().flatten()] }  // [ meta paramset, [functional results] ]
 
     // Prepare input for report generation
     // Each paramset will generate one markdown report by gathering all
     // the files created with the same paramset
 
-    ch_report_input = ch_report_files    // [paramset, [report_file, logo_file, css_file, citations_file]]
+    ch_report_input = ch_report_files    // [meta paramset, [report_file, logo_file, css_file, citations_file]]
         .combine(ch_collated_versions)   // [versions file]
-        .join(ch_all_matrices)           // [paramset, samplesheet, features, [matrices]]
-        .join(ch_validated_contrast)     // [paramset, contrast file]
-        .join(ch_differential_grouped)   // [paramset, [differential results and models]]
-        .join(ch_functional_grouped, remainder: true) // [paramset, [functional results]]
-        .map { [it[0], it.tail().flatten()] }                    // [paramset, [files]]
-        .map { meta, files -> [meta, files[0], files.tail()] }   // [paramset, report_file, [files]]
-        .multiMap { paramset, report_file, files ->
+        .join(ch_all_matrices)           // [meta paramset, samplesheet, features, [matrices]]
+        .join(ch_validated_contrast)     // [meta paramset, contrast file]
+        .join(ch_differential_grouped)   // [meta paramset, [differential results and models]]
+        .join(ch_functional_grouped, remainder: true) // [meta paramset, [functional results]]
+        .map { [it[0], it.tail().flatten()] }                    // [meta paramset, [files]]
+        .map { paramset, files -> [paramset, files[0], files.tail()] }   // [meta paramset, report_file, [files]]
+        .multiMap { meta_paramset, report_file, files ->
             report_file:
-            [paramset, report_file]
+            [meta_paramset, report_file]
 
             report_params:
+            def paramset = [analysis_name: meta_paramset.analysis_name] + meta_paramset.params  // flat the map
             def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
                 paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
                 [ 'contrasts_file' ]
