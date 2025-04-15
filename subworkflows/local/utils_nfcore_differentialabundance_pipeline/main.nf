@@ -573,8 +573,10 @@ def getRelevantMeta (meta, module) {
 
     // define the base keys and prefix
     def keys_base = ['study_name', 'study_type']
+    def keys_base_features = ['features_type','features_id_col','features_name_col']
+    def keys_base_observations = ['observations_col','observations_id_col','observations_name_col']
     def keys_contrast = ['variable', 'reference', 'target', 'blocking', 'formula'] // also always keep contrast keys, if available
-    def keys = ['id'] + keys_base + keys_contrast
+    def keys = ['id'] + keys_base + keys_base_features + keys_base_observations + keys_contrast
     def prefix = []
 
     // add prefix and keys based on module
@@ -583,11 +585,10 @@ def getRelevantMeta (meta, module) {
             break
         case 'affy':
             prefix += ['affy_']
-            keys += ['observations_id_col','observations_name_col']
             break
         case 'proteus':
             prefix += ['proteus_']
-            keys += ['observations_id_col','features_id_col','report_round_digits']
+            keys += ['report_round_digits']
             break
         case 'geoquery':
             keys += ['features_metadata_cols']
@@ -596,27 +597,22 @@ def getRelevantMeta (meta, module) {
             prefix += ['features_gtf_']
             break
         case 'validator':
-            keys += ['observations_id_col','features_id_col']
             break
         case 'matrixfilter':
             prefix += ['filtering_']
-            keys += ['observations_id_col']
             break
         case 'differential':
             prefix += ['differential_', meta.differential_method+'_', 'exclude_samples_']
-            keys += ['features_id_col', 'observations_id_col', 'report_round_digits', 'sizefactors_from_controls']
+            keys += ['report_round_digits', 'sizefactors_from_controls']
             break
         case 'functional':
             prefix += ['functional_', meta.functional_method+'_']
-            keys += ['features_id_col', 'features_name_col']
             break
         case 'exploratory':
             prefix += ['exploratory_']
-            keys += ['features_id_col', 'observations_id_col']
             break
         case 'plot_differential':
             prefix += ['differential_']
-            keys += ['features_id_col']
             break
         case 'shiny':
             prefix += ['shinyngs_']
@@ -627,7 +623,6 @@ def getRelevantMeta (meta, module) {
             break
         case 'immunedeconv':
             prefix += ['immunedeconv_']
-            keys += ['features_name_col']
             break
         default:
             error("Module '${module}' not recognized by getRelevantMeta.")
