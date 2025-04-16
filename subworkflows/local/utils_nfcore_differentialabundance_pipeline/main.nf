@@ -460,14 +460,14 @@ def extractRequiredFromSchema(schema) {
 // prepare the input for the module by keeping only the relevant params
 // in the meta and group channel by simplified meta and unique inputs
 // @param channel: the input channel
-// @param module: the simplified module name
+// @params module_prefix: the module prefix for params
 // @return a channel with [simplified meta, files ...]
-def prepareModuleInput(channel, module='base') {
+def prepareModuleInput(channel, module_prefix=null) {
     return channel
         .map {
             def analysis_name = it[0].analysis_name
             // clean the params by keeping only the relevant params
-            def simplifiedparams = getRelevantParams(it[0].params, module)
+            def simplifiedparams = getRelevantParams(it[0].params, module_prefix)
             // parse to proper meta structure
             def simplifiedmeta = [analysis_name: analysis_name, params: simplifiedparams] +
                 it[0].findAll { key, value ->
@@ -524,58 +524,30 @@ def prepareModuleOutput(channel, paramsets) {
 
 // get the relevant params for the module
 // @params meta: the meta map
-// @params module: the simplified module name
-def getRelevantParams (meta, module) {
+// @params module_prefix: the module prefix for params
+def getRelevantParams (meta, module_prefix=null) {
     def relevantParams = [:]
 
-    // define the base keys and prefix
+    // define the base keys
     def keys_base = ['study_name', 'study_type']
-    def keys_base_features = ['features_type','features_id_col','features_name_col']
+    def keys_base_features = ['features_type','features_id_col','features_name_col','features_metadata_cols']
     def keys_base_observations = ['observations_col','observations_id_col','observations_name_col']
-    def keys_contrast = ['variable', 'reference', 'target', 'blocking', 'formula'] // also always keep contrast keys, if available
-    def keys = ['id'] + keys_base + keys_base_features + keys_base_observations + keys_contrast
-    def prefix = []
+    def keys_base_other = ['report_round_digits', 'sizefactors_from_controls']
+    def keys = keys_base + keys_base_features + keys_base_observations + keys_base_other
 
-    // add prefix and keys based on module
-    switch(module) {
-        case 'base':
-            break
-        case 'affy':
-            prefix += ['affy_']
-            break
-        case 'proteus':
-            prefix += ['proteus_']
-            keys += ['report_round_digits']
-            break
-        case 'geoquery':
-            keys += ['features_metadata_cols']
-            break
-        case 'gtf':
-            prefix += ['features_gtf_']
-            break
-        case 'validator':
-            break
-        case 'matrixfilter':
-            prefix += ['filtering_']
-            break
-        case 'differential':
-            prefix += ['differential_', meta.differential_method+'_', 'exclude_samples_']
-            keys += ['report_round_digits', 'sizefactors_from_controls']
-            break
-        case 'functional':
-            prefix += ['functional_', meta.functional_method+'_']
-            break
-        case 'exploratory':
-            prefix += ['exploratory_']
-            break
-        case 'plot_differential':
-            prefix += ['differential_']
-            break
-        case 'immunedeconv':
-            prefix += ['immunedeconv_']
-            break
-        default:
-            error("Module '${module}' not recognized by getRelevantMeta.")
+    // define prefix
+    def prefix = []
+    if (module_prefix) {
+        prefix += [module_prefix]
+        // add prefix for special cases
+        switch(module_prefix) {
+            case 'differential_':
+                prefix += [meta.differential_method+'_']
+                break
+            case 'functional_':
+                prefix += [meta.functional_method+'_']
+                break
+        }
     }
 
     // get key, value pairs from meta that start with the prefix

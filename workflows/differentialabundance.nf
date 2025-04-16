@@ -171,7 +171,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_affy_input = ch_input.affy_array
         .join(ch_untar_out)
-    ch_affy_input = prepareModuleInput(ch_affy_input, 'affy')
+    ch_affy_input = prepareModuleInput(ch_affy_input, 'affy_')
 
     AFFY_JUSTRMA_RAW (
         ch_affy_input,
@@ -202,7 +202,7 @@ workflow DIFFERENTIALABUNDANCE {
             [meta_new, input, matrix]
         }
 
-    ch_proteus_input = prepareModuleInput(ch_proteus_input, 'proteus')
+    ch_proteus_input = prepareModuleInput(ch_proteus_input, 'proteus_')
 
     // Run proteus to import protein abundances
     PROTEUS( ch_proteus_input )
@@ -229,7 +229,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Run GEO query to get the annotation
     //
 
-    ch_geoquery_input = prepareModuleInput(ch_querygse, 'geoquery')
+    ch_geoquery_input = prepareModuleInput(ch_querygse)
 
     GEOQUERY_GETGEO(ch_geoquery_input)
 
@@ -308,7 +308,7 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(ch_gunzip_out)
 
     // Convert GTF to feature annotation table
-    ch_gtf_input = prepareModuleInput(ch_gtf_processed, 'gtf')
+    ch_gtf_input = prepareModuleInput(ch_gtf_processed, 'features_gtf_')
     GTF_TO_TABLE(
         ch_gtf_input,
         [tuple('id':""), []]
@@ -371,7 +371,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_features)
         .join(ch_contrasts_file)
 
-    validator_input = prepareModuleInput(validator_input, 'validator')
+    validator_input = prepareModuleInput(validator_input)
         .multiMap{meta, samplesheet, matrices, features_file, contrasts_file ->
             samplesheet_matrices: [meta, samplesheet, matrices]
             features_file: [meta, features_file]
@@ -436,7 +436,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_matrixfilter_input = ch_matrix_for_differential
         .join(ch_validated_samplemeta)
 
-    ch_matrixfilter_input = prepareModuleInput(ch_matrixfilter_input, 'matrixfilter')
+    ch_matrixfilter_input = prepareModuleInput(ch_matrixfilter_input, 'filtering_')
         .multiMap{meta, matrix, samplesheet ->
             matrix: [meta, matrix]
             samplesheet: [meta, samplesheet]
@@ -460,7 +460,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_contrasts)
 
     // Use a multiMap to generate synched channels for differential analysis
-    ch_differential_input = prepareModuleInput(ch_differential_input, 'differential')
+    ch_differential_input = prepareModuleInput(ch_differential_input, 'differential_')
         .multiMap{ meta, matrix, samplesheet, transcript_lengths, control_features, contrast, variable, reference, target, formula ->
             input: [meta, matrix, meta.params.differential_method, meta.params.differential_min_fold_change, meta.params.differential_max_qval]
             samplesheet: [meta, samplesheet]
@@ -584,7 +584,7 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_validated_featuremeta, by:0) // meta, features
         .map { it.tail() } // remove the simple meta key
 
-    ch_functional_input = prepareModuleInput(ch_functional_input, 'functional')
+    ch_functional_input = prepareModuleInput(ch_functional_input, 'functional_')
         .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, formula, samplesheet, features ->
             input: [meta, input, gene_sets, background, meta.params.functional_method]
             contrasts: [meta, contrasts, variable, reference, target, formula]
@@ -634,7 +634,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_immunedeconv_input = ch_in_raw
         .filter{meta, raw -> meta.params.immunedeconv_run}
 
-    ch_immunedeconv_input = prepareModuleInput(ch_immunedeconv_input, 'immunedeconv')
+    ch_immunedeconv_input = prepareModuleInput(ch_immunedeconv_input, 'immunedeconv_')
         .multiMap{meta, raw ->
             input: [meta, raw, meta.params.immunedeconv_method, meta.params.immunedeconv_function]
             name_col: meta.params.features_name_col
@@ -684,7 +684,7 @@ workflow DIFFERENTIALABUNDANCE {
             [meta_new, samples, features, matrices]
         }
 
-    ch_exploratory_input = prepareModuleInput(ch_exploratory_input, 'exploratory')
+    ch_exploratory_input = prepareModuleInput(ch_exploratory_input, 'exploratory_')
 
     PLOT_EXPLORATORY(
         ch_exploratory_input
@@ -696,7 +696,7 @@ workflow DIFFERENTIALABUNDANCE {
         .combine(ch_all_matrices, by: 0)         // [meta, samples, features, matrices]
         .map{it.tail()}  // remove simple meta key
 
-    ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'plot_differential')
+    ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'differential_')
         .multiMap{meta, differential_results, samples, features, matrices ->
             differential_results: [meta, differential_results]
             samples_features_matrices: [meta, samples, features, matrices]
