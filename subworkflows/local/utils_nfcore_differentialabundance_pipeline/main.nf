@@ -571,13 +571,6 @@ def getRelevantParams (meta, module) {
         case 'plot_differential':
             prefix += ['differential_']
             break
-        case 'shiny':
-            prefix += ['shinyngs_']
-            break
-        case 'report':
-            prefix += ['report_']
-            keys += ['logo_file', 'css_file', 'citations_file']
-            break
         case 'immunedeconv':
             prefix += ['immunedeconv_']
             break

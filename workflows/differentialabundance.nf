@@ -481,33 +481,41 @@ workflow DIFFERENTIALABUNDANCE {
     // note that 'differential_method' is additionally added to the meta in the differential subworkflow
     // remove it to keep a consistent meta structure
 
-    // note that these channels, the meta contain contrast info
+    // Also note that these channels, the meta contain other info apart from the base paramset meta
+    // hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params
+    // this will facilitate later on to join/combine channels
+    // To keep nomenclature consistent with the rest of the pipeline, the simple meta is called as meta, whereas
+    // the full meta containing other info is called as meta_full
+
     ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets)
-        .map {meta, results ->
-            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
-            [meta_new, results]
+        .map {meta_out, results ->
+            def meta_full = meta_out.findAll { k,v -> k != 'differential_method' }
+            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
+            [meta, meta_full, results]
         }
     ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets)
-        .map {meta, results ->
-            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
-            [meta_new, results]
+        .map {meta_out, results ->
+            def meta_full = meta_out.findAll { k,v -> !['differential_method', 'fc_threshold', 'stat_threshold'].contains(k) }
+            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
+            [meta, meta_full, results]
         }
     ch_differential_model = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, ch_paramsets)
-        .map {meta, results ->
-            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
-            [meta_new, results]
+        .map {meta_out, results ->
+            def meta_full = meta_out.findAll { k,v -> k != 'differential_method' }
+            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
+            [meta, meta_full, results]
         }
 
     // whereas these channels, the meta do not contain contrast info, as they come from the NORM modules instead of DIFFERENTIAL modules
     ch_differential_norm = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets)
-        .map {meta, results ->
-            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
-            [meta_new, results]
+        .map {meta_out, results ->
+            def meta = meta_out.findAll { k,v -> k != 'differential_method' }
+            [meta, results]
         }
     ch_differential_varstab = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets)
-        .map {meta, results ->
-            def meta_new = meta.findAll { k,v -> k != 'differential_method' }
-            [meta_new, results]
+        .map {meta_out, results ->
+            def meta = meta_out.findAll { k,v -> k != 'differential_method' }
+            [meta, results]
         }
 
     ch_versions = ch_versions
@@ -560,25 +568,19 @@ workflow DIFFERENTIALABUNDANCE {
     // - use filtered differential results, if method is gprofiler2
     ch_functional_analysis_matrices = ch_norm
         .filter{meta, matrix -> meta.params.functional_method == 'gsea'}
+        .map{ meta, matrix -> [meta, meta, matrix]}
         .mix(
             ch_differential_results_filtered
-                .filter{meta, results -> meta.params.functional_method == 'gprofiler2'}
+                .filter{meta, meta_full, results -> meta.params.functional_method == 'gprofiler2'}
         )
 
     ch_functional_input = ch_functional_analysis_matrices
-        // Note that differential results contain contrast info in the meta, whereas
-        // ch_norm do not. Hence, parse meta to keep only analysis name and params
-        // to use it as key for combine
-        .map { meta, file ->
-            def key = [analysis_name: meta.analysis_name, params: meta.params]
-            [key, meta, file]
-        }
         .combine(ch_gene_sets, by:0)             // meta, [gmt files]
         .combine(ch_background, by:0)            // meta, background
         .combine(ch_contrasts, by:0)             // meta, [contrast], [variable], [reference], [target]
         .combine(ch_validated_samplemeta, by:0)  // meta, samplesheet
         .combine(ch_validated_featuremeta, by:0) // meta, features
-        .map { it.tail() } // remove key
+        .map { it.tail() } // remove the simple meta key
 
     ch_functional_input = prepareModuleInput(ch_functional_input, 'functional')
         .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, samplesheet, features ->
@@ -598,18 +600,25 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect functional analysis results
+    // Note that these channels, the meta contain other info apart from the base paramset meta
+    // hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params
+    // this will facilitate later on to join/combine channels
+    // To keep nomenclature consistent with the rest of the pipeline, the simple meta is called as meta, whereas
+    // the full meta containing other info is called as meta_full
 
     ch_functional_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, remainder: true)
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, remainder: true)
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report)
-        // note that 'functional_method' is additionally added to the meta in the functional subworkflow
-        // remove it to keep a consistent meta structure
-        .map {
-            def meta = it[0].findAll { k,v -> k != 'functional_method' }
-            [meta] + it.tail()
-        }
+
     ch_functional_results = prepareModuleOutput(ch_functional_results, ch_paramsets)
+        .map {
+            // 'functional_method' is additionally added to the meta in the functional subworkflow
+            // so we also remove it to keep a consistent meta structure
+            def meta_full = it[0].findAll { k,v -> k != 'functional_method' }
+            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
+            [meta, meta_full, it.tail()]  // [meta, meta_full, [files]]
+        }
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
@@ -681,15 +690,9 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Plot differential analysis results
 
-    ch_plot_differential_input = ch_differential_results
-        .map { meta, differential_results ->
-            // differential_results meta contain contrast info whereas ch_all_matrices meta do not
-            // here we parse analysis_name and params as key to combine
-            def key = [analysis_name: meta.analysis_name, params: meta.params]
-            [key, meta, differential_results]
-        }
-        .combine(ch_all_matrices, by: 0)
-        .map{it.tail()}  // remove key
+    ch_plot_differential_input = ch_differential_results  // [meta, meta_full, results]
+        .combine(ch_all_matrices, by: 0)         // [meta, samples, features, matrices]
+        .map{it.tail()}  // remove simple meta key
 
     ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'plot_differential')
         .multiMap{meta, differential_results, samples, features, matrices ->
@@ -738,51 +741,43 @@ workflow DIFFERENTIALABUNDANCE {
             ]]
         }
 
-    // Group differential and functional results by base paramset meta [analysis_name, params]
+    // Group differential and functional results by simple paramset meta [analysis_name, params]
     // So all the files generated with the same paramset meta will go together to report
 
     ch_differential_grouped = ch_differential_results
-        .join(ch_differential_model)
-        .map { meta, results, model ->
-            def meta_paramset = [analysis_name: meta.analysis_name, params: meta.params]
-            [meta_paramset, results, model]
-        }
+        .join(ch_differential_model, by:[0,1])
         .groupTuple()
-        .map { [it[0], it.tail().flatten()] }  // [ meta paramset, [differential results and models] ]
+        .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [differential results and models] ]
 
     ch_functional_grouped = ch_functional_results
-        .map {
-            def meta_paramset = [analysis_name: it[0].analysis_name, params: it[0].params]
-            [meta_paramset, it.tail()]
-        }
         .groupTuple()
-        .map { [it[0], it.tail().flatten()] }  // [ meta paramset, [functional results] ]
+        .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [functional results] ]
 
     // Prepare input for report generation
     // Each paramset will generate one markdown report by gathering all
     // the files created with the same paramset
 
-    ch_report_input = ch_report_files    // [meta paramset, [report_file, logo_file, css_file, citations_file]]
+    ch_report_input = ch_report_files    // [meta, [report_file, logo_file, css_file, citations_file]]
         .combine(ch_collated_versions)   // [versions file]
-        .join(ch_all_matrices)           // [meta paramset, samplesheet, features, [matrices]]
-        .join(ch_validated_contrast)     // [meta paramset, contrast file]
-        .join(ch_differential_grouped)   // [meta paramset, [differential results and models]]
-        .join(ch_functional_grouped, remainder: true) // [meta paramset, [functional results]]
-        .map { [it[0], it.tail().flatten()] }                    // [meta paramset, [files]]
-        .map { paramset, files -> [paramset, files[0], files.tail()] }   // [meta paramset, report_file, [files]]
-        .multiMap { meta_paramset, report_file, files ->
+        .join(ch_all_matrices)           // [meta, samplesheet, features, [matrices]]
+        .join(ch_validated_contrast)     // [meta, contrast file]
+        .join(ch_differential_grouped)   // [meta, [differential results and models]]
+        .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
+        .map { [it[0], it.tail().flatten()] }                    // [meta, [files]]
+        .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
+        .multiMap { meta, report_file, files ->
             report_file:
-            [meta_paramset, report_file]
+            [meta, report_file]
 
             report_params:
-            def paramset = [analysis_name: meta_paramset.analysis_name] + meta_paramset.params  // flat the map
+            def paramset = [analysis_name: meta.analysis_name] + meta.params  // flat the map
             def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
                 paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
                 [ 'contrasts_file' ]
             paramset + [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:
-            [meta_paramset, files]
+            [meta, files]
         }
 
     // Render the final report
@@ -790,7 +785,7 @@ workflow DIFFERENTIALABUNDANCE {
     RMARKDOWNNOTEBOOK(
         ch_report_input.report_file,
         ch_report_input.report_params,
-        ch_report_input.input_files.map{meta_paramset, files -> files}
+        ch_report_input.input_files.map{ meta, files -> files }
     )
 
     // Make a report bundle comprising the markdown document and all necessary
@@ -798,7 +793,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
             .combine(ch_report_input.input_files, by:0)
-            .map{[it[0], it.tail().flatten()]}
+            .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
 
     MAKE_REPORT_BUNDLE( ch_bundle_input )
 }
