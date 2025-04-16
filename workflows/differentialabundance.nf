@@ -782,7 +782,7 @@ workflow DIFFERENTIALABUNDANCE {
             paramset + [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:
-            files
+            [meta_paramset, files]
         }
 
     // Render the final report
@@ -790,8 +790,17 @@ workflow DIFFERENTIALABUNDANCE {
     RMARKDOWNNOTEBOOK(
         ch_report_input.report_file,
         ch_report_input.report_params,
-        ch_report_input.input_files
+        ch_report_input.input_files.map{meta_paramset, files -> files}
     )
+
+    // Make a report bundle comprising the markdown document and all necessary
+    // input files
+
+    ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
+            .combine(ch_report_input.input_files, by:0)
+            .map{[it[0], it.tail().flatten()]}
+
+    MAKE_REPORT_BUNDLE( ch_bundle_input )
 }
 
 /*
