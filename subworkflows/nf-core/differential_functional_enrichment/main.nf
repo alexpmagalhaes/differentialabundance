@@ -20,7 +20,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // other - for the moment these files are only needed for GSEA
     // as it is the only one that takes expression data as input
     // if in the future this setting is changed, this section could be removed
-    ch_contrasts             // [ meta_input, [contrast], [variable], [reference], [target] ]
+    ch_contrasts             // [ meta_input, [contrast], [variable], [reference], [target], [formula] ]
     ch_samplesheet           // [ meta_input, samples sheet ]
     ch_featuresheet          // [ meta_input, features sheet, features id, features symbol ]
 
@@ -47,7 +47,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // In the case of GSEA, it needs additional files coming from other channels that other methods don't use
     // here we define the input channel for the GSEA section
 
-    def criteria = multiMapCriteria { meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
+    def criteria = multiMapCriteria { meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target, formula ->
         def meta_all = meta_input + contrast + [ 'variable': variable, 'reference': reference, 'target': target ] + ['functional_method': 'gsea']
         input:
             [ meta_all, input ]
@@ -64,7 +64,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         .join(ch_samplesheet)
         .join(ch_featuresheet)
         .combine(ch_contrasts.transpose(), by:0)
-        .filter{ meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target ->
+        .filter{ meta_input, input, genesets, background, method, samplesheet, featuresheet, features_id, features_symbol, contrast, variable, reference, target, formula ->
             method == 'gsea' }
         .multiMap(criteria)
 
