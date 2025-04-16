@@ -713,6 +713,67 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(PLOT_DIFFERENTIAL.out.versions)
 
     // ========================================================================
+    // ShinyNGS app
+    // ========================================================================
+
+    ch_shinyngs = ch_paramsets
+        .filter{ it.params.shinyngs_build_app }
+
+    // to prepare the input for shinyngs app we need to first make sure that the differential
+    // results are parsed in the same order as the contrast file
+    // To do so, as we cannot rely on the order of the channels as they are asynchronous, we
+    // create temporary contrast files with the entries based on the order of the gathered
+    // differential results
+
+    // create a channel with the differential results and the corresponding map with
+    // the contrast entries
+    ch_differential_with_contrast = ch_shinyngs
+        .join( ch_differential_results.groupTuple() )   // [meta, [meta_full], [differential results]]
+        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target]]
+        .map { meta, meta_full, results, contrast, variable, reference, target ->
+            // extract the contrast entries from the meta dynamically
+            // in this way we don't need to harcode the contrast keys
+            def contrast_keys = contrast[0].keySet()
+            def contrast_maps = meta_full.collect { it.subMap(contrast_keys) }
+            [meta, results, contrast_maps]   // [meta, [differential results], [contrast maps]]
+        }
+
+    // save temporary contrast csv files with the entries ordered by the differential results
+    ch_contrasts_sorted = ch_differential_with_contrast
+        .collectFile { meta, results, contrast_map ->
+            def header = contrast_map[0].keySet().join(',')
+            def content = contrast_map.collect { it.values().join(',') }
+            def lines = header + '\n' + content.join('\n')
+            ["${meta.analysis_name}.csv", lines]
+        }
+        .map { [it.baseName, it] }
+        .join( ch_shinyngs.map { [it.analysis_name, it] } )
+        .map { analysis_name, contrast_file, meta ->
+            [meta, contrast_file]
+        }
+
+    // parse input for shinyngs app
+    ch_shinyngs_input = ch_differential_with_contrast
+        .join(ch_contrasts_sorted)
+        .join(ch_all_matrices)
+        .multiMap { meta, differential_results, contrast_map, contrast_file, samplesheet, features, matrices ->
+            matrices:
+            [meta, samplesheet, features, matrices]
+            contrasts_and_differential:
+            [meta, contrast_file, differential_results]
+            contrast_stats_assay:
+            meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
+        }
+
+    SHINYNGS_APP(
+        ch_shinyngs_input.matrices,
+        ch_shinyngs_input.contrasts_and_differential,
+        ch_shinyngs_input.contrast_stats_assay
+    )
+
+    ch_versions = ch_versions.mix(SHINYNGS_APP.out.versions)
+
+    // ========================================================================
     // Generate report
     // ========================================================================
 
