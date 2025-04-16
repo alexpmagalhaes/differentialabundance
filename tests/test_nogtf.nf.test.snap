@@ -1,48 +1,210 @@
 {
     "Test no gtf profile - with toolsheet": {
         "content": [
-            0,
+            13,
             {
+                "CUSTOM_FILTERDIFFERENTIALTABLE": {
+                    "pandas": "1.5.2"
+                },
+                "DESEQ2_DIFFERENTIAL": {
+                    "r-base": "4.1.3",
+                    "bioconductor-deseq2": "1.34.0"
+                },
+                "DESEQ2_NORM": {
+                    "r-base": "4.1.3",
+                    "bioconductor-deseq2": "1.34.0"
+                },
+                "PLOT_DIFFERENTIAL": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "PLOT_EXPLORATORY": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "SHINYNGS_APP": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "VALIDATOR": {
+                    "r-shinyngs": "2.2.2"
+                },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
                 }
             },
             [
+                "other",
+                "other/deseq2",
+                "other/deseq2/treatment_mCherry_hND6_.dds.rld.rds",
+                "other/deseq2/treatment_mCherry_hND6_.deseq2.sizefactors.tsv",
+                "other/deseq2/treatment_mCherry_hND6_sample_number.dds.rld.rds",
+                "other/deseq2/treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
-                "pipeline_info/nf_core_differentialabundance_software_versions.yml"
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
+                "plots",
+                "plots/differential",
+                "plots/differential/treatment_mCherry_hND6_",
+                "plots/differential/treatment_mCherry_hND6_/png",
+                "plots/differential/treatment_mCherry_hND6_/png/volcano.png",
+                "plots/differential/treatment_mCherry_hND6_sample_number",
+                "plots/differential/treatment_mCherry_hND6_sample_number/png",
+                "plots/differential/treatment_mCherry_hND6_sample_number/png/volcano.png",
+                "plots/differential/versions.yml",
+                "plots/exploratory",
+                "plots/exploratory/treatment",
+                "plots/exploratory/treatment/png",
+                "plots/exploratory/treatment/png/boxplot.png",
+                "plots/exploratory/treatment/png/density.png",
+                "plots/exploratory/treatment/png/mad_correlation.png",
+                "plots/exploratory/treatment/png/pca2d.png",
+                "plots/exploratory/treatment/png/pca3d.png",
+                "plots/exploratory/treatment/png/sample_dendrogram.png",
+                "plots/exploratory/versions.yml",
+                "plots/qc",
+                "plots/qc/treatment_mCherry_hND6_.deseq2.dispersion.png",
+                "plots/qc/treatment_mCherry_hND6_sample_number.deseq2.dispersion.png",
+                "report",
+                "report/deseq2_rnaseq.html",
+                "report/deseq2_rnaseq.zip",
+                "shinyngs_app",
+                "shinyngs_app/deseq2_rnaseq",
+                "shinyngs_app/deseq2_rnaseq/app.R",
+                "shinyngs_app/deseq2_rnaseq/data.rds",
+                "shinyngs_app/versions.yml",
+                "tables",
+                "tables/differential",
+                "tables/differential/treatment_mCherry_hND6_.deseq2.results.tsv",
+                "tables/differential/treatment_mCherry_hND6_.deseq2.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number.deseq2.results.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv",
+                "tables/processed_abundance",
+                "tables/processed_abundance/all.normalised_counts.tsv",
+                "tables/processed_abundance/all.vst.tsv"
             ],
             [
-                
+                "treatment_mCherry_hND6_.dds.rld.rds:md5,6169c02c9c5dc9bfbd907d1d0ffe5442",
+                "treatment_mCherry_hND6_.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
+                "treatment_mCherry_hND6_sample_number.dds.rld.rds:md5,4ef00951aa423f2b5d1ab797b16ff20d",
+                "treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
+                "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
+                "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
+                "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
+                "versions.yml:md5,b9e9aeb4e55381e73a796d7760040c3b",
+                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,083c15a96e86aa34751c779c261cef54",
+                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,024da041c017d0539995aee55af83e26",
+                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,1cacf5addc0f57199958137bb69fa4ac",
+                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,67194d019bbda6cedbfd35bfd5f31af7",
+                "all.normalised_counts.tsv:md5,c01442cf7f86fc1a9f4372b27f837052",
+                "all.vst.tsv:md5,f25a3a95044074ed2164d155fbdb9571"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.4"
+            "nextflow": "24.10.5"
         },
-        "timestamp": "2025-04-16T15:09:08.093879575"
+        "timestamp": "2025-04-16T16:07:12.573121948"
     },
     "Test no gtf profile": {
         "content": [
-            0,
+            13,
             {
+                "CUSTOM_FILTERDIFFERENTIALTABLE": {
+                    "pandas": "1.5.2"
+                },
+                "DESEQ2_DIFFERENTIAL": {
+                    "r-base": "4.1.3",
+                    "bioconductor-deseq2": "1.34.0"
+                },
+                "DESEQ2_NORM": {
+                    "r-base": "4.1.3",
+                    "bioconductor-deseq2": "1.34.0"
+                },
+                "PLOT_DIFFERENTIAL": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "PLOT_EXPLORATORY": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "SHINYNGS_APP": {
+                    "r-shinyngs": "2.2.0"
+                },
+                "VALIDATOR": {
+                    "r-shinyngs": "2.2.2"
+                },
                 "Workflow": {
                     "nf-core/differentialabundance": "v1.6.0dev"
                 }
             },
             [
+                "other",
+                "other/deseq2",
+                "other/deseq2/treatment_mCherry_hND6_.dds.rld.rds",
+                "other/deseq2/treatment_mCherry_hND6_.deseq2.sizefactors.tsv",
+                "other/deseq2/treatment_mCherry_hND6_sample_number.dds.rld.rds",
+                "other/deseq2/treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv",
                 "pipeline_info",
                 "pipeline_info/collated_versions.yml",
-                "pipeline_info/nf_core_differentialabundance_software_versions.yml"
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
+                "plots",
+                "plots/differential",
+                "plots/differential/treatment_mCherry_hND6_",
+                "plots/differential/treatment_mCherry_hND6_/png",
+                "plots/differential/treatment_mCherry_hND6_/png/volcano.png",
+                "plots/differential/treatment_mCherry_hND6_sample_number",
+                "plots/differential/treatment_mCherry_hND6_sample_number/png",
+                "plots/differential/treatment_mCherry_hND6_sample_number/png/volcano.png",
+                "plots/differential/versions.yml",
+                "plots/exploratory",
+                "plots/exploratory/treatment",
+                "plots/exploratory/treatment/png",
+                "plots/exploratory/treatment/png/boxplot.png",
+                "plots/exploratory/treatment/png/density.png",
+                "plots/exploratory/treatment/png/mad_correlation.png",
+                "plots/exploratory/treatment/png/pca2d.png",
+                "plots/exploratory/treatment/png/pca3d.png",
+                "plots/exploratory/treatment/png/sample_dendrogram.png",
+                "plots/exploratory/versions.yml",
+                "plots/qc",
+                "plots/qc/treatment_mCherry_hND6_.deseq2.dispersion.png",
+                "plots/qc/treatment_mCherry_hND6_sample_number.deseq2.dispersion.png",
+                "report",
+                "report/null.html",
+                "report/null.zip",
+                "shinyngs_app",
+                "shinyngs_app/null",
+                "shinyngs_app/null/app.R",
+                "shinyngs_app/null/data.rds",
+                "shinyngs_app/versions.yml",
+                "tables",
+                "tables/differential",
+                "tables/differential/treatment_mCherry_hND6_.deseq2.results.tsv",
+                "tables/differential/treatment_mCherry_hND6_.deseq2.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number.deseq2.results.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv",
+                "tables/processed_abundance",
+                "tables/processed_abundance/all.normalised_counts.tsv",
+                "tables/processed_abundance/all.vst.tsv"
             ],
             [
-                
+                "treatment_mCherry_hND6_.dds.rld.rds:md5,6169c02c9c5dc9bfbd907d1d0ffe5442",
+                "treatment_mCherry_hND6_.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
+                "treatment_mCherry_hND6_sample_number.dds.rld.rds:md5,4ef00951aa423f2b5d1ab797b16ff20d",
+                "treatment_mCherry_hND6_sample_number.deseq2.sizefactors.tsv:md5,402909515e7ae8d53d091bf5ad9bc5fd",
+                "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
+                "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
+                "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
+                "versions.yml:md5,b9e9aeb4e55381e73a796d7760040c3b",
+                "treatment_mCherry_hND6_.deseq2.results.tsv:md5,083c15a96e86aa34751c779c261cef54",
+                "treatment_mCherry_hND6_.deseq2.results_filtered.tsv:md5,024da041c017d0539995aee55af83e26",
+                "treatment_mCherry_hND6_sample_number.deseq2.results.tsv:md5,1cacf5addc0f57199958137bb69fa4ac",
+                "treatment_mCherry_hND6_sample_number.deseq2.results_filtered.tsv:md5,67194d019bbda6cedbfd35bfd5f31af7",
+                "all.normalised_counts.tsv:md5,c01442cf7f86fc1a9f4372b27f837052",
+                "all.vst.tsv:md5,f25a3a95044074ed2164d155fbdb9571"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.4"
+            "nextflow": "24.10.5"
         },
-        "timestamp": "2025-04-16T15:08:49.375559877"
+        "timestamp": "2025-04-16T16:05:15.709445234"
     }
 }
