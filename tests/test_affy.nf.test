@@ -42,7 +42,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                analysis_name       = "limma_gsea"
+                analysis_name       = "limma_affy_gsea"
                 differential_method = null
                 functional_method   = null
             }

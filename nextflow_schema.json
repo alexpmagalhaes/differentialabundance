@@ -453,7 +453,7 @@
                 "differential_method": {
                     "type": "string",
                     "description": "Differential analysis method",
-                    "enum": ["deseq2", "limma"],
+                    "enum": ["deseq2", "limma", "dream"],
                     "default": "deseq2"
                 },
                 "differential_file_suffix": {

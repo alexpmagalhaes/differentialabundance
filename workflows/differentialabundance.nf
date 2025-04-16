@@ -250,7 +250,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Raw inputs
 
     ch_in_raw = ch_input.rnaseq
-        .map{meta, file -> [meta, meta.params.matrix]}
+        .map{meta, input -> [meta, file(meta.params.matrix, checkIfExists: true)]}
         .mix(ch_affy_raw)
         .mix(ch_proteus_raw)
 
@@ -280,11 +280,11 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Handle Affy array platform features
     ch_affy_features = ch_feature_sources.affy_features
-        .map { meta -> ch_affy_platform_features }
+        .join(ch_affy_platform_features)
 
     // Handle GEO soft file features
     ch_geo_features = ch_feature_sources.geo_features
-        .map { meta -> ch_soft_features }
+        .join(ch_soft_features)
 
     // Handle GTF-based feature annotations
     ch_gtf_files = ch_feature_sources.gtf_features
@@ -326,9 +326,10 @@ workflow DIFFERENTIALABUNDANCE {
     ch_matrix_features = ch_pre_matrix_features.maxquant.join(ch_in_norm)
         .mix(ch_pre_matrix_features.other.join(ch_in_raw))
         .map{ meta, matrix ->
-            matrix_as_anno_filename = "${workflow.workDir}/${matrix.getBaseName()}_as_anno.${matrix.getExtension()}"
-            matrix_copy = file(matrix_as_anno_filename)
+            def matrix_as_anno_filename = "${workflow.workDir}/${matrix.getBaseName()}_as_anno.${matrix.getExtension()}"
+            def matrix_copy = file(matrix_as_anno_filename)
             matrix_copy.exists() && matrix.getText().md5().equals(matrix_copy.getText().md5()) ?: matrix.copyTo(matrix_as_anno_filename)
+            println(matrix_as_anno_filename)
             [ meta, file(matrix_as_anno_filename) ]
         }
 
@@ -536,7 +537,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_processed_matrices = ch_norm.join(ch_differential_varstab, remainder: true)
         .map { meta, norm, vs ->
-            def matrices = vs ? [norm, vs] : [norm]
+            def matrices = vs ? [norm, vs].flatten() : [norm]
             [meta, matrices]
         }
 
@@ -825,7 +826,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_validated_contrast)     // [meta, contrast file]
         .join(ch_differential_grouped)   // [meta, [differential results and models]]
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
-        .map { [it[0], it.tail().flatten()] }                    // [meta, [files]]
+        .map { [it[0], it.tail().grep().flatten()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
         .multiMap { meta, report_file, files ->
             report_file:

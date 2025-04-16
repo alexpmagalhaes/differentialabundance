@@ -141,12 +141,12 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // DREAM only runs with formula
     dream_inputs = inputs.contrasts_for_diff_with_formula
         .filter { meta, variable, reference, target, formula ->
-            meta.method_differential == 'dream' && formula != null
+            meta.differential_method == 'dream' && formula != null
         }
 
     VARIANCEPARTITION_DREAM(
         dream_inputs,
-        inputs.samples_and_matrix.filter{ it[0].method_differential == 'dream' }
+        inputs.samples_and_matrix.filter{ it[0].differential_method == 'dream' }
     )
 
     ch_versions = ch_versions.mix( VARIANCEPARTITION_DREAM.out.versions.first() )

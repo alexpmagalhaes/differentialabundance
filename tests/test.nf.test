@@ -11,7 +11,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                analysis_name       = "deseq2_gsea"
+                analysis_name       = "deseq2_rnaseq_gsea"
                 differential_method = null
                 functional_method   = null
             }

@@ -496,7 +496,7 @@ def prepareModuleOutput(channel, paramsets) {
         // first parse the channel to have analysis_names as key
         .map { [it[0].analysis_names] + it }
         // transpose the list of analysis_names
-        .transpose()
+        .transpose(by:0)
         .map {
             // replace analysis_names by analysis_name in the meta
             def meta = [analysis_name: it[0]] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
