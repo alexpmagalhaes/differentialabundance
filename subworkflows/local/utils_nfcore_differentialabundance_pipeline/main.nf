@@ -367,7 +367,7 @@ def getToolsheetConfigurations() {
             def fullparams = params + cleanparams
             // sort toolsheet params based on pipeline params order
             def sortedparams = fullparams.sort { a, b ->
-                    params.keySet().indexOf(a.key) <=> params.keySet().indexOf(b.key)
+                    params.keySet().toList().indexOf(a.key) <=> params.keySet().toList().indexOf(b.key)
                 } as Map
             return sortedparams
         }
