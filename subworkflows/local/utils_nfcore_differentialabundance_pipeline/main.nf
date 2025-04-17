@@ -307,9 +307,18 @@ def methodsDescriptionText(mqc_methods_yaml) {
 // Get tool configurations based on whether analysis_name is provided
 def getToolConfigurations() {
     // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
-    return (params.analysis_name || params.toolsheet_custom) ?
+    def paramsets = (params.analysis_name || params.toolsheet_custom) ?
         getToolsheetConfigurations() :
         getDefaultConfigurations()
+
+    return paramsets.collect { paramset ->
+        // some params are not useful through the pipeline run, remove them for cleaner meta
+        def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
+        // non static params would interfere with cache
+        // remove them from meta to avoid problems with resume
+        def nonstaticparams = ['trace_report_suffix']
+        paramset.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map
+    }
 }
 
 // Get configurations from toolsheet
@@ -357,24 +366,17 @@ def getToolsheetConfigurations() {
             // add missing params from pipeline params
             def fullparams = params + cleanparams
             // sort toolsheet params based on pipeline params order
-            def paramKeysList = params.keySet().toList()
             def sortedparams = fullparams.sort { a, b ->
-                    paramKeysList.indexOf(a.key) <=> paramKeysList.indexOf(b.key)
+                    params.keySet().indexOf(a.key) <=> params.keySet().indexOf(b.key)
                 } as Map
-            // use only the static params, otherwise it causes issues with cache
-            def staticparams = sortedparams.findAll { k, v -> k != 'trace_report_suffix' } as Map
-            // remove useless keys
-            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
-            def paramset = staticparams.findAll { k, v -> !(ignore).contains(k) } as Map
-            return paramset
+            return sortedparams
         }
 }
 
 // Get default configurations from pipeline parameters
 def getDefaultConfigurations() {
-    def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
-    def nonstaticparams = ['trace_report_suffix']
-    return [ params.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map + [analysis_name: 'null'] ]
+    // replace null by string 'null' for analysis_name to avoid certain problems with null object
+    return [params + [analysis_name: 'null']]
 }
 
 // Create a temporary schema file for toolsheet validation
@@ -462,23 +464,21 @@ def extractRequiredFromSchema(schema) {
 // @param channel: the input channel
 // @params module_prefix: the module prefix for params
 // @return a channel with [simplified meta, files ...]
+// the simplified meta would have the following structure:
+// [analysis_names: [list of analysis names], params: [relevant params map], ...other k,v]
 def prepareModuleInput(channel, module_prefix=null) {
     return channel
         .map {
-            def analysis_name = it[0].analysis_name
             // clean the params by keeping only the relevant params
             def simplifiedparams = getRelevantParams(it[0].params, module_prefix)
-            // parse to proper meta structure
-            def simplifiedmeta = [analysis_name: analysis_name, params: simplifiedparams] +
-                it[0].findAll { key, value ->
-                    ! ['analysis_name', 'params'].contains(key)
-                }
+            // replace meta.params by simplified params
+            def simplifiedmeta = it[0] + [params: simplifiedparams]
             // define key as simplified meta + input files
             def key = [simplifiedmeta, it[1..-1]]
 
-            [key, analysis_name]   // [ [simplified meta, files ...], analysis_name ]
+            [key, it[0].analysis_name]   // [ [simplified meta, files ...], analysis_name ]
         }
-        .groupTuple()
+        .groupTuple()              // [ [simplified meta, files ...], [ analysis_name ] ]
         .map {
             def simplifiedmeta = it[0][0]
             def files = it[0][1]
@@ -490,35 +490,35 @@ def prepareModuleInput(channel, module_prefix=null) {
 }
 
 // prepare the output for the module by adding back the full paramsets
-// based on the analysis_name
+// to the meta. This is done by matching with analysis_name
 def prepareModuleOutput(channel, paramsets) {
+    // prepare the channel to have analysis_name as key
     channel_by_name = channel
         // first parse the channel to have analysis_names as key
         .map { [it[0].analysis_names] + it }
         // transpose the list of analysis_names
         .transpose(by:0)
         .map {
+            def analysis_name = it[0]
             // replace analysis_names by analysis_name in the meta
-            def meta = [analysis_name: it[0]] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
+            def meta = [analysis_name: analysis_name] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
             // put analysis name as key
-            [it[0], meta] + it[2..-1]  // [analysis_name, meta, files ...]
+            [analysis_name, meta] + it[2..-1]  // [analysis_name, meta, files ...]
         }
+    // add back the full paramset by matching with paramsets channel
+    // with analysis_name as key
     return paramsets
         .map { [it.analysis_name, it] }
         // we use combine instead of join, because for the same analysis_name,
         // different meta and files may have been generated because of the different contrasts
         .combine(channel_by_name, by:0)
         .map {
-            // get full meta
-            def paramset = it[1].params + it[2].params
-            def sortedparamset = paramset.sort { a, b ->
-                paramset.keySet().toList().indexOf(a.key) <=> paramset.keySet().toList().indexOf(b.key)
-            } as Map
-            def meta_full = [analysis_name: it[0], params: sortedparamset] +
-                it[2].findAll { key, value ->
-                    ! ['analysis_name', 'params'].contains(key)
-                }
-            [meta_full] + it[3..-1]    // [meta with full paramsets, files ...]
+            def meta_paramset = it[1]
+            def meta_out = it[2]
+            // replace output meta simplified params by full params from paramset
+            // note that meta_out might have other k,v in the meta map (eg. contrast maps), we keep those too
+            def meta_full = meta_out + [params: meta_paramset.params]
+            [meta_full] + it[3..-1]    // [meta with full paramset, files ...]
         }
 }
 

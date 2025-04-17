@@ -162,9 +162,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Uncompress the CEL files archive
 
     ch_untar_input = prepareModuleInput(ch_celfiles)
-
     UNTAR ( ch_untar_input )
-
     ch_untar_out = prepareModuleOutput(UNTAR.out.untar, ch_paramsets)
 
     // run affy
@@ -201,7 +199,6 @@ workflow DIFFERENTIALABUNDANCE {
             def meta_new = meta + [contrast: contrast]
             [meta_new, input, matrix]
         }
-
     ch_proteus_input = prepareModuleInput(ch_proteus_input, 'proteus_')
 
     // Run proteus to import protein abundances
@@ -329,7 +326,6 @@ workflow DIFFERENTIALABUNDANCE {
             def matrix_as_anno_filename = "${workflow.workDir}/${matrix.getBaseName()}_as_anno.${matrix.getExtension()}"
             def matrix_copy = file(matrix_as_anno_filename)
             matrix_copy.exists() && matrix.getText().md5().equals(matrix_copy.getText().md5()) ?: matrix.copyTo(matrix_as_anno_filename)
-            println(matrix_as_anno_filename)
             [ meta, file(matrix_as_anno_filename) ]
         }
 
