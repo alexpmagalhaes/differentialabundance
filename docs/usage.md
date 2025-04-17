@@ -226,7 +226,9 @@ By default, if you don't provide features, for non-array data the workflow will 
 
 ## Toolsheet
 
-We provide a set of toolsheet files that define the tools that make sense to run for a given study type. These files are in the `assets` directory of the pipeline.
+### 1. Default toolsheet
+
+We provide a `toolsheet.csv` file in the `assets` directory that define the tools and tool parameters that make sense to run together, for specific study type.
 
 Each row defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments.
 
@@ -235,7 +237,12 @@ Each row defines a combination of differential analysis tool and functional anal
 
 To run a given combination of tools, you can use the `--analysis_name` parameter.
 
-Optionally, one can also provide its own toolsheet file using the `--toolsheet_custom` flag. This file can be in CSV, TSV or YAML format.
+### 2. Custom toolsheet
+
+Optionally, one can also provide its own toolsheet CSV file using the `--toolsheet` flag.
+
+> [!WARNING]
+> Note that any parameter from the pipeline can be provided through the custom toolsheet. In essence, the toolsheet is a compact file with multiple nextflow configs, being each row one config.
 
 ## Working with the output R markdown file
 

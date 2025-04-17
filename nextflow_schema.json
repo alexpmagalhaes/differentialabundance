@@ -440,7 +440,7 @@
                 },
                 "toolsheet": {
                     "type": "string",
-                    "description": "Path to a custom toolsheet file"
+                    "description": "Path to a toolsheet file"
                 }
             }
         },

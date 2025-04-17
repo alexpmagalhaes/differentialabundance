@@ -306,11 +306,8 @@ def methodsDescriptionText(mqc_methods_yaml) {
 
 // Get tool configurations based on whether analysis_name is provided
 def getToolConfigurations() {
-    // Use toolsheet if either analysis_name or custom toolsheet is provided, otherwise use default params
-    def paramsets = (params.analysis_name || params.toolsheet_custom) ?
-        getToolsheetConfigurations() :
-        getDefaultConfigurations()
-
+    // Use toolsheet if analysis_name is provided, otherwise use default params
+    def paramsets = (params.analysis_name) ? getToolsheetConfigurations() : getDefaultConfigurations()
     return paramsets.collect { paramset ->
         // some params are not useful through the pipeline run, remove them for cleaner meta
         def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
@@ -329,7 +326,7 @@ def getToolConfigurations() {
 // 2. fill missing params with pipeline params
 def getToolsheetConfigurations() {
     // get toolsheet path
-    def toolsheet_path = params.toolsheet_custom ?: "${projectDir}/assets/toolsheet.csv"
+    def toolsheet_path = params.toolsheet
 
     // Create temporary schema for validation - with only the fields in the toolsheet
     def schema_path = createToolsheetSchema(toolsheet_path)
@@ -342,12 +339,9 @@ def getToolsheetConfigurations() {
         .collect { row ->
             return row.findAll { key, value -> value != [] }
         }
-        // If analysis_name is set, only keep matching rows
+        // Only keep row matching with analysis name
         .findAll { row ->
-            if (params.analysis_name) {
-                return row.analysis_name == params.analysis_name
-            }
-            return true
+            return row.analysis_name == params.analysis_name
         }
 
     if (toolsheet.isEmpty()) {
