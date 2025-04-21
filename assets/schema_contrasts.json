@@ -36,7 +36,8 @@
                         "type": "string"
                     }
                 },
-                "required": ["id", "comparison"],
+                "required": ["id"],
+                "oneOf": [{ "required": ["comparison"] }, { "required": ["make_contrasts_str"] }],
                 "additionalProperties": false
             },
             "minItems": 1
