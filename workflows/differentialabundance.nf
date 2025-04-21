@@ -188,7 +188,7 @@ workflow DIFFERENTIALABUNDANCE {
                 def yaml_file = entry[1]
                 def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
                 yaml_data.contrasts.collect { contrast ->
-                    tuple('id': contrast.comparison[0])
+                    tuple('id': contrast.get('id'))
                 }
             }
             .flatten()
