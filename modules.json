@@ -97,22 +97,22 @@
                     },
                     "shinyngs/app": {
                         "branch": "master",
-                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "git_sha": "d802effd844103fcc5e233184f95c84026ed44d6",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticdifferential": {
                         "branch": "master",
-                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "git_sha": "d802effd844103fcc5e233184f95c84026ed44d6",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticexploratory": {
                         "branch": "master",
-                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "git_sha": "d802effd844103fcc5e233184f95c84026ed44d6",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/validatefomcomponents": {
                         "branch": "master",
-                        "git_sha": "0d290ba0c91d488a47726adedc176f5fe443cf19",
+                        "git_sha": "d802effd844103fcc5e233184f95c84026ed44d6",
                         "installed_by": ["modules"]
                     },
                     "untar": {
@@ -122,7 +122,7 @@
                     },
                     "variancepartition/dream": {
                         "branch": "master",
-                        "git_sha": "a74e1f94f680116b324c14348d1833a0d16b23a4",
+                        "git_sha": "c48c4b3d11fb243c888235d1e6b18d6c5059b2bb",
                         "installed_by": ["abundance_differential_filter", "modules"]
                     },
                     "zip": {

@@ -44,7 +44,7 @@ read_delim_flexible <- function(file, header = TRUE, row.names = NULL, check.nam
     return(df)
 }
 
-# 
+#
 #' Turn “null” or empty strings into actual NULL
 #'
 #' @param x Input option
