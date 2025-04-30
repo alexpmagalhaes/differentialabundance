@@ -4,10 +4,146 @@
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {
-                "nf-core": {}
+                "nf-core": {
+                    "affy/justrma": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "atlasgeneannotationmanipulation/gtf2featureannotation": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "custom/filterdifferentialtable": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["abundance_differential_filter"]
+                    },
+                    "custom/matrixfilter": {
+                        "branch": "master",
+                        "git_sha": "c835e1647a2e16237ae9d1db3d27351297f290c5",
+                        "installed_by": ["modules"]
+                    },
+                    "custom/tabulartogseachip": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "custom/tabulartogseacls": {
+                        "branch": "master",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "custom/tabulartogseagct": {
+                        "branch": "master",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "deseq2/differential": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["abundance_differential_filter"]
+                    },
+                    "geoquery/getgeo": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "gprofiler2/gost": {
+                        "branch": "master",
+                        "git_sha": "100b1dc1ece11cf8d4fec100314d616a66a60875",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "gsea/gsea": {
+                        "branch": "master",
+                        "git_sha": "785efc640b1e87e9ff4b451cf9b6970f0db7a03b",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "gunzip": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "immunedeconv": {
+                        "branch": "master",
+                        "git_sha": "e0d590dc1005b89a06b54548d4e3cdfa45e6b6f2",
+                        "installed_by": ["modules"]
+                    },
+                    "limma/differential": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["abundance_differential_filter"]
+                    },
+                    "propr/grea": {
+                        "branch": "master",
+                        "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+                        "installed_by": ["differential_functional_enrichment"]
+                    },
+                    "propr/propd": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["abundance_differential_filter"]
+                    },
+                    "proteus/readproteingroups": {
+                        "branch": "master",
+                        "git_sha": "ba9efe74bd993e9ce77441104e48120834d5886e",
+                        "installed_by": ["modules"]
+                    },
+                    "rmarkdownnotebook": {
+                        "branch": "master",
+                        "git_sha": "ba9efe74bd993e9ce77441104e48120834d5886e",
+                        "installed_by": ["modules"]
+                    },
+                    "shinyngs/app": {
+                        "branch": "master",
+                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "installed_by": ["modules"]
+                    },
+                    "shinyngs/staticdifferential": {
+                        "branch": "master",
+                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "installed_by": ["modules"]
+                    },
+                    "shinyngs/staticexploratory": {
+                        "branch": "master",
+                        "git_sha": "597771ff67e7d86a0ded1561eaa791b19c55deaa",
+                        "installed_by": ["modules"]
+                    },
+                    "shinyngs/validatefomcomponents": {
+                        "branch": "master",
+                        "git_sha": "0d290ba0c91d488a47726adedc176f5fe443cf19",
+                        "installed_by": ["modules"]
+                    },
+                    "untar": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "variancepartition/dream": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["abundance_differential_filter", "modules"]
+                    },
+                    "zip": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    }
+                }
             },
             "subworkflows": {
                 "nf-core": {
+                    "abundance_differential_filter": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["subworkflows"]
+                    },
+                    "differential_functional_enrichment": {
+                        "branch": "master",
+                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "installed_by": ["subworkflows"]
+                    },
                     "utils_nextflow_pipeline": {
                         "branch": "master",
                         "git_sha": "c2b22d85f30a706a3073387f30380704fcae013b",

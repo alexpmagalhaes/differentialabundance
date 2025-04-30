@@ -1,0 +1,11 @@
+pipeline_info/*.{html,json,txt,yml}
+report/gsea/**/*.symbols.Gsea.rpt
+report/*.html
+report/*.zip
+report/*.png
+report/**/*.html
+report/**/*.zip
+report/**/*.png
+*html
+shinyngs_app/**/data.rds
+**/*.png
