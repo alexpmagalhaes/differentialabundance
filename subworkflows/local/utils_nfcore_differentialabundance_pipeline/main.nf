@@ -517,6 +517,10 @@ def prepareModuleOutput(channel, paramsets) {
 }
 
 // get the relevant params for the module
+// This function will parse meta to only retain the parameters that are relevant.
+// The relevant parameters include: 1) those base parameters that might be shared
+// by many modules in the pipeline, and 2) those parameters that are only needed
+// for a given module, and usually starts with the module specific prefix.
 // @params meta: the meta map
 // @params module_prefix: the module prefix for params
 def getRelevantParams (meta, module_prefix=null) {

@@ -241,8 +241,11 @@ To run a given combination of tools, you can use the `--analysis_name` parameter
 
 Optionally, one can also provide its own toolsheet CSV file using the `--toolsheet` flag.
 
+### 3. Multi config
+
 > [!WARNING]
-> Note that any parameter from the pipeline can be provided through the custom toolsheet. In essence, the toolsheet is a compact file with multiple nextflow configs, being each row one config.
+> Note that any parameter from the pipeline can be provided through the toolsheet. In essence, the toolsheet is a compact file with multiple nextflow configs, being each row one config.
+> For the moment, the pipeline only allows to run one config at a time through `--analysis_name`, but soon iterating multi configs through one pipeline run would be possible.
 
 ## Working with the output R markdown file
 
