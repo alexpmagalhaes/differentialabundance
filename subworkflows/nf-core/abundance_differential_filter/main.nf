@@ -10,47 +10,59 @@ include { PROPR_PROPD                         } from '../../../modules/nf-core/p
 include { CUSTOM_FILTERDIFFERENTIALTABLE      } from '../../../modules/nf-core/custom/filterdifferentialtable/main'
 include { VARIANCEPARTITION_DREAM             } from '../../../modules/nf-core/variancepartition/dream/main'
 
+// Combine meta maps, including merging non-identical values of shared keys (e.g. 'id')
+def mergeMaps(meta, meta2){
+    (meta + meta2).collectEntries { k, v ->
+        meta[k] && meta[k] != v ? [k, "${meta[k]}_${v}"] : [k, v]
+    }
+}
+
 workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     take:
     // Things we may need to iterate
-    ch_input                 // [ meta_input, abundance, analysis method, fc_threshold, stat_threshold ]
+    ch_input                 // [ meta, abundance, analysis method, fc_threshold, stat_threshold ]
 
     // Workflow-wide things, we don't need to iterate
-    ch_samplesheet           // [ meta_input, samplesheet ]
-    ch_transcript_lengths    // [ meta_input, transcript_lengths]
-    ch_control_features      // [ meta_input, control_features ]
-    ch_contrasts             // [ meta_input, [contrast], [variable], [reference], [target], [formula] ]
+    ch_samplesheet           // [ meta, samplesheet ]
+    ch_transcript_lengths    // [ meta, transcript_lengths]
+    ch_control_features      // [ meta, control_features ]
+    ch_contrasts             // [ meta, [meta_contrast], [variable], [reference], [target], [formula], [comparison] ]
 
     main:
 
     ch_versions = Channel.empty()
 
     // Set up how the channels crossed below will be used to generate channels for processing
-    def criteria = multiMapCriteria { meta_input, abundance, analysis_method, fc_threshold, stat_threshold, samplesheet, transcript_length, control_features, contrast, variable, reference, target, formula ->
-        def meta_for_diff = meta_input + [ 'differential_method': analysis_method ] + contrast
-        def meta_input_new = meta_input + [ 'differential_method': analysis_method ]
+    def criteria = multiMapCriteria { meta, abundance, analysis_method, fc_threshold, stat_threshold, samplesheet, transcript_length, control_features, meta_contrast, variable, reference, target, formula, comparison ->
+        def meta_with_method = meta + [ 'differential_method': analysis_method ]
+        def meta_for_diff = mergeMaps(meta_contrast, meta_with_method)
         samples_and_matrix:
-            [ meta_input_new, samplesheet, abundance ]
+            [ meta_with_method, samplesheet, abundance ]
         contrasts_for_diff:
             [ meta_for_diff, variable, reference, target ]
         contrasts_for_diff_with_formula:
-            [ meta_for_diff, variable, reference, target, formula ]
+            [ meta_for_diff, variable, reference, target, formula, comparison ]
         filter_params:
             [ meta_for_diff, [ 'fc_threshold': fc_threshold, 'stat_threshold': stat_threshold ]]
         contrasts_for_norm:
-            [ meta_input_new, variable, reference, target ]
+            [ meta_with_method, variable, reference, target ]
+        // these are optional files
+        // return empty file if not available
         transcript_length:
-            [ meta_input_new, transcript_length ]
+            [ meta_with_method, (transcript_length)?:[] ]
         control_features:
-            [ meta_input_new, control_features ]
+            [ meta_with_method, (control_features)?:[] ]
     }
+
+    // create joined channel with samplesheet and optional transcript lengths and control features
+    ch_samplesheet_with_control = ch_samplesheet
+        .join(ch_transcript_lengths, remainder:true)
+        .join(ch_control_features, remainder:true)
 
     // For DIFFERENTIAL modules we need to cross the things we're iterating so we
     // run differential analysis for every combination of matrix and contrast
     inputs = ch_input
-        .join(ch_samplesheet)
-        .join(ch_transcript_lengths)
-        .join(ch_control_features)
+        .combine(ch_samplesheet_with_control, by:0)
         .combine(ch_contrasts.transpose(), by:0)
         .multiMap(criteria)
 
@@ -59,11 +71,8 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // on the contrast setting etc, these modules may subset matrices, hence
     // not returning the full normalized matrix as NORM modules would do.
     norm_inputs = ch_input
-        .join(ch_samplesheet)
-        .join(ch_transcript_lengths)
-        .join(ch_control_features)
-        .combine(ch_contrasts.transpose().first(), by:0) // Just taking the first contrast
-        .unique()
+        .combine(ch_samplesheet_with_control, by:0)
+        .join(ch_contrasts.transpose()) // by using join instead of combine, it only returns the inner join with the first contrast
         .multiMap(criteria)
 
     // ----------------------------------------------------
@@ -140,7 +149,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
 
     // DREAM only runs with formula
     dream_inputs = inputs.contrasts_for_diff_with_formula
-        .filter { meta, variable, reference, target, formula ->
+        .filter { meta, variable, reference, target, formula, comparison ->
             meta.differential_method == 'dream' && formula != null
         }
 

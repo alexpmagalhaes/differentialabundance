@@ -72,7 +72,7 @@
                     },
                     "limma/differential": {
                         "branch": "master",
-                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "git_sha": "6ac0725bddb061e6f8eb3e22d20129f901021d9a",
                         "installed_by": ["abundance_differential_filter"]
                     },
                     "propr/grea": {
@@ -122,7 +122,7 @@
                     },
                     "variancepartition/dream": {
                         "branch": "master",
-                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "git_sha": "c48c4b3d11fb243c888235d1e6b18d6c5059b2bb",
                         "installed_by": ["abundance_differential_filter", "modules"]
                     },
                     "zip": {
@@ -136,12 +136,12 @@
                 "nf-core": {
                     "abundance_differential_filter": {
                         "branch": "master",
-                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "git_sha": "6ac0725bddb061e6f8eb3e22d20129f901021d9a",
                         "installed_by": ["subworkflows"]
                     },
                     "differential_functional_enrichment": {
                         "branch": "master",
-                        "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
+                        "git_sha": "6ac0725bddb061e6f8eb3e22d20129f901021d9a",
                         "installed_by": ["subworkflows"]
                     },
                     "utils_nextflow_pipeline": {

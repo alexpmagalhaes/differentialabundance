@@ -421,9 +421,9 @@ workflow DIFFERENTIALABUNDANCE {
                 contrast.id = contrast.values().join('_')
             }
             contrast.formula = contrast.formula?.trim() ? contrast.formula.trim() : null
-            return [meta, contrast, contrast.variable, contrast.reference, contrast.target, contrast.formula]
+            return [meta, contrast, contrast.variable, contrast.reference, contrast.target, contrast.formula, contrast.comparison]
         }
-        .groupTuple() // [meta, [contrast], [variable], [reference], [target], [formula]]
+        .groupTuple() // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
 
     // ========================================================================
     // Filter matrix
@@ -457,12 +457,12 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Use a multiMap to generate synched channels for differential analysis
     ch_differential_input = prepareModuleInput(ch_differential_input, 'differential_')
-        .multiMap{ meta, matrix, samplesheet, transcript_lengths, control_features, contrast, variable, reference, target, formula ->
+        .multiMap{ meta, matrix, samplesheet, transcript_lengths, control_features, contrast, variable, reference, target, formula, comparison ->
             input: [meta, matrix, meta.params.differential_method, meta.params.differential_min_fold_change, meta.params.differential_max_qval]
             samplesheet: [meta, samplesheet]
             transcript_lengths: [meta, transcript_lengths]
             control_features: [meta, control_features]
-            contrast: [meta, contrast, variable, reference, target, formula]
+            contrast: [meta, contrast, variable, reference, target, formula, comparison]
         }
 
     // Run differential analysis
@@ -575,15 +575,15 @@ workflow DIFFERENTIALABUNDANCE {
     ch_functional_input = ch_functional_analysis_matrices
         .combine(ch_gene_sets, by:0)             // meta, [gmt files]
         .combine(ch_background, by:0)            // meta, background
-        .combine(ch_contrasts, by:0)             // meta, [contrast], [variable], [reference], [target], [formula]
+        .combine(ch_contrasts, by:0)             // meta, [contrast], [variable], [reference], [target], [formula], [comparison]
         .combine(ch_validated_samplemeta, by:0)  // meta, samplesheet
         .combine(ch_validated_featuremeta, by:0) // meta, features
         .map { it.tail() } // remove the simple meta key
 
     ch_functional_input = prepareModuleInput(ch_functional_input, 'functional_')
-        .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, formula, samplesheet, features ->
+        .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, formula, comparison, samplesheet, features ->
             input: [meta, input, gene_sets, background, meta.params.functional_method]
-            contrasts: [meta, contrasts, variable, reference, target, formula]
+            contrasts: [meta, contrasts, variable, reference, target, formula, comparison]
             samplesheet: [meta, samplesheet]
             features: [meta, features, meta.params.features_id_col, meta.params.features_name_col]
         }
@@ -727,8 +727,8 @@ workflow DIFFERENTIALABUNDANCE {
     // the contrast entries
     ch_differential_with_contrast = ch_shinyngs
         .join( ch_differential_results.groupTuple() )   // [meta, [meta_full], [differential results]]
-        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula]]
-        .map { meta, meta_full, results, contrast, variable, reference, target, formula ->
+        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
+        .map { meta, meta_full, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
             // in this way we don't need to harcode the contrast keys
             def contrast_keys = contrast[0].keySet()
