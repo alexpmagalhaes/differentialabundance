@@ -368,6 +368,8 @@ workflow DIFFERENTIALABUNDANCE {
     // downstream plots separately.
     // Replace NA strings that might have snuck into the blocking column
 
+    VALIDATOR.out.contrasts.dump(tag:"VALIDATOR.out.contrasts")
+
     ch_contrasts = VALIDATOR.out.contrasts
         .map{it[1]}
         .splitCsv ( header:true, sep:'\t' )
@@ -380,6 +382,8 @@ workflow DIFFERENTIALABUNDANCE {
             it.make_contrasts_str = it.make_contrasts_str?.trim() ? it.make_contrasts_str.trim() : null
             tuple(it, it.variable, it.reference, it.target, it.formula, it.make_contrasts_str)
         }
+
+        ch_contrasts.dump(tag:"ch_contrasts")
 
     // Firstly Filter the input matrix
 
@@ -406,6 +410,24 @@ workflow DIFFERENTIALABUNDANCE {
             ]
         }
 
+        ch_differential_input.dump(tag:"ch_differential_input")
+
+    // extract the differential method from ch_tools
+    ch_diff_method = ch_tools
+        .map { tools_norm, tools_diff, tools_func -> tools_diff.method }
+
+    // filter out any contrast entries with empty var/ref/target when method != 'dream'
+    ch_contrasts_filtered = ch_contrasts
+        .combine(ch_diff_method)
+        .filter { contrast, variable, reference, target, formula, make_contrasts_str, method ->
+            method == 'dream' || (variable && reference && target)
+        }
+        .map { contrast, variable, reference, target, formula, make_contrasts_str, method ->
+            [contrast, variable, reference, target, formula, make_contrasts_str]
+        }
+
+    ch_contrasts_filtered.dump(tag:"ch_contrasts_filtered")
+
     // Run differential analysis
 
     ABUNDANCE_DIFFERENTIAL_FILTER(
@@ -413,7 +435,7 @@ workflow DIFFERENTIALABUNDANCE {
         VALIDATOR.out.sample_meta,
         ch_transcript_lengths,
         ch_control_features,
-        ch_contrasts
+        ch_contrasts_filtered
     )
 
     // collect differential results
@@ -494,7 +516,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
         ch_functional_input,
-        ch_contrasts,
+        ch_contrasts_filtered,
         VALIDATOR.out.sample_meta,
         VALIDATOR.out.feature_meta.combine(Channel.of([params.features_id_col, params.features_name_col]))
     )
@@ -516,7 +538,7 @@ workflow DIFFERENTIALABUNDANCE {
     // The exploratory plots are made by coloring by every unique variable used
     // to define contrasts
 
-    ch_contrast_variables = ch_contrasts
+    ch_contrast_variables = ch_contrasts_filtered
         .map{
             [ "id": it[1] ]
         }
@@ -590,10 +612,12 @@ workflow DIFFERENTIALABUNDANCE {
     ch_css_file = Channel.from(css_file)
     ch_citations_file = Channel.from(citations_file)
 
+    VALIDATOR.out.contrasts.map{it.tail()}.dump(tag:"VALIDATOR.out.contrasts.map{it.tail()}")
+
     ch_report_input_files = ch_all_matrices
         .map{ it.tail() }
         .map{it.flatten()}
-        .combine(VALIDATOR.out.contrasts.map{it.tail()})
+        .combine(VALIDATOR.out.contrasts.map{it.tail()}) // contrasts could have been filtered
         .combine(ch_collated_versions)
         .combine(ch_logo_file)
         .combine(ch_css_file)
@@ -682,11 +706,15 @@ workflow DIFFERENTIALABUNDANCE {
     }
     params_pattern = ~/(${params_pattern}).*/
 
+    ch_report_input_files.dump(tag:"ch_report_input_files")
+
     ch_report_params = ch_report_input_files
         .map{
             params.findAll{ k,v -> k.matches(params_pattern) } +
             [report_file_names, it.collect{ f -> f.name}].transpose().collectEntries()
         }
+
+        ch_report_params.dump(tag:"ch_report_params")
 
     // Render the final report
     RMARKDOWNNOTEBOOK(
