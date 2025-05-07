@@ -175,18 +175,6 @@ contrasts:
     blocking_factors: ["replicate"]
 ```
 
-Alternatively, the YAML contrasts also supports formula based model definitions:
-
-```yaml
-contrasts:
-  - id: condition_control_treated
-    formula: "~ condition"
-    comparison: ["condition", "control", "treated"]
-  - id: condition_control_treated_blockrep
-    formula: "~ condition + replicate"
-    comparison: ["condition", "control", "treated"]
-```
-
 The necessary fields in order are:
 
 - `id` - an arbitrary identifier, will be used to name contrast-wise output files
@@ -194,13 +182,25 @@ The necessary fields in order are:
 - - `variable` - which column from the observations information will be used to define groups
 - - `reference` - the base/ reference level for the comparison. If features have higher values in this group than target they will generate negative fold changes
 - - `target` - the target/ non-reference level for the comparison. If features have higher values in this group than the reference they will generate positive fold changes
-
-You can optionally supply:
-
-- `formula` - A string representation of the model formula. It is used to build the design matrix.
-- `make_contrasts_str` - An optional explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to `limma::makeContrasts()` in `VARIANCEPARTITION_DREAM`. This field provides full control for complex designs. Requires `formula`.
 - `blocking_factors` - Any additional variables (also observation columns) that should be modelled alongside the contrast variable
 - `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be excluded prior to analysis of a given contrast.
+
+Alternatively, the YAML contrasts also supports formula based model definitions:
+
+```yaml
+contrasts:
+  - id: condition_control_treated
+    formula: "~ condition"
+    make_contrasts_str: "conditiontreated"
+  - id: condition_control_treated_blockrep
+    formula: "~ condition + replicate"
+    make_contrasts_str: "conditiontreated"
+```
+
+The necessary fields in order are::
+
+- `formula` - A string representation of the model formula. It is used to build the design matrix.
+- `make_contrasts_str` - An explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to `limma::makeContrasts()` in `VARIANCEPARTITION_DREAM`. This field provides full control for complex designs. Requires `formula`.
 
 Beyond the basic one-factor comparison, the YAML contrasts format supports advanced experimental designs through the use of interaction terms and custom contrast strings. These are particularly useful in multifactorial experiments where the effect of one variable may depend on the level of another (e.g. genotype × treatment). To model an interaction between genotype and treatment, use a formula like `~ genotype * treatment`, which expands the yaml to:
 
