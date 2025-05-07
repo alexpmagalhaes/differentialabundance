@@ -185,7 +185,7 @@ The necessary fields in order are:
 - `blocking_factors` - Any additional variables (also observation columns) that should be modelled alongside the contrast variable
 - `exclude_samples_col` and `exclude_samples_values` - the former being a valid column in the samples sheet, the latter a list of values in that column which should be used to select samples prior to differential modelling. This is helpful where certain samples need to be excluded prior to analysis of a given contrast.
 
-Alternatively, the YAML contrasts also supports formula based model definitions:
+Alternatively, the YAML contrasts also supports formula based model definitions for tools such as `VARIANCEPARTITION_DREAM`:
 
 ```yaml
 contrasts:
