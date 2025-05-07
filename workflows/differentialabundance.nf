@@ -187,8 +187,13 @@ workflow DIFFERENTIALABUNDANCE {
             .map { entry ->
                 def yaml_file = entry[1]
                 def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
-                yaml_data.contrasts.collect { contrast ->
-                    tuple('id': contrast.get('id'))
+                yaml_data.contrasts.collect { constrast ->
+                    if (constrast.containsKey('formula')) {
+                        tuple('id': constrast.id)
+                    }
+                    else if (constrast.containsKey('comparison')) {
+                        tuple('id': constrast.comparison[0])
+                    }
                 }
             }
             .flatten()
@@ -243,6 +248,10 @@ workflow DIFFERENTIALABUNDANCE {
 
         // We'll be running Proteus once per unique contrast variable to generate plots
         // TODO: there should probably be a separate plotting module in proteus to simplify this
+
+ch_contrast_variables.dump(tag:"ch_contrast_variables")
+
+proteus_in.dump(tag:"proteus_in")
 
         // Run proteus to import protein abundances
         PROTEUS(
