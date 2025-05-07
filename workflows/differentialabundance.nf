@@ -410,20 +410,6 @@ workflow DIFFERENTIALABUNDANCE {
             ]
         }
 
-    // extract the differential method from ch_tools
-    ch_diff_method = ch_tools
-        .map { tools_norm, tools_diff, tools_func -> tools_diff.method }
-
-    // filter out any contrast entries with empty var/ref/target when method != 'dream'
-    ch_contrasts_filtered = ch_contrasts
-        .combine(ch_diff_method)
-        .filter { contrast, variable, reference, target, formula, make_contrasts_str, method ->
-            method == 'dream' || (variable && reference && target)
-        }
-        .map { contrast, variable, reference, target, formula, make_contrasts_str, method ->
-            [contrast, variable, reference, target, formula, make_contrasts_str]
-        }
-
     // Run differential analysis
 
     ABUNDANCE_DIFFERENTIAL_FILTER(
@@ -431,7 +417,7 @@ workflow DIFFERENTIALABUNDANCE {
         VALIDATOR.out.sample_meta,
         ch_transcript_lengths,
         ch_control_features,
-        ch_contrasts_filtered
+        ch_contrasts
     )
 
     // collect differential results
@@ -512,7 +498,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     DIFFERENTIAL_FUNCTIONAL_ENRICHMENT(
         ch_functional_input,
-        ch_contrasts_filtered,
+        ch_contrasts,
         VALIDATOR.out.sample_meta,
         VALIDATOR.out.feature_meta.combine(Channel.of([params.features_id_col, params.features_name_col]))
     )
@@ -534,7 +520,7 @@ workflow DIFFERENTIALABUNDANCE {
     // The exploratory plots are made by coloring by every unique variable used
     // to define contrasts
 
-    ch_contrast_variables = ch_contrasts_filtered
+    ch_contrast_variables = ch_contrasts
         .map{
             [ "id": it[1] ]
         }
