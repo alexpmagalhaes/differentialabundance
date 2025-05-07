@@ -248,11 +248,6 @@ workflow DIFFERENTIALABUNDANCE {
 
         // We'll be running Proteus once per unique contrast variable to generate plots
         // TODO: there should probably be a separate plotting module in proteus to simplify this
-
-ch_contrast_variables.dump(tag:"ch_contrast_variables")
-
-proteus_in.dump(tag:"proteus_in")
-
         // Run proteus to import protein abundances
         PROTEUS(
             ch_contrast_variables.combine(proteus_in)
@@ -377,8 +372,6 @@ proteus_in.dump(tag:"proteus_in")
     // downstream plots separately.
     // Replace NA strings that might have snuck into the blocking column
 
-    VALIDATOR.out.contrasts.dump(tag:"VALIDATOR.out.contrasts")
-
     ch_contrasts = VALIDATOR.out.contrasts
         .map{it[1]}
         .splitCsv ( header:true, sep:'\t' )
@@ -391,8 +384,6 @@ proteus_in.dump(tag:"proteus_in")
             it.make_contrasts_str = it.make_contrasts_str?.trim() ? it.make_contrasts_str.trim() : null
             tuple(it, it.variable, it.reference, it.target, it.formula, it.make_contrasts_str)
         }
-
-        ch_contrasts.dump(tag:"ch_contrasts")
 
     // Firstly Filter the input matrix
 
@@ -419,8 +410,6 @@ proteus_in.dump(tag:"proteus_in")
             ]
         }
 
-        ch_differential_input.dump(tag:"ch_differential_input")
-
     // extract the differential method from ch_tools
     ch_diff_method = ch_tools
         .map { tools_norm, tools_diff, tools_func -> tools_diff.method }
@@ -434,8 +423,6 @@ proteus_in.dump(tag:"proteus_in")
         .map { contrast, variable, reference, target, formula, make_contrasts_str, method ->
             [contrast, variable, reference, target, formula, make_contrasts_str]
         }
-
-    ch_contrasts_filtered.dump(tag:"ch_contrasts_filtered")
 
     // Run differential analysis
 
@@ -621,12 +608,10 @@ proteus_in.dump(tag:"proteus_in")
     ch_css_file = Channel.from(css_file)
     ch_citations_file = Channel.from(citations_file)
 
-    VALIDATOR.out.contrasts.map{it.tail()}.dump(tag:"VALIDATOR.out.contrasts.map{it.tail()}")
-
     ch_report_input_files = ch_all_matrices
         .map{ it.tail() }
         .map{it.flatten()}
-        .combine(VALIDATOR.out.contrasts.map{it.tail()}) // contrasts could have been filtered
+        .combine(VALIDATOR.out.contrasts.map{it.tail()})
         .combine(ch_collated_versions)
         .combine(ch_logo_file)
         .combine(ch_css_file)
@@ -715,15 +700,11 @@ proteus_in.dump(tag:"proteus_in")
     }
     params_pattern = ~/(${params_pattern}).*/
 
-    ch_report_input_files.dump(tag:"ch_report_input_files")
-
     ch_report_params = ch_report_input_files
         .map{
             params.findAll{ k,v -> k.matches(params_pattern) } +
             [report_file_names, it.collect{ f -> f.name}].transpose().collectEntries()
         }
-
-        ch_report_params.dump(tag:"ch_report_params")
 
     // Render the final report
     RMARKDOWNNOTEBOOK(
