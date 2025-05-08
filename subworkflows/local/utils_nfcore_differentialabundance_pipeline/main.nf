@@ -534,11 +534,11 @@ def getRelevantParams(paramset, category) {
     relevant_categories = [
         'base': ['base'],
         'preprocessing': ['base', 'preprocessing'],
-        'exporatory': ['base', 'preprocessing', 'exporatory'],
+        'exploratory': ['base', 'preprocessing', 'exploratory'],
         'differential': ['base', 'preprocessing', 'differential'],
         'functional': ['base', 'preprocessing', 'differential', 'functional']
     ]
-    if (!category in relevant_categories.keySet()) {
+    if (!relevant_categories.containsKey(category)) {
         error("Category '${category}' not found in schema.")
     }
 
