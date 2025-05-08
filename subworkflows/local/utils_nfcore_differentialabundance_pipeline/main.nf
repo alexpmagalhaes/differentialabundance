@@ -456,27 +456,28 @@ def extractRequiredFromSchema(schema) {
 // prepare the input for the module by keeping only the relevant params
 // in the meta and group channel by simplified meta and unique inputs
 // @param channel: the input channel
-// @params module_prefix: the module prefix for params
+// @params category: the category in which the module belong to
 // @return a channel with [simplified meta, files ...]
 // the simplified meta would have the following structure:
 // [analysis_names: [list of analysis names], params: [relevant params map], ...other k,v]
-def prepareModuleInput(channel, module_prefix=null) {
+def prepareModuleInput(channel, category) {
     return channel
         .map {
             // clean the params by keeping only the relevant params
-            def simplifiedparams = getRelevantParams(it[0].params, module_prefix)
+            def simplifiedparams = getRelevantParams(it[0].params, category)
             // replace meta.params by simplified params
             def simplifiedmeta = it[0] + [params: simplifiedparams]
-            // define key as simplified meta + input files
-            def key = [simplifiedmeta, it[1..-1]]
 
-            [key, it[0].analysis_name]   // [ [simplified meta, files ...], analysis_name ]
+            // use simplified meta as key
+            [simplifiedmeta, it[0].analysis_name, it[1..-1]]  // [ meta, analysis_name, [files] ]
         }
-        .groupTuple()              // [ [simplified meta, files ...], [ analysis_name ] ]
+        .groupTuple()
         .map {
-            def simplifiedmeta = it[0][0]
-            def files = it[0][1]
+            def simplifiedmeta = it[0]
             def analysis_names = it[1]
+            // the list files are the same for the same simplified meta,
+            // thus the list of files generated from grouping are just a repetition of the same files
+            def files = it[2][0]
             // replace analysis_name by analysis_names
             def meta = [analysis_names: analysis_names] + simplifiedmeta.findAll{ k,v -> k != 'analysis_name'}
             [meta] + files
@@ -516,44 +517,53 @@ def prepareModuleOutput(channel, paramsets) {
         }
 }
 
-// get the relevant params for the module
-// This function will parse meta to only retain the parameters that are relevant.
-// The relevant parameters include: 1) those base parameters that might be shared
-// by many modules in the pipeline, and 2) those parameters that are only needed
-// for a given module, and usually starts with the module specific prefix.
+// get the relevant params given the category
+// This function will parse the schema to only retain the parameters that are relevant.
+// The relevant parameters include: 1) those parameters from the base category that
+// might be shared by many modules in the pipeline, 2) those parameters needed for
+// preceding categories and 3) those parameters that are only needed for a given
+// category. The category is defined in the parameter group name in the schema.
 // @params meta: the meta map
-// @params module_prefix: the module prefix for params
-def getRelevantParams (meta, module_prefix=null) {
+// @params category: the category name
+def getRelevantParams(paramset, category) {
+    // Define schema URL - in practice this would be loaded from file
+    def schema = new groovy.json.JsonSlurper().parseText(new File("${projectDir}/nextflow_schema.json").text)
+
+    // the relevant groups are the one defined by the category
+    // and all the preceding ones
+    relevant_categories = [
+        'base': ['base'],
+        'preprocessing': ['base', 'preprocessing'],
+        'exporatory': ['base', 'preprocessing', 'exporatory'],
+        'differential': ['base', 'preprocessing', 'differential'],
+        'functional': ['base', 'preprocessing', 'differential', 'functional']
+    ]
+    if (!category in relevant_categories.keySet()) {
+        error("Category '${category}' not found in schema.")
+    }
+
+    // Get all relevant categories for this level
+    def categories_to_check = relevant_categories[category]
+
+    // Initialize results map
     def relevantParams = [:]
 
-    // define the base keys
-    def keys_base = ['study_name', 'study_type']
-    def keys_base_features = ['features_type','features_id_col','features_name_col','features_metadata_cols']
-    def keys_base_observations = ['observations_col','observations_id_col','observations_name_col']
-    def keys_base_other = ['report_round_digits', 'sizefactors_from_controls']
-    def keys = keys_base + keys_base_features + keys_base_observations + keys_base_other
+    // For each relevant category, find and collect parameters
+    categories_to_check.each { cat ->
+        def matchingGroups = schema['$defs'].findAll { groupName, group ->
+            groupName.startsWith("${cat}_")
+        }
 
-    // define prefix
-    def prefix = []
-    if (module_prefix) {
-        prefix += [module_prefix]
-        // add prefix for special cases
-        switch(module_prefix) {
-            case 'differential_':
-                prefix += [meta.differential_method+'_']
-                break
-            case 'functional_':
-                prefix += [meta.functional_method+'_']
-                break
+        matchingGroups.each { groupName, group ->
+            if (group.properties) {
+                group.properties.each { paramName, paramProps ->
+                    if (paramset.containsKey(paramName)) {
+                        relevantParams[paramName] = paramset[paramName]
+                    }
+                }
+            }
         }
     }
 
-    // get key, value pairs from meta that start with the prefix
-    // or contain the keys in the keys list
-    meta.each { k, v ->
-        if ( (prefix.any { k.startsWith(it) }) || (keys.contains(k)) ) {
-            relevantParams[k] = v
-        }
-    }
     return relevantParams
 }

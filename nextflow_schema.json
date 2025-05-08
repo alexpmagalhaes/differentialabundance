@@ -5,8 +5,8 @@
     "description": "Differential abundance analysis",
     "type": "object",
     "$defs": {
-        "input_output_options": {
-            "title": "Input/output options",
+        "base_input_output_options": {
+            "title": "[base] Input/output options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
@@ -71,8 +71,8 @@
                 }
             }
         },
-        "abundance_values": {
-            "title": "Abundance values",
+        "base_abundance_values": {
+            "title": "[base] Abundance values",
             "type": "object",
             "description": "Ways of providing your abundance values",
             "default": "",
@@ -106,8 +106,8 @@
                 }
             }
         },
-        "observations_options": {
-            "title": "Observations (e.g. samples) options",
+        "base_observations_e_g_samples_options": {
+            "title": "[base] Observations (e.g. samples) options",
             "type": "object",
             "description": "",
             "default": "",
@@ -134,8 +134,8 @@
             "required": ["observations_id_col", "observations_type"],
             "fa_icon": "fas fa-eye"
         },
-        "features_options": {
-            "title": "Features options",
+        "base_features_options": {
+            "title": "[base] Features options",
             "type": "object",
             "description": "Options related to features",
             "default": "",
@@ -186,25 +186,29 @@
                     "description": "This parameter allows you to supply your own feature annotations. These can often be automatically derived from the GTF used upstream for RNA-seq, or from the Bioconductor annotation package (for affy arrays). ",
                     "help_text": "This parameter allows you to supply your own feature annotations. These can often be automatically derived from the GTF used upstream for RNA-seq, or from the Bioconductor annotation package (for affy arrays). ",
                     "fa_icon": "fas fa-align-justify"
-                },
-                "features_gtf_feature_type": {
-                    "type": "string",
-                    "default": "transcript",
-                    "description": "Where a GTF file is supplied, which feature type to use",
-                    "fa_icon": "fas fa-keyboard"
-                },
-                "features_gtf_table_first_field": {
-                    "type": "string",
-                    "default": "gene_id",
-                    "description": "Where a GTF file is supplied, which field should go first in the converted output table",
-                    "fa_icon": "fas fa-fast-backward"
                 }
             },
             "required": ["features_id_col", "features_name_col", "features_type"],
             "fa_icon": "fas fa-sitemap"
         },
-        "affy_input_options": {
-            "title": "Affy input options",
+        "base_toolsheet_options": {
+            "title": "[base] Toolsheet options",
+            "type": "object",
+            "description": "Options related to the use of toolsheet",
+            "default": "",
+            "properties": {
+                "analysis_name": {
+                    "type": "string",
+                    "description": "Name of the analysis (as specified in toolsheet) to run"
+                },
+                "toolsheet": {
+                    "type": "string",
+                    "description": "Path to a toolsheet file"
+                }
+            }
+        },
+        "preprocessing_affy_input_options": {
+            "title": "[preprocessing] Affy input options",
             "type": "object",
             "description": "Options for processing of affy arrays with justRMA()",
             "default": "",
@@ -262,8 +266,38 @@
             },
             "fa_icon": "fas fa-table"
         },
-        "proteus_input_options": {
-            "title": "Proteus input options",
+        "preprocessing_gtf_parsing_options": {
+            "title": "[preprocessing] GTF parsing options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "gtf": {
+                    "type": "string",
+                    "description": "Genome annotation file in GTF format",
+                    "pattern": "^\\S+\\.gtf(\\.gz)?",
+                    "format": "file-path",
+                    "exists": true,
+                    "mimetype": "text/plain",
+                    "help_text": "\"This parameter is *mandatory* if `--genome` is not specified.\"",
+                    "fa_icon": "fas fa-book"
+                },
+                "features_gtf_feature_type": {
+                    "type": "string",
+                    "default": "transcript",
+                    "description": "Where a GTF file is supplied, which feature type to use",
+                    "fa_icon": "fas fa-keyboard"
+                },
+                "features_gtf_table_first_field": {
+                    "type": "string",
+                    "default": "gene_id",
+                    "description": "Where a GTF file is supplied, which field should go first in the converted output table",
+                    "fa_icon": "fas fa-fast-backward"
+                }
+            }
+        },
+        "preprocessing_proteus_input_options": {
+            "title": "[preprocessing] Proteus input options",
             "type": "object",
             "description": "Options for processing of proteomics MaxQuant tables with the Proteus R package",
             "default": "",
@@ -303,21 +337,21 @@
             },
             "fa_icon": "fas fa-table"
         },
-        "filtering": {
-            "title": "Filtering",
+        "preprocessing_filtering": {
+            "title": "[preprocessing] Filtering",
             "type": "object",
             "description": "Options related to filtering upstream of differential analysis",
             "default": "",
             "properties": {
                 "filtering_min_abundance": {
                     "type": "number",
-                    "default": 1.0,
+                    "default": 1,
                     "description": "Minimum abundance value",
                     "fa_icon": "fas fa-compress-alt"
                 },
                 "filtering_min_samples": {
                     "type": "number",
-                    "default": 1.0,
+                    "default": 1,
                     "description": "Minimum observations that must pass the threshold to retain the row/ feature (e.g. gene).",
                     "fa_icon": "fas fa-compress-alt"
                 },
@@ -347,8 +381,33 @@
             "fa_icon": "fas fa-filter",
             "required": ["filtering_min_abundance"]
         },
-        "exploratory_analysis": {
-            "title": "Exploratory analysis",
+        "preprocessing_immunedeconv": {
+            "title": "[preprocessing] IMMUNEDECONV",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "immunedeconv_run": {
+                    "type": "boolean",
+                    "description": "Set to run IMMUNEDECONV",
+                    "fa_icon": "fas fa-running"
+                },
+                "immunedeconv_method": {
+                    "type": "string",
+                    "description": "Set method to run with IMMUNEDECONV. Available options can be found in 'https://omnideconv.org/immunedeconv/articles/immunedeconv.html'",
+                    "default": "quantiseq",
+                    "fa_icon": "fas fa-running"
+                },
+                "immunedeconv_function": {
+                    "type": "string",
+                    "description": "Set function to run with IMMUNEDECONV. Available options can be found in 'https://omnideconv.org/immunedeconv/articles/immunedeconv.html'",
+                    "default": "deconvolute",
+                    "fa_icon": "fas fa-running"
+                }
+            }
+        },
+        "exploratory_exploratory_analysis": {
+            "title": "[exploratory] Exploratory analysis",
             "type": "object",
             "description": "Options related to data exploration",
             "default": "",
@@ -428,24 +487,8 @@
                 "exploratory_palette_name"
             ]
         },
-        "tools_options": {
-            "title": "Toolsheet options",
-            "type": "object",
-            "description": "Options related to the use of toolsheet",
-            "default": "",
-            "properties": {
-                "analysis_name": {
-                    "type": "string",
-                    "description": "Name of the analysis (as specified in toolsheet) to run"
-                },
-                "toolsheet": {
-                    "type": "string",
-                    "description": "Path to a toolsheet file"
-                }
-            }
-        },
-        "differential_analysis": {
-            "title": "Differential analysis",
+        "differential_differential_analysis": {
+            "title": "[differential] Differential analysis",
             "type": "object",
             "description": "Options related to differential operations",
             "default": "",
@@ -487,13 +530,13 @@
                 },
                 "differential_min_fold_change": {
                     "type": "number",
-                    "default": 2.0,
+                    "default": 2,
                     "description": "Minimum fold change used to calculate differential feature numbers",
                     "fa_icon": "fas fa-angle-double-down"
                 },
                 "differential_max_pval": {
                     "type": "number",
-                    "default": 1.0,
+                    "default": 1,
                     "description": "Maximum p value used to calculate differential feature numbers",
                     "fa_icon": "fas fa-angle-double-up"
                 },
@@ -539,8 +582,8 @@
             ],
             "fa_icon": "fas fa-adjust"
         },
-        "deseq2_specific_options_rna_seq_only": {
-            "title": "DESeq2 specific options (RNA-seq only)",
+        "differential_deseq2_specific_options_rna_seq_only": {
+            "title": "[differential] DESeq2 specific options (RNA-seq only)",
             "type": "object",
             "description": "",
             "default": "",
@@ -663,8 +706,8 @@
             },
             "fa_icon": "fas fa-adjust"
         },
-        "limma_specific_options": {
-            "title": "Limma specific options",
+        "differential_limma_specific_options": {
+            "title": "[differential] Limma specific options",
             "type": "object",
             "description": "",
             "default": "",
@@ -747,7 +790,7 @@
                 },
                 "limma_p_value": {
                     "type": "number",
-                    "default": 1.0,
+                    "default": 1,
                     "description": "cutoff value for adjusted p-values. Only genes with lower p-values are listed.",
                     "fa_icon": "fas fa-angle-double-up"
                 },
@@ -759,33 +802,8 @@
             },
             "fa_icon": "fas fa-border-all"
         },
-        "immunedeconv": {
-            "title": "IMMUNEDECONV",
-            "type": "object",
-            "description": "",
-            "default": "",
-            "properties": {
-                "immunedeconv_run": {
-                    "type": "boolean",
-                    "description": "Set to run IMMUNEDECONV",
-                    "fa_icon": "fas fa-running"
-                },
-                "immunedeconv_method": {
-                    "type": "string",
-                    "description": "Set method to run with IMMUNEDECONV. Available options can be found in 'https://omnideconv.org/immunedeconv/articles/immunedeconv.html'",
-                    "default": "quantiseq",
-                    "fa_icon": "fas fa-running"
-                },
-                "immunedeconv_function": {
-                    "type": "string",
-                    "description": "Set function to run with IMMUNEDECONV. Available options can be found in 'https://omnideconv.org/immunedeconv/articles/immunedeconv.html'",
-                    "default": "deconvolute",
-                    "fa_icon": "fas fa-running"
-                }
-            }
-        },
-        "functional_analysis_options": {
-            "title": "Functional analysis options",
+        "functional_functional_analysis_options": {
+            "title": "[functional] Functional analysis options",
             "type": "object",
             "description": "",
             "default": "",
@@ -802,8 +820,8 @@
                 }
             }
         },
-        "gsea": {
-            "title": "GSEA",
+        "functional_gsea": {
+            "title": "[functional] GSEA",
             "type": "object",
             "description": "",
             "default": "",
@@ -933,8 +951,8 @@
             },
             "fa_icon": "fas fa-layer-group"
         },
-        "gprofiler2": {
-            "title": "gprofiler2",
+        "functional_gprofiler2": {
+            "title": "[functional] gprofiler2",
             "type": "object",
             "description": "",
             "default": "",
@@ -1015,8 +1033,8 @@
             },
             "fa_icon": "fas fa-layer-group"
         },
-        "shiny_app_settings": {
-            "title": "Shiny app settings",
+        "shiny_shiny_app_settings": {
+            "title": "[shiny] Shiny app settings",
             "type": "object",
             "description": "",
             "default": "",
@@ -1046,8 +1064,8 @@
             },
             "fa_icon": "fab fa-app-store-ios"
         },
-        "reporting_options": {
-            "title": "Reporting options",
+        "report_reporting_options": {
+            "title": "[report] Reporting options",
             "type": "object",
             "description": "",
             "default": "",
@@ -1131,16 +1149,6 @@
                     "description": "Name of iGenomes reference.",
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
-                },
-                "gtf": {
-                    "type": "string",
-                    "description": "Genome annotation file in GTF format",
-                    "pattern": "^\\S+\\.gtf(\\.gz)?",
-                    "format": "file-path",
-                    "exists": true,
-                    "mimetype": "text/plain",
-                    "help_text": "\"This parameter is *mandatory* if `--genome` is not specified.\"",
-                    "fa_icon": "fas fa-book"
                 },
                 "igenomes_ignore": {
                     "type": "boolean",
@@ -1278,58 +1286,61 @@
     },
     "allOf": [
         {
-            "$ref": "#/$defs/input_output_options"
+            "$ref": "#/$defs/base_input_output_options"
         },
         {
-            "$ref": "#/$defs/abundance_values"
+            "$ref": "#/$defs/base_abundance_values"
         },
         {
-            "$ref": "#/$defs/observations_options"
+            "$ref": "#/$defs/base_observations_e_g_samples_options"
         },
         {
-            "$ref": "#/$defs/features_options"
+            "$ref": "#/$defs/base_features_options"
         },
         {
-            "$ref": "#/$defs/affy_input_options"
+            "$ref": "#/$defs/base_toolsheet_options"
         },
         {
-            "$ref": "#/$defs/proteus_input_options"
+            "$ref": "#/$defs/preprocessing_affy_input_options"
         },
         {
-            "$ref": "#/$defs/filtering"
+            "$ref": "#/$defs/preprocessing_gtf_parsing_options"
         },
         {
-            "$ref": "#/$defs/exploratory_analysis"
+            "$ref": "#/$defs/preprocessing_proteus_input_options"
         },
         {
-            "$ref": "#/$defs/tools_options"
+            "$ref": "#/$defs/preprocessing_filtering"
         },
         {
-            "$ref": "#/$defs/differential_analysis"
+            "$ref": "#/$defs/preprocessing_immunedeconv"
         },
         {
-            "$ref": "#/$defs/deseq2_specific_options_rna_seq_only"
+            "$ref": "#/$defs/exploratory_exploratory_analysis"
         },
         {
-            "$ref": "#/$defs/limma_specific_options"
+            "$ref": "#/$defs/differential_differential_analysis"
         },
         {
-            "$ref": "#/$defs/immunedeconv"
+            "$ref": "#/$defs/differential_deseq2_specific_options_rna_seq_only"
         },
         {
-            "$ref": "#/$defs/functional_analysis_options"
+            "$ref": "#/$defs/differential_limma_specific_options"
         },
         {
-            "$ref": "#/$defs/gsea"
+            "$ref": "#/$defs/functional_functional_analysis_options"
         },
         {
-            "$ref": "#/$defs/gprofiler2"
+            "$ref": "#/$defs/functional_gsea"
         },
         {
-            "$ref": "#/$defs/shiny_app_settings"
+            "$ref": "#/$defs/functional_gprofiler2"
         },
         {
-            "$ref": "#/$defs/reporting_options"
+            "$ref": "#/$defs/shiny_shiny_app_settings"
+        },
+        {
+            "$ref": "#/$defs/report_reporting_options"
         },
         {
             "$ref": "#/$defs/reference_genome_options"
