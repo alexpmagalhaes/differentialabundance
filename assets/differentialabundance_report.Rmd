@@ -26,7 +26,7 @@ params:
     report_author: NULL,
     report_description: NULL,
     report_scree: NULL
-    report_round_digits: NULL
+    round_digits: NULL
     observations_type: NULL
     observations: NULL                                          # GSE156533.samplesheet.csv
     observations_id_col: NULL
@@ -176,7 +176,7 @@ round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
     if (is.null(columns)) {
         columns <- colnames(df)[(unlist(lapply(df, is.numeric), use.names=F))]    # extract only numeric columns for rounding
     }
-    df[,columns] <- format(data.frame(df[, columns], check.names = FALSE), scientific=T, digits=params$report_round_digits)
+    df[,columns] <- format(data.frame(df[, columns], check.names = FALSE), scientific=T, digits=params$round_digits)
     # Convert columns back to numeric
 
     for (c in columns) {
@@ -931,7 +931,7 @@ for (i in 1:nrow(contrasts)){
         colnames(contrast_de) <- prettifyVariablename(colnames(contrast_de))
 
         if (nrow(contrast_de) > 0){
-            contrast_de <- round_dataframe_columns(contrast_de, digits=params$report_round_digits)
+            contrast_de <- round_dataframe_columns(contrast_de, digits=params$round_digits)
             print( htmltools::tagList(datatable(contrast_de, caption = paste('Differential genes', dir, 'in', contrast_descriptions[i], " (check", differential_files[[i]], "for more detail)"), rownames = FALSE) ))
 
         if ("Gene biotype" %in% colnames(contrast_de)) {
@@ -980,10 +980,10 @@ if (!is.null(params$functional_method)){
         for (i in 1:nrow(contrasts)){
             cat("\n###### ", contrast_descriptions[i], "\n")
             target_gsea_results <- read_metadata(target_gsea_tables[i])[,c(-2,-3)]
-            target_gsea_results <- round_dataframe_columns(target_gsea_results, digits=params$report_round_digits)
+            target_gsea_results <- round_dataframe_columns(target_gsea_results, digits=params$round_digits)
             print( htmltools::tagList(datatable(target_gsea_results, caption = paste0("\nTarget (", contrasts$target[i], ")\n"), rownames = FALSE) ))
             ref_gsea_results <- read_metadata(reference_gsea_tables[i])[,c(-2,-3)]
-            ref_gsea_results <- round_dataframe_columns(ref_gsea_results, digits=params$report_round_digits)
+            ref_gsea_results <- round_dataframe_columns(ref_gsea_results, digits=params$round_digits)
             print( htmltools::tagList(datatable(ref_gsea_results, caption = paste0("\nReference (", contrasts$reference[i], ")\n"), rownames = FALSE) ))
         }
         }
@@ -1007,7 +1007,7 @@ if (!is.null(params$functional_method)){
                 "Differential features" = all_enriched$intersection_size, "Pathway size" = all_enriched$term_size,
                 "Differential fraction" = (all_enriched$intersection_size/all_enriched$term_size),
                 "Adjusted p value" = all_enriched$p_value, check.names = FALSE)
-                all_enriched <- round_dataframe_columns(all_enriched, digits=params$report_round_digits)
+                all_enriched <- round_dataframe_columns(all_enriched, digits=params$round_digits)
                 print(htmltools::tagList(datatable(all_enriched, caption = paste('Enriched pathways in', name, " (check", table, "for more detail)"), rownames = FALSE)))
             }
             cat("\n")
