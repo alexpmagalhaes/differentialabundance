@@ -454,7 +454,9 @@ def extractRequiredFromSchema(schema) {
 }
 
 // prepare the input for the module by keeping only the relevant params
-// in the meta and group channel by simplified meta and unique inputs
+// in the meta and group channel by simplified meta and unique inputs.
+// By keeping only the relevant params in meta when calling the modules,
+// we could ensure proper functionality of pipeline `resume`.
 // @param channel: the input channel
 // @params category: the category in which the module belong to
 // @return a channel with [simplified meta, files ...]
@@ -532,7 +534,6 @@ def getRelevantParams(paramset, category) {
     // the relevant groups are the one defined by the category
     // and all the preceding ones
     relevant_categories = [
-        'base': ['base'],
         'preprocessing': ['base', 'preprocessing'],
         'exploratory': ['base', 'preprocessing', 'exploratory'],
         'differential': ['base', 'preprocessing', 'differential'],
