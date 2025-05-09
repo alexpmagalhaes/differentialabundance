@@ -151,33 +151,33 @@
                 "treatment_mCherry_hND6_sample_number.MArrayLM.limma.rds:md5,385f960f9330a1dd6bbf4b00166bc96e",
                 "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
                 "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
-                "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,d47ccff0732fb808d25f91fd7ef15f1c",
+                "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,33f68d7ad9647f31b3298af573008ff0",
                 "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,e000a1b93ebbb7eb347d9ce666fd5e26",
                 "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gene_set_sizes.tsv:md5,e3049abd72c25ff6d7cd75b14135d245",
-                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,d51e3600004ba6e9ff78f321d64f209b",
+                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,7e884068035d4e70e8a596fdabfabaf8",
                 "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.tsv:md5,ce8792382ae299749445767ff16aaecc",
-                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,2054b247acc714589b7f1e4f25a348d8",
-                "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,d47ccff0732fb808d25f91fd7ef15f1c",
+                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,a21ae0877e6d6f6673c6dbaaa1ff715d",
+                "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,33f68d7ad9647f31b3298af573008ff0",
                 "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,e000a1b93ebbb7eb347d9ce666fd5e26",
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gene_set_sizes.tsv:md5,e3049abd72c25ff6d7cd75b14135d245",
-                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,d51e3600004ba6e9ff78f321d64f209b",
+                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,7e884068035d4e70e8a596fdabfabaf8",
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.tsv:md5,ce8792382ae299749445767ff16aaecc",
-                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,2054b247acc714589b7f1e4f25a348d8",
+                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,a21ae0877e6d6f6673c6dbaaa1ff715d",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b9e9aeb4e55381e73a796d7760040c3b",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6_.limma.results.tsv:md5,26df55a9c0fd182977396f75337d5fc4",
+                "treatment_mCherry_hND6_.limma.results.tsv:md5,a43760a51311b526cd25f42cc3b2e938",
                 "treatment_mCherry_hND6_.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "treatment_mCherry_hND6_sample_number.limma.results.tsv:md5,2a3937bfc95a1d0a0cbed1f2da4b0bd2",
+                "treatment_mCherry_hND6_sample_number.limma.results.tsv:md5,84c2a001bc4e0420048b8e2757e398d3",
                 "treatment_mCherry_hND6_sample_number.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "all.normalised_counts.tsv:md5,7510c89d6665176d5026b7af0a64344d"
+                "all.normalised_counts.tsv:md5,0db6b54ce8b3da36d6f42758ea172823"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.5"
+            "nextflow": "25.04.0"
         },
-        "timestamp": "2025-04-16T16:21:31.869870931"
+        "timestamp": "2025-05-09T16:24:52.325052368"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
@@ -331,32 +331,32 @@
                 "treatment_mCherry_hND6_sample_number.MArrayLM.limma.rds:md5,385f960f9330a1dd6bbf4b00166bc96e",
                 "versions.yml:md5,393bf70818672e793a062e6e63f4e6f1",
                 "versions.yml:md5,857b6d0b01291020eb98da1fd385cdbc",
-                "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,d47ccff0732fb808d25f91fd7ef15f1c",
+                "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,33f68d7ad9647f31b3298af573008ff0",
                 "gene_sets_treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,e000a1b93ebbb7eb347d9ce666fd5e26",
                 "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gene_set_sizes.tsv:md5,e3049abd72c25ff6d7cd75b14135d245",
-                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,d51e3600004ba6e9ff78f321d64f209b",
+                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,7e884068035d4e70e8a596fdabfabaf8",
                 "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.tsv:md5,ce8792382ae299749445767ff16aaecc",
-                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,2054b247acc714589b7f1e4f25a348d8",
-                "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,d47ccff0732fb808d25f91fd7ef15f1c",
+                "treatment_mCherry_hND6_.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,a21ae0877e6d6f6673c6dbaaa1ff715d",
+                "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,33f68d7ad9647f31b3298af573008ff0",
                 "gene_sets_treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,e000a1b93ebbb7eb347d9ce666fd5e26",
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gene_set_sizes.tsv:md5,e3049abd72c25ff6d7cd75b14135d245",
-                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,d51e3600004ba6e9ff78f321d64f209b",
+                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.tsv:md5,7e884068035d4e70e8a596fdabfabaf8",
                 "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.tsv:md5,ce8792382ae299749445767ff16aaecc",
-                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,2054b247acc714589b7f1e4f25a348d8",
+                "treatment_mCherry_hND6_sample_number.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,a21ae0877e6d6f6673c6dbaaa1ff715d",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b9e9aeb4e55381e73a796d7760040c3b",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6_.limma.results.tsv:md5,26df55a9c0fd182977396f75337d5fc4",
+                "treatment_mCherry_hND6_.limma.results.tsv:md5,a43760a51311b526cd25f42cc3b2e938",
                 "treatment_mCherry_hND6_.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "treatment_mCherry_hND6_sample_number.limma.results.tsv:md5,2a3937bfc95a1d0a0cbed1f2da4b0bd2",
+                "treatment_mCherry_hND6_sample_number.limma.results.tsv:md5,84c2a001bc4e0420048b8e2757e398d3",
                 "treatment_mCherry_hND6_sample_number.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "all.normalised_counts.tsv:md5,7510c89d6665176d5026b7af0a64344d"
+                "all.normalised_counts.tsv:md5,0db6b54ce8b3da36d6f42758ea172823"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.5"
+            "nextflow": "25.04.0"
         },
-        "timestamp": "2025-04-16T16:24:15.327084518"
+        "timestamp": "2025-05-09T16:26:50.041598464"
     }
 }
