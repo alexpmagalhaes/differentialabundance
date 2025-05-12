@@ -233,7 +233,7 @@ We provide a `toolsheet.csv` file in the `assets` directory that define the tool
 Each row defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments.
 
 > [!WARNING]
-> Note that the arguments defined in the toolsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files.
+> Note that the arguments defined in the toolsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files. In other words, the priority of the parameters will follow this order: toolsheet > command line flags > nextflow configuration file
 
 To run a given combination of tools, you can use the `--analysis_name` parameter.
 
