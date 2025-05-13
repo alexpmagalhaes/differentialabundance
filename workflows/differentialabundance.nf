@@ -187,12 +187,12 @@ workflow DIFFERENTIALABUNDANCE {
             .map { entry ->
                 def yaml_file = entry[1]
                 def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
-                yaml_data.contrasts.collect { constrast ->
-                    if (constrast.containsKey('formula')) {
-                        tuple('id': constrast.id)
+                yaml_data.contrasts.collect { contrast ->
+                    if (contrast.containsKey('formula')) {
+                        tuple('id': contrast.id)
                     }
-                    else if (constrast.containsKey('comparison')) {
-                        tuple('id': constrast.comparison[0])
+                    else if (contrast.containsKey('comparison')) {
+                        tuple('id': contrast.comparison[0])
                     }
                 }
             }

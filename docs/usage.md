@@ -197,7 +197,7 @@ contrasts:
     make_contrasts_str: "conditiontreated"
 ```
 
-The necessary fields in order are::
+The necessary fields in order are:
 
 - `formula` - A string representation of the model formula. It is used to build the design matrix.
 - `make_contrasts_str` - An explicit literal contrast string (e.g., "treatmenthND6 - treatmentmCherry") that is passed directly to [`limma::makeContrasts()`](https://rdrr.io/bioc/limma/man/makeContrasts.html) in `VARIANCEPARTITION_DREAM`. The parameter names must be syntactically valid variable names in R (see [`make.names`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/make.names.html)). This field provides full control for complex designs. Requires `formula`.
