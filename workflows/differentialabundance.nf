@@ -191,7 +191,7 @@ workflow DIFFERENTIALABUNDANCE {
                     if (contrast.containsKey('formula')) {
                         tuple('id': contrast.id)
                     }
-                    else if (contrast.containsKey('comparison')) {
+                    else if (contrast.containsKey('comparison')) { //  Necessary line for Maxquant to work. Check if it can be simplified to use contrast.id
                         tuple('id': contrast.comparison[0])
                     }
                 }
