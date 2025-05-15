@@ -133,7 +133,12 @@ workflow DIFFERENTIALABUNDANCE {
         .map { meta, yaml_file, ext ->
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
-                tuple(meta, contrast.comparison[0])
+                if (contrast.containsKey('formula')) {
+                    tuple(meta, contrast.id)
+                }
+                else if (contrast.containsKey('comparison')) { //  Necessary line for Maxquant to work. Check if it can be simplified to use contrast.id
+                    tuple(meta, contrast.comparison[0])
+                }
             }
         }
         .map{it[0]}  // convert list of list into a list
@@ -420,7 +425,8 @@ workflow DIFFERENTIALABUNDANCE {
                 contrast.id = contrast.values().join('_')
             }
             contrast.formula = contrast.formula?.trim() ? contrast.formula.trim() : null
-            return [meta, contrast, contrast.variable, contrast.reference, contrast.target, contrast.formula, contrast.comparison]
+            contrast.make_contrasts_str = contrast.make_contrasts_str?.trim() ? contrast.make_contrasts_str.trim() : null
+            return [meta, contrast, contrast.variable, contrast.reference, contrast.target, contrast.formula, contrast.make_contrasts_str]
         }
         .groupTuple() // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
 
