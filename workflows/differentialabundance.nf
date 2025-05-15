@@ -130,7 +130,7 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     ch_contrasts_variables_from_yml = ch_contrast_variables_input.yml
-        .map { meta, yaml_file, ext ->
+        .flatMap { meta, yaml_file, ext ->
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
                 if (contrast.containsKey('formula')) {
@@ -141,7 +141,6 @@ workflow DIFFERENTIALABUNDANCE {
                 }
             }
         }
-        .map{it[0]}  // convert list of list into a list
         .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
 
     ch_contrasts_variables_from_other = ch_contrast_variables_input.csv.splitCsv(header:true)
@@ -198,7 +197,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // add contrast variable
     ch_proteus_input = ch_maxquant_inputs
-        .join(ch_contrast_variables)
+        .combine(ch_contrast_variables, by:0)
         .map { meta, input, matrix, contrast ->
             def meta_new = meta + [contrast: contrast]
             [meta_new, input, matrix]
