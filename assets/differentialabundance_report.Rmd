@@ -986,7 +986,7 @@ if (!is.null(params$functional_method)){
             ref_gsea_results <- round_dataframe_columns(ref_gsea_results, digits=params$round_digits)
             print( htmltools::tagList(datatable(ref_gsea_results, caption = paste0("\nReference (", contrasts$reference[i], ")\n"), rownames = FALSE) ))
         }
-        }
+    }
 
     } else if (params$functional_method == 'gprofiler2') {
 

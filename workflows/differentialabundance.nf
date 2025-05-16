@@ -158,21 +158,18 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
 
     //
-    // 1. deal with affy array data
+    // 1. Deal with affy array data
     // If we have affy array data in the form of CEL files we'll be deriving
     // matrix and annotation from them
     //
 
     // Uncompress the CEL files archive
-    ch_untar_input = prepareModuleInput(ch_celfiles, 'preprocessing')
-    UNTAR ( ch_untar_input )
+    UNTAR ( prepareModuleInput(ch_celfiles, 'preprocessing') )
     ch_untar_out = prepareModuleOutput(UNTAR.out.untar, ch_paramsets)
 
-    // run affy
+    // Run affy
 
-    ch_affy_input = ch_input.affy_array
-        .join(ch_untar_out)
-    ch_affy_input = prepareModuleInput(ch_affy_input, 'preprocessing')
+    ch_affy_input = prepareModuleInput(ch_input.affy_array.join(ch_untar_out), 'preprocessing')
 
     AFFY_JUSTRMA_RAW (
         ch_affy_input,
@@ -191,21 +188,20 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(AFFY_JUSTRMA_RAW.out.versions)
 
     //
-    // 2. deal with maxquant data
+    // 2. Deal with maxquant data
     // We'll be running Proteus once per unique contrast variable to generate plots
     //
 
-    // add contrast variable
+    // Add contrast variable
     ch_proteus_input = ch_maxquant_inputs
         .combine(ch_contrast_variables, by:0)
         .map { meta, input, matrix, contrast ->
             def meta_new = meta + [contrast: contrast]
             [meta_new, input, matrix]
         }
-    ch_proteus_input = prepareModuleInput(ch_proteus_input, 'preprocessing')
 
     // Run proteus to import protein abundances
-    PROTEUS( ch_proteus_input )
+    PROTEUS( prepareModuleInput(ch_proteus_input, 'preprocessing') )
 
     // Note that the tables are the same across contrasts, only one table will be necessary
     // that is why here we take the first one and remove the contrast variable from meta
@@ -225,13 +221,11 @@ workflow DIFFERENTIALABUNDANCE {
     ch_versions = ch_versions.mix(PROTEUS.out.versions)
 
     //
-    // 3. deal with GEO soft file data
+    // 3. Deal with GEO soft file data
     // Run GEO query to get the annotation
     //
 
-    ch_geoquery_input = prepareModuleInput(ch_querygse, 'preprocessing')
-
-    GEOQUERY_GETGEO(ch_geoquery_input)
+    GEOQUERY_GETGEO( prepareModuleInput(ch_querygse, 'preprocessing') )
 
     ch_soft_norm = prepareModuleOutput(GEOQUERY_GETGEO.out.expression, ch_paramsets)
     ch_soft_features = prepareModuleOutput(GEOQUERY_GETGEO.out.annotation, ch_paramsets)
@@ -298,8 +292,7 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // Decompress GTF files if needed
-    ch_gunzip_input = prepareModuleInput(ch_gtf_for_processing.compressed, 'preprocessing')
-    GUNZIP_GTF( ch_gunzip_input )
+    GUNZIP_GTF( prepareModuleInput(ch_gtf_for_processing.compressed, 'preprocessing') )
     ch_gunzip_out = prepareModuleOutput(GUNZIP_GTF.out.gunzip, ch_paramsets)
     ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
 
@@ -308,17 +301,16 @@ workflow DIFFERENTIALABUNDANCE {
         .mix(ch_gunzip_out)
 
     // Convert GTF to feature annotation table
-    ch_gtf_input = prepareModuleInput(ch_gtf_processed, 'preprocessing')
     GTF_TO_TABLE(
-        ch_gtf_input,
+        prepareModuleInput(ch_gtf_processed, 'preprocessing'),
         [tuple('id':""), []]
     )
     ch_gtf_features = prepareModuleOutput(GTF_TO_TABLE.out.feature_annotation, ch_paramsets)
     ch_versions = ch_versions.mix(GTF_TO_TABLE.out.versions)
 
-    // extract features from matrix
-    // note that in the case of maxquant we use the normalised matrix
-    // whereas for other study types we use the raw matrix
+    // Extract features from matrix
+    // Note that in the case of maxquant we use the normalised matrix
+    // Whereas for other study types we use the raw matrix
     ch_pre_matrix_features = ch_feature_sources.matrix_features.branch{ meta ->
         maxquant: meta.params.study_type == 'maxquant'
         other: true
@@ -508,7 +500,7 @@ workflow DIFFERENTIALABUNDANCE {
     // hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params
     // this will facilitate later on to join/combine channels
     // To keep nomenclature consistent with the rest of the pipeline, the simple meta is called as meta, whereas
-    // the full meta containing other info is called as meta_full
+    // The full meta containing other info is called as meta_full
 
     ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets)
         .map {meta_out, results ->
@@ -682,10 +674,8 @@ workflow DIFFERENTIALABUNDANCE {
             [meta_new, samples, features, matrices]
         }
 
-    ch_exploratory_input = prepareModuleInput(ch_exploratory_input, 'exploratory')
-
     PLOT_EXPLORATORY(
-        ch_exploratory_input
+        prepareModuleInput(ch_exploratory_input, 'exploratory')
     )
 
     // Plot differential analysis results
@@ -719,13 +709,13 @@ workflow DIFFERENTIALABUNDANCE {
     ch_shinyngs = ch_paramsets
         .filter{ it.params.shinyngs_build_app }
 
-    // to prepare the input for shinyngs app we need to first make sure that the differential
+    // To prepare the input for shinyngs app we need to first make sure that the differential
     // results are parsed in the same order as the contrast file
     // To do so, as we cannot rely on the order of the channels as they are asynchronous, we
     // create temporary contrast files with the entries based on the order of the gathered
     // differential results
 
-    // create a channel with the differential results and the corresponding map with
+    // Create a channel with the differential results and the corresponding map with
     // the contrast entries
     ch_differential_with_contrast = ch_shinyngs
         .join( ch_differential_results.groupTuple() )   // [meta, [meta_full], [differential results]]
@@ -738,7 +728,7 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, results, contrast_maps]   // [meta, [differential results], [contrast maps]]
         }
 
-    // save temporary contrast csv files with the entries ordered by the differential results
+    // Save temporary contrast csv files with the entries ordered by the differential results
     ch_contrasts_sorted = ch_differential_with_contrast
         .collectFile { meta, results, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
@@ -752,36 +742,21 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, contrast_file]
         }
 
-    // parse input for shinyngs app
+    // Parse input for shinyngs app
     ch_shinyngs_input = ch_differential_with_contrast
         .join(ch_contrasts_sorted)
         .join(ch_all_matrices)
         .multiMap { meta, differential_results, contrast_map, contrast_file, samplesheet, features, matrices ->
-            matrices:
-            [meta, samplesheet, features, matrices]
-            contrasts_and_differential:
-            [meta, contrast_file, differential_results]
-            contrast_stats_assay:
-            meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
+            matrices: [meta, samplesheet, features, matrices]
+            contrasts_and_differential: [meta, contrast_file, differential_results]
+            contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
         }
 
     SHINYNGS_APP(
         ch_shinyngs_input.matrices,
-        ch_shinyngs_input.contrasts_and_differential,
-        ch_shinyngs_input.contrast_stats_assay
-    )
-
-    ch_versions = ch_versions.mix(SHINYNGS_APP.out.versions)
-
-    // ========================================================================
-    // Generate report
-    // ========================================================================
-
-    // Collate and save software versions
-
-    softwareVersionsToYAML(ch_versions)
-        .collectFile(
-            storeDir: "${params.outdir}/pipeline_info",
+            matrices: [meta, samplesheet, features, matrices]
+            contrasts_and_differential: [meta, contrast_file, differential_results]
+            contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
             name: 'nf_core_'  +  'differentialabundance_software_'  + 'versions.yml',
             sort: true,
             newLine: true
