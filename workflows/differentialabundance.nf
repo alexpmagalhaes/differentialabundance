@@ -205,18 +205,10 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Note that the tables are the same across contrasts, only one table will be necessary
     // that is why here we take the first one and remove the contrast variable from meta
-    ch_proteus_raw = prepareModuleOutput(PROTEUS.out.raw_tab, ch_paramsets)
+    ch_proteus_raw = prepareModuleOutput(PROTEUS.out.raw_tab, ch_paramsets, meta_keys_to_remove=['contrast'])
         .first()
-        .map { meta, matrix ->
-            def meta_new = meta.findAll { key, value -> key != 'contrast' }
-            [meta_new, matrix]
-        }
-    ch_proteus_norm = prepareModuleOutput(PROTEUS.out.norm_tab, ch_paramsets)
+    ch_proteus_norm = prepareModuleOutput(PROTEUS.out.norm_tab, ch_paramsets, meta_keys_to_remove=['contrast'])
         .first()
-        .map { meta, matrix ->
-            def meta_new = meta.findAll { key, value -> key != 'contrast' }
-            [meta_new, matrix]
-        }
 
     ch_versions = ch_versions.mix(PROTEUS.out.versions)
 
@@ -493,45 +485,20 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect differential results
-    // note that 'differential_method' is additionally added to the meta in the differential subworkflow
-    // remove it to keep a consistent meta structure
+    // Note that 'differential_method' is additionally added to the meta in the differential subworkflow.
+    // Remove it to keep a consistent meta structure.
 
-    // Also note that these channels, the meta contain other info apart from the base paramset meta
-    // hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params
-    // this will facilitate later on to join/combine channels
-    // To keep nomenclature consistent with the rest of the pipeline, the simple meta is called as meta, whereas
-    // The full meta containing other info is called as meta_full
+    // Also note that these channels, the meta contain other info apart from the base paramset meta.
+    // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
+    // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
+    ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets, meta_keys_to_remove=['differential_method'], use_meta_key=true) // key, meta, results
+    ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets, meta_keys_to_remove=['differential_method'], use_meta_key=true) // key, meta, results_filtered
+    ch_differential_model = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, ch_paramsets, meta_keys_to_remove=['differential_method'], use_meta_key=true) // key, meta, model
 
-    ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets)
-        .map {meta_out, results ->
-            def meta_full = meta_out.findAll { k,v -> k != 'differential_method' }
-            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
-            [meta, meta_full, results]
-        }
-    ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets)
-        .map {meta_out, results ->
-            def meta_full = meta_out.findAll { k,v -> !['differential_method', 'fc_threshold', 'stat_threshold'].contains(k) }
-            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
-            [meta, meta_full, results]
-        }
-    ch_differential_model = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.model, ch_paramsets)
-        .map {meta_out, results ->
-            def meta_full = meta_out.findAll { k,v -> k != 'differential_method' }
-            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
-            [meta, meta_full, results]
-        }
-
-    // whereas these channels, the meta do not contain contrast info, as they come from the NORM modules instead of DIFFERENTIAL modules
-    ch_differential_norm = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets)
-        .map {meta_out, results ->
-            def meta = meta_out.findAll { k,v -> k != 'differential_method' }
-            [meta, results]
-        }
-    ch_differential_varstab = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets)
-        .map {meta_out, results ->
-            def meta = meta_out.findAll { k,v -> k != 'differential_method' }
-            [meta, results]
-        }
+    // Whereas these channels, the meta do not contain contrast info, as they come from the NORM modules instead of DIFFERENTIAL modules.
+    // We do not need to define an extra key based on meta for later join/combine.
+    ch_differential_norm = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.normalised_matrix, ch_paramsets, meta_keys_to_remove=['differential_method']) // meta, norm file
+    ch_differential_varstab = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.variance_stabilised_matrix, ch_paramsets, meta_keys_to_remove=['differential_method']) // meta, varstab file
 
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
@@ -615,25 +582,18 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect functional analysis results
-    // Note that these channels, the meta contain other info apart from the base paramset meta
-    // hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params
-    // this will facilitate later on to join/combine channels
-    // To keep nomenclature consistent with the rest of the pipeline, the simple meta is called as meta, whereas
-    // the full meta containing other info is called as meta_full
+    // Note that 'functional_method' is additionally added to the meta in the functional subworkflow.
+    // Remove it to keep a consistent meta structure.
+    // Also note that these channels, the meta contain other info apart from the base paramset meta.
+    // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
+    // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
 
     ch_functional_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, remainder: true)
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, remainder: true)
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report)
 
-    ch_functional_results = prepareModuleOutput(ch_functional_results, ch_paramsets)
-        .map {
-            // 'functional_method' is additionally added to the meta in the functional subworkflow
-            // so we also remove it to keep a consistent meta structure
-            def meta_full = it[0].findAll { k,v -> k != 'functional_method' }
-            def meta = [analysis_name: meta_full.analysis_name, params: meta_full.params]
-            [meta, meta_full, it.tail()]  // [meta, meta_full, [files]]
-        }
+    ch_functional_results = prepareModuleOutput(ch_functional_results, ch_paramsets, meta_keys_to_remove=['functional_method'], use_meta_key=true) // key, meta, [ functional results ]
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)

@@ -458,7 +458,7 @@ def extractRequiredFromSchema(schema) {
 // By keeping only the relevant params in meta when calling the modules,
 // we could ensure proper functionality of pipeline `resume`.
 // @param channel: the input channel
-// @params category: the category in which the module belong to
+// @param category: the category in which the module belong to
 // @return a channel with [simplified meta, files ...]
 // the simplified meta would have the following structure:
 // [analysis_names: [list of analysis names], params: [relevant params map], ...other k,v]
@@ -484,8 +484,15 @@ def prepareModuleInput(channel, category) {
 }
 
 // prepare the output for the module by adding back the full paramsets
-// to the meta. This is done by matching with analysis_name
-def prepareModuleOutput(channel, paramsets) {
+// to the meta. This is done by matching with analysis_name.
+// When provided, it will also remove the unnecesary keys from meta.
+// @param channel: the output channel from module
+// @param paramsets: the channel containing all the parameter sets
+// @param meta_keys_to_remove: a list of meta keys to remove. null if not
+// provided.
+// @param use_meta_key: use the base meta structure as key. So
+// [analysis_name: ..., params: [:]]
+def prepareModuleOutput(channel, paramsets, List meta_keys_to_remove = null, Boolean use_meta_key = false) {
     // prepare the channel to have analysis_name as key
     channel_by_name = channel
         // first parse the channel to have analysis_names as key
@@ -501,7 +508,7 @@ def prepareModuleOutput(channel, paramsets) {
         }
     // add back the full paramset by matching with paramsets channel
     // with analysis_name as key
-    return paramsets
+    channel_with_updated_paramsets = paramsets
         .map { [it.analysis_name, it] }
         // we use combine instead of join, because for the same analysis_name,
         // different meta and files may have been generated because of the different contrasts
@@ -510,9 +517,19 @@ def prepareModuleOutput(channel, paramsets) {
             def meta_paramset = it[1]
             def meta_out = it[2]
             // replace output meta simplified params by full params from paramset
-            // note that meta_out might have other k,v in the meta map (eg. contrast maps), we keep those too
+            // note that meta_out might have other k,v in the meta map (eg. contrast maps)
             def meta_full = meta_out + [params: meta_paramset.params]
-            [meta_full] + it[3..-1]    // [meta with full paramset, files ...]
+            // remove the other k,v from meta only when required
+            def meta_cleaned = (meta_keys_to_remove) ? meta_full.findAll{ k,v -> !meta_keys_to_remove.contains(k) } : meta_full
+
+            if (use_meta_key) {
+                // define a key using the basic meta structure: only containing analysis_name and params
+                // when required
+                def key = [analysis_name: meta_cleaned.analysis_name, params: meta_cleaned.params]
+                [key, meta_cleaned] + it[3..-1] // [key, meta with full paramset, files ...]
+            } else {
+                [meta_cleaned] + it[3..-1]      // [meta with full paramset, files ...]
+            }
         }
 }
 
@@ -522,8 +539,8 @@ def prepareModuleOutput(channel, paramsets) {
 // might be shared by many modules in the pipeline, 2) those parameters needed for
 // preceding categories and 3) those parameters that are only needed for a given
 // category. The category is defined in the parameter group name in the schema.
-// @params meta: the meta map
-// @params category: the category name
+// @param meta: the meta map
+// @param category: the category name
 def getRelevantParams(paramset, category) {
     // Define schema URL - in practice this would be loaded from file
     def schema = new groovy.json.JsonSlurper().parseText(new File("${projectDir}/nextflow_schema.json").text)
