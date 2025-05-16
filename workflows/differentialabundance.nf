@@ -706,6 +706,8 @@ workflow DIFFERENTIALABUNDANCE {
     // ShinyNGS app
     // ========================================================================
 
+    // Make (and optionally deploy) the shinyngs app
+
     ch_shinyngs = ch_paramsets
         .filter{ it.params.shinyngs_build_app }
 
@@ -753,10 +755,22 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     SHINYNGS_APP(
-        ch_shinyngs_input.matrices,
-            matrices: [meta, samplesheet, features, matrices]
-            contrasts_and_differential: [meta, contrast_file, differential_results]
-            contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
+        ch_shinyngs_input.matrices,    // meta, samples, features, [  matrices ]
+        ch_shinyngs_input.contrasts_and_differential,   // meta, contrasts, [differential results]
+        ch_shinyngs_input.contrast_stats_assay
+    )
+
+    ch_versions = ch_versions.mix(SHINYNGS_APP.out.versions)
+
+    // ========================================================================
+    // Generate report
+    // ========================================================================
+
+    // Collate and save software versions
+
+    softwareVersionsToYAML(ch_versions)
+        .collectFile(
+            storeDir: "${params.outdir}/pipeline_info",
             name: 'nf_core_'  +  'differentialabundance_software_'  + 'versions.yml',
             sort: true,
             newLine: true

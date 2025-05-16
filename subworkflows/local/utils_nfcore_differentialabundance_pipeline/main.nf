@@ -475,10 +475,13 @@ def prepareModuleInput(channel, category) {
         }
         .groupTuple()
         .map { simplifiedmeta, analysis_names, file_lists ->
+            // replace analysis_name by analysis_names
+            def meta = [analysis_names: analysis_names] + simplifiedmeta.findAll{ k,v -> k != 'analysis_name'}
             // the list files are the same for the same simplified meta,
             // thus the list of files generated from grouping are just a repetition of the same files
-            [meta] + file_lists[0]
+        [meta] + file_lists[0]
         }
+}
 
 // prepare the output for the module by adding back the full paramsets
 // to the meta. This is done by matching with analysis_name
@@ -527,7 +530,7 @@ def getRelevantParams(paramset, category) {
 
     // the relevant groups are the one defined by the category
     // and all the preceding ones
-    relevant_categories = [
+    def relevant_categories = [
         'preprocessing': ['base', 'preprocessing'],
         'exploratory': ['base', 'preprocessing', 'exploratory'],
         'differential': ['base', 'preprocessing', 'differential'],
