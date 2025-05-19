@@ -486,10 +486,10 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Collect differential results
     // Note that 'differential_method' is additionally added to the meta in the differential subworkflow.
-    // Remove it to keep a consistent meta structure.
+    // Remove it to keep a consistent meta structure (needed for join/combine).
 
     // Also note that these channels, the meta contain other info apart from the base paramset meta.
-    // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
+    // Hence we create a key using the simple paramset meta with only meta.id, meta.analysis_name and meta.params,
     // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
     ch_differential_results = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise, ch_paramsets, meta_keys_to_remove=['differential_method'], use_meta_key=true) // key, meta, results
     ch_differential_results_filtered = prepareModuleOutput(ABUNDANCE_DIFFERENTIAL_FILTER.out.results_genewise_filtered, ch_paramsets, meta_keys_to_remove=['differential_method'], use_meta_key=true) // key, meta, results_filtered
@@ -553,17 +553,22 @@ workflow DIFFERENTIALABUNDANCE {
         .map{ meta, matrix -> [meta, meta, matrix]}
         .mix(
             ch_differential_results_filtered
-                .filter{meta, meta_full, results -> meta.params.functional_method == 'gprofiler2'}
+                // Remember that the meta from differential results contain contrast info.
+                // Here the key is the meta without contrast info (same as the meta in other channels)
+                // So we can use this key to combine channels
+                .filter{meta, meta_with_contrast, results -> meta.params.functional_method == 'gprofiler2'}
         )
 
-    ch_functional_input = ch_functional_analysis_matrices
+    ch_functional_input = ch_functional_analysis_matrices  // meta, meta with contrast, file
         .combine(ch_gene_sets, by:0)             // meta, [gmt files]
         .combine(ch_background, by:0)            // meta, background
         .combine(ch_contrasts, by:0)             // meta, [contrast], [variable], [reference], [target], [formula], [comparison]
         .combine(ch_validated_samplemeta, by:0)  // meta, samplesheet
         .combine(ch_validated_featuremeta, by:0) // meta, features
-        .map { it.tail() } // remove the simple meta key
+        .map { it.tail() } // remove the meta without contrast info that is used as key
+                        // the remaining meta will contain the contrast info, if any
 
+    // Use a multiMap to generate synched channels for functional enrichment analysis
     ch_functional_input = prepareModuleInput(ch_functional_input, 'functional')
         .multiMap{ meta, input, gene_sets, background, contrasts, variable, reference, target, formula, comparison, samplesheet, features ->
             input: [meta, input, gene_sets, background, meta.params.functional_method]
@@ -583,7 +588,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Collect functional analysis results
     // Note that 'functional_method' is additionally added to the meta in the functional subworkflow.
-    // Remove it to keep a consistent meta structure.
+    // Remove it to keep a consistent meta structure (needed for join/combine).
     // Also note that these channels, the meta contain other info apart from the base paramset meta.
     // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
     // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
@@ -640,12 +645,13 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Plot differential analysis results
 
-    ch_plot_differential_input = ch_differential_results  // [meta, meta_full, results]
-        .combine(ch_all_matrices, by: 0)         // [meta, samples, features, matrices]
-        .map{it.tail()}  // remove simple meta key
+    ch_plot_differential_input = ch_differential_results  // [meta, meta with contrast, results]
+        .combine(ch_all_matrices, by: 0)                  // [meta, samples, features, matrices]
+        .map{it.tail()}  // remove the meta without contrast info that is used as key
+                        // the remaining meta will contain the contrast info
 
     ch_plot_differential_input = prepareModuleInput(ch_plot_differential_input, 'differential')
-        .multiMap{meta, differential_results, samples, features, matrices ->
+        .multiMap{ meta, differential_results, samples, features, matrices ->
             differential_results: [meta, differential_results]
             samples_features_matrices: [meta, samples, features, matrices]
         }
@@ -680,13 +686,13 @@ workflow DIFFERENTIALABUNDANCE {
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
     ch_differential_with_contrast = ch_shinyngs
-        .join( ch_differential_results.groupTuple() )   // [meta, [meta_full], [differential results]]
+        .join( ch_differential_results.groupTuple() )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
-        .map { meta, meta_full, results, contrast, variable, reference, target, formula, comparison ->
+        .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
             // in this way we don't need to harcode the contrast keys
             def contrast_keys = contrast[0].keySet()
-            def contrast_maps = meta_full.collect { it.subMap(contrast_keys) }
+            def contrast_maps = meta_with_contrast.collect { it.subMap(contrast_keys) }
             [meta, results, contrast_maps]   // [meta, [differential results], [contrast maps]]
         }
 
@@ -698,6 +704,7 @@ workflow DIFFERENTIALABUNDANCE {
             def lines = header + '\n' + content.join('\n')
             ["${meta.analysis_name}.csv", lines]
         }
+        // parse the channel to have the contrast file with the corresponding meta
         .map { [it.baseName, it] }
         .join( ch_shinyngs.map { [it.analysis_name, it] } )
         .map { analysis_name, contrast_file, meta ->
@@ -716,7 +723,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     SHINYNGS_APP(
         ch_shinyngs_input.matrices,    // meta, samples, features, [  matrices ]
-        ch_shinyngs_input.contrasts_and_differential,   // meta, contrasts, [differential results]
+        ch_shinyngs_input.contrasts_and_differential,   // meta, contrast file, [ differential results ]
         ch_shinyngs_input.contrast_stats_assay
     )
 
@@ -751,21 +758,21 @@ workflow DIFFERENTIALABUNDANCE {
             ]]
         }
 
-    // Group differential and functional results by simple paramset meta [analysis_name, params]
-    // So all the files generated with the same paramset meta will go together to report
+    // Group differential and functional results by paramset meta [id: study_name, analysis_name: analysis_name, params: paramset]
+    // So all the files generated with the same paramset meta will go together to report.
+    // Note that the files generated with different contrasts will also be grouped together for the same paramset meta.
 
     ch_differential_grouped = ch_differential_results
         .join(ch_differential_model, by:[0,1])
-        .groupTuple()
+        .groupTuple()                                 // [ meta, [meta with contrast], [differential results], [differential model] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [differential results and models] ]
 
     ch_functional_grouped = ch_functional_results
-        .groupTuple()
+        .groupTuple()                                 // [ meta, [meta with contrast], [functional results] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [functional results] ]
 
     // Prepare input for report generation
-    // Each paramset will generate one markdown report by gathering all
-    // the files created with the same paramset
+    // Each paramset will generate one markdown report by gathering all the files created with the same paramset
 
     ch_report_input = ch_report_files    // [meta, [report_file, logo_file, css_file, citations_file]]
         .combine(ch_collated_versions)   // [versions file]

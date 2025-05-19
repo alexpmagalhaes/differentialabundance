@@ -74,6 +74,7 @@ workflow PIPELINE_INITIALISATION {
     paramsets = getToolConfigurations()
     ch_paramsets = Channel.fromList(paramsets)
         .map { paramset -> [
+            id: paramset.study_name,
             analysis_name: paramset.analysis_name,
             params: paramset.findAll{ k,v -> k != 'analysis_name' }
         ]}
@@ -491,44 +492,43 @@ def prepareModuleInput(channel, category) {
 // @param meta_keys_to_remove: a list of meta keys to remove. null if not
 // provided.
 // @param use_meta_key: use the base meta structure as key. So
-// [analysis_name: ..., params: [:]]
+// [id: study_name, analysis_name: analysis_name, params: [:]]
 def prepareModuleOutput(channel, paramsets, List meta_keys_to_remove = null, Boolean use_meta_key = false) {
-    // prepare the channel to have analysis_name as key
+    // Prepare the channel to have analysis_name as key
     channel_by_name = channel
-        // first parse the channel to have analysis_names as key
+        // First parse the channel to have analysis_names as key
         .map { [it[0].analysis_names] + it }
-        // transpose the list of analysis_names
+        // Transpose the list of analysis_names
         .transpose(by:0)
         .map {
             def analysis_name = it[0]
-            // replace analysis_names by analysis_name in the meta
+            // Replace analysis_names by analysis_name in the meta
             def meta = [analysis_name: analysis_name] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
-            // put analysis name as key
+            // Put analysis name as key
             [analysis_name, meta] + it[2..-1]  // [analysis_name, meta, files ...]
         }
-    // add back the full paramset by matching with paramsets channel
-    // with analysis_name as key
+    // Add back the full paramset by matching with paramsets channel with analysis_name as key
     channel_with_updated_paramsets = paramsets
         .map { [it.analysis_name, it] }
-        // we use combine instead of join, because for the same analysis_name,
+        // We use combine instead of join, because for the same analysis_name,
         // different meta and files may have been generated because of the different contrasts
         .combine(channel_by_name, by:0)
         .map {
             def meta_paramset = it[1]
             def meta_out = it[2]
-            // replace output meta simplified params by full params from paramset
-            // note that meta_out might have other k,v in the meta map (eg. contrast maps)
-            def meta_full = meta_out + [params: meta_paramset.params]
-            // remove the other k,v from meta only when required
-            def meta_cleaned = (meta_keys_to_remove) ? meta_full.findAll{ k,v -> !meta_keys_to_remove.contains(k) } : meta_full
+            // Remove unnecessary keys from meta, when asked
+            def meta_cleaned = (meta_keys_to_remove) ? meta_out.findAll{ k,v -> !meta_keys_to_remove.contains(k) } : meta_out
+            // Replace output meta simplified params by full params from paramset
+            def meta = meta_cleaned + [params: meta_paramset.params]
 
             if (use_meta_key) {
-                // define a key using the basic meta structure: only containing analysis_name and params
-                // when required
-                def key = [analysis_name: meta_cleaned.analysis_name, params: meta_cleaned.params]
-                [key, meta_cleaned] + it[3..-1] // [key, meta with full paramset, files ...]
+                // Define a key using the basic meta structure: only containing id, analysis_name and params, when asked.
+                // Note that all the channels in the pipeline have study_name as id, except those containing contrast info.
+                // Hence, we need to use the study_name as id in the key.
+                def key = [id: meta.params.study_name, analysis_name: meta.analysis_name, params: meta.params]
+                [key, meta] + it[3..-1] // [key, meta with full paramset, files ...]
             } else {
-                [meta_cleaned] + it[3..-1]      // [meta with full paramset, files ...]
+                [meta] + it[3..-1]      // [meta with full paramset, files ...]
             }
         }
 }
