@@ -33,7 +33,7 @@
             [
                 "other",
                 "other/affy",
-                "other/affy/normalised.eset.rds",
+                "other/affy/eset.rds",
                 "other/limma",
                 "other/limma/phenotype_uninvolved_lesional_study.MArrayLM.limma.rds",
                 "pipeline_info",
@@ -58,40 +58,36 @@
                 "plots/qc",
                 "plots/qc/phenotype_uninvolved_lesional_study.limma.mean_difference.png",
                 "report",
-                "report/null_study.html",
-                "report/null_study.zip",
+                "report/study.html",
+                "report/study.zip",
                 "shinyngs_app",
-                "shinyngs_app/null_study",
-                "shinyngs_app/null_study/app.R",
-                "shinyngs_app/null_study/data.rds",
+                "shinyngs_app/study",
+                "shinyngs_app/study/app.R",
+                "shinyngs_app/study/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/annotation",
-                "tables/annotation/normalised.annotation.tsv",
                 "tables/differential",
                 "tables/differential/phenotype_uninvolved_lesional_study.limma.results.tsv",
                 "tables/differential/phenotype_uninvolved_lesional_study.limma.results_filtered.tsv",
-                "tables/processed_abundance",
-                "tables/processed_abundance/normalised.matrix.tsv"
+                "tables/processed_abundance"
             ],
             [
-                "normalised.eset.rds:md5,ee83ece8b75d711163af9dd9300db49a",
+                "eset.rds:md5,ee83ece8b75d711163af9dd9300db49a",
                 "phenotype_uninvolved_lesional_study.MArrayLM.limma.rds:md5,eecc9b0267ce9a5d3a1330da7fbce4cc",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
-                "normalised.annotation.tsv:md5,40300ae222ae35fa54daf10a1b86e830",
                 "phenotype_uninvolved_lesional_study.limma.results.tsv:md5,9de894fae8489dc8baeeb4eef3cf01fc",
-                "phenotype_uninvolved_lesional_study.limma.results_filtered.tsv:md5,ae01d0073e3ddc63c33a08de52d1d5ea",
-                "normalised.matrix.tsv:md5,230f87f91c0c1a7e2ab354200c4b978c"
+                "phenotype_uninvolved_lesional_study.limma.results_filtered.tsv:md5,ae01d0073e3ddc63c33a08de52d1d5ea"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:12:38.533463344"
+        "timestamp": "2025-05-19T15:35:01.697117257"
     },
     "Test soft profile - with toolsheet": {
         "content": [
@@ -127,7 +123,7 @@
             [
                 "other",
                 "other/affy",
-                "other/affy/normalised.eset.rds",
+                "other/affy/eset.rds",
                 "other/limma",
                 "other/limma/phenotype_uninvolved_lesional_study.MArrayLM.limma.rds",
                 "pipeline_info",
@@ -152,39 +148,35 @@
                 "plots/qc",
                 "plots/qc/phenotype_uninvolved_lesional_study.limma.mean_difference.png",
                 "report",
-                "report/limma_soft_study.html",
-                "report/limma_soft_study.zip",
+                "report/study.html",
+                "report/study.zip",
                 "shinyngs_app",
-                "shinyngs_app/limma_soft_study",
-                "shinyngs_app/limma_soft_study/app.R",
-                "shinyngs_app/limma_soft_study/data.rds",
+                "shinyngs_app/study",
+                "shinyngs_app/study/app.R",
+                "shinyngs_app/study/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/annotation",
-                "tables/annotation/normalised.annotation.tsv",
                 "tables/differential",
                 "tables/differential/phenotype_uninvolved_lesional_study.limma.results.tsv",
                 "tables/differential/phenotype_uninvolved_lesional_study.limma.results_filtered.tsv",
-                "tables/processed_abundance",
-                "tables/processed_abundance/normalised.matrix.tsv"
+                "tables/processed_abundance"
             ],
             [
-                "normalised.eset.rds:md5,ee83ece8b75d711163af9dd9300db49a",
+                "eset.rds:md5,ee83ece8b75d711163af9dd9300db49a",
                 "phenotype_uninvolved_lesional_study.MArrayLM.limma.rds:md5,eecc9b0267ce9a5d3a1330da7fbce4cc",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
-                "normalised.annotation.tsv:md5,40300ae222ae35fa54daf10a1b86e830",
                 "phenotype_uninvolved_lesional_study.limma.results.tsv:md5,9de894fae8489dc8baeeb4eef3cf01fc",
-                "phenotype_uninvolved_lesional_study.limma.results_filtered.tsv:md5,ae01d0073e3ddc63c33a08de52d1d5ea",
-                "normalised.matrix.tsv:md5,230f87f91c0c1a7e2ab354200c4b978c"
+                "phenotype_uninvolved_lesional_study.limma.results_filtered.tsv:md5,ae01d0073e3ddc63c33a08de52d1d5ea"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:15:18.815078927"
+        "timestamp": "2025-05-19T15:37:52.05736823"
     }
 }

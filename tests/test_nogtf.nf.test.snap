@@ -63,12 +63,12 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/deseq2_rnaseq_SRP254919.html",
-                "report/deseq2_rnaseq_SRP254919.zip",
+                "report/SRP254919.html",
+                "report/SRP254919.zip",
                 "shinyngs_app",
-                "shinyngs_app/deseq2_rnaseq_SRP254919",
-                "shinyngs_app/deseq2_rnaseq_SRP254919/app.R",
-                "shinyngs_app/deseq2_rnaseq_SRP254919/data.rds",
+                "shinyngs_app/SRP254919",
+                "shinyngs_app/SRP254919/app.R",
+                "shinyngs_app/SRP254919/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/differential",
@@ -101,7 +101,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:43:45.967865868"
+        "timestamp": "2025-05-19T15:11:23.089324882"
     },
     "Test no gtf profile": {
         "content": [
@@ -167,12 +167,12 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/null_SRP254919.html",
-                "report/null_SRP254919.zip",
+                "report/SRP254919.html",
+                "report/SRP254919.zip",
                 "shinyngs_app",
-                "shinyngs_app/null_SRP254919",
-                "shinyngs_app/null_SRP254919/app.R",
-                "shinyngs_app/null_SRP254919/data.rds",
+                "shinyngs_app/SRP254919",
+                "shinyngs_app/SRP254919/app.R",
+                "shinyngs_app/SRP254919/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/differential",
@@ -205,6 +205,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:40:36.265903842"
+        "timestamp": "2025-05-19T15:08:57.430940077"
     }
 }

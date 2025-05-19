@@ -79,6 +79,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.limma.mean_difference.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.limma.mean_difference.png",
                 "report",
+                "report/SRP254919.html",
+                "report/SRP254919.zip",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -128,12 +130,10 @@
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.pvalues_vs_nes_plot.png",
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv",
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.ranked_list_corr_2.png",
-                "report/null_SRP254919.html",
-                "report/null_SRP254919.zip",
                 "shinyngs_app",
-                "shinyngs_app/null_SRP254919",
-                "shinyngs_app/null_SRP254919/app.R",
-                "shinyngs_app/null_SRP254919/data.rds",
+                "shinyngs_app/SRP254919",
+                "shinyngs_app/SRP254919/app.R",
+                "shinyngs_app/SRP254919/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/annotation",
@@ -177,7 +177,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:32:04.746551884"
+        "timestamp": "2025-05-19T15:25:16.093172872"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
@@ -259,6 +259,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.limma.mean_difference.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.limma.mean_difference.png",
                 "report",
+                "report/SRP254919.html",
+                "report/SRP254919.zip",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -308,12 +310,10 @@
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.pvalues_vs_nes_plot.png",
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv",
                 "report/gsea/treatment_mCherry_hND6_sample_number_SRP254919/mh.all.v2022.1.Mm.symbols/treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.ranked_list_corr_2.png",
-                "report/limma_rnaseq_gsea_SRP254919.html",
-                "report/limma_rnaseq_gsea_SRP254919.zip",
                 "shinyngs_app",
-                "shinyngs_app/limma_rnaseq_gsea_SRP254919",
-                "shinyngs_app/limma_rnaseq_gsea_SRP254919/app.R",
-                "shinyngs_app/limma_rnaseq_gsea_SRP254919/data.rds",
+                "shinyngs_app/SRP254919",
+                "shinyngs_app/SRP254919/app.R",
+                "shinyngs_app/SRP254919/data.rds",
                 "shinyngs_app/versions.yml",
                 "tables",
                 "tables/annotation",
@@ -357,6 +357,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.2"
         },
-        "timestamp": "2025-05-15T10:35:06.969570656"
+        "timestamp": "2025-05-19T15:27:24.165331512"
     }
 }
