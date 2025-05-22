@@ -630,8 +630,14 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Exploratory analysis
 
-    ch_exploratory_input = ch_all_matrices
-        .combine(ch_contrast_variables, by:0)
+    ch_exploratory_input = ch_contrast_variables         // [meta, variable]
+        .combine(ch_all_matrices, by:0)                  // [meta, samples, features, [matrices]]
+        .map { meta, variable, samples, features, matrices ->
+            // we need to add variable info into meta, otherwise the channel will have the same meta no
+            // matter the variable information and prepareModuleInput will group them together.
+            def meta_new = meta + [id: variable]
+            [meta_new, samples, features, matrices, variable]
+        }
 
     PLOT_EXPLORATORY(
         prepareModuleInput(ch_exploratory_input, 'exploratory')
