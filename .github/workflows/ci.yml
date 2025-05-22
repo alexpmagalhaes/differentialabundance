@@ -44,6 +44,7 @@ jobs:
           - "maxquant"
           - "soft"
           - "rnaseq_limma"
+          - "paramset"
         compute_profile:
           - "docker"
           - "singularity"
