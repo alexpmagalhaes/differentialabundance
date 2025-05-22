@@ -630,14 +630,8 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Exploratory analysis
 
-    ch_exploratory_input = ch_contrast_variables         // [meta, variable]
-        .combine(ch_all_matrices, by:0)                  // [meta, variable, samples, features, [matrices]]
-        .map { meta, variable, samples, features, matrices ->
-            // we need to add variable info as id in meta
-            // since PLOT_EXPLORATORY uses meta.id as the contrast variable
-            def meta_new = meta + [id: variable]
-            [meta_new, samples, features, matrices]
-        }
+    ch_exploratory_input = ch_all_matrices
+        .combine(ch_contrast_variables, by:0)
 
     PLOT_EXPLORATORY(
         prepareModuleInput(ch_exploratory_input, 'exploratory')
