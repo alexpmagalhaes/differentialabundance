@@ -82,7 +82,7 @@ If you wish to contribute a new step, please use the following coding standards:
 9. Update MultiQC config `assets/multiqc_config.yml` so relevant suffixes, file name clean up and module plots are in the appropriate order. If applicable, add a [MultiQC](https://https://multiqc.info/) module.
 10. Add a description of the output files and if relevant any appropriate images from the MultiQC report to `docs/output.md`.
 
-This pipeline allows the iteration of multiple configs through one run. This is achieved by using **toolsheet**, which is a compact file with multiple nextflow configs, being each row one config. Each config is parsed into the meta of the workflow channels. In this way, one can run the same modules multiple times with different configuration sets. In order to ensure the correct behaviour for this, and proper `resume` of the pipeline, additional steps are needed when adding a new module:
+This pipeline allows the iteration of multiple configs through one run. This is achieved by using **paramsheet**, which is a compact file with multiple nextflow configs, being each row one config. Each config is parsed into the meta of the workflow channels. In this way, one can run the same modules multiple times with different configuration sets. In order to ensure the correct behaviour for this, and proper `resume` of the pipeline, additional steps are needed when adding a new module:
 
 1. Ensure to run `prepareModuleInput` before calling the new module. This function will parse the channel meta to only include the parameters relevant for the module.
 2. Ensure to run `prepareModuleOutput` after calling the new module. This function will extend the meta to include the entire parameters set.

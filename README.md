@@ -95,7 +95,7 @@ Affymetrix microarray:
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
 
-The toolsheet file (ie. `toolsheet.csv`) stored in the `assets` directory define the combination of tools and parameters that make sense to run for a given study type. You can use the flag `--analysis_name` to specify which set of tools to run. For example:
+The paramsheet file (ie. `paramsheet.csv`) stored in the `assets` directory defines the combination of tools and parameters that make sense to run for a given study type. You can use the flag `--paramset_name` to specify which set of tools to run. For example:
 
 ```bash
  nextflow run nf-core/differentialabundance \
@@ -105,8 +105,10 @@ The toolsheet file (ie. `toolsheet.csv`) stored in the `assets` directory define
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
      -profile rnaseq,<docker/singularity/podman/shifter/charliecloud/conda/institute> \
-     --analysis_name deseq2_rnaseq_gprofiler2
+     --paramset_name deseq2_rnaseq_gprofiler2
 ```
+
+You could also provide your own paramsheet through the `--paramsheet` parameter.
 
 For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/differentialabundance/usage) and the [parameter documentation](https://nf-co.re/differentialabundance/parameters).
 

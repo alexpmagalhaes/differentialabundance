@@ -252,28 +252,29 @@ To override the above options, you may also supply your own features table as a 
 
 By default, if you don't provide features, for non-array data the workflow will fall back to attempting to use the matrix itself as a source of feature annotations. For this to work you must make sure to set the `features_id_col`, `features_name_col` and `features_metadata_cols` parameters to the appropriate values, for example by setting them to 'gene_id' if that is the identifier column on the matrix. This will cause the gene ID to be used everywhere rather than more accessible gene symbols (as can be derived from the GTF), but the workflow should run. Please use this option for MaxQuant analysis, i.e. do not provide features.
 
-## Toolsheet
+## Paramsheet
 
-### 1. Default toolsheet
+In essence, the paramsheet is a compact file with multiple nextflow configs, being each row one config.
+To run the pipeline with a specific config row, you can use the `--paramset_name` parameter.
 
-We provide a `toolsheet.csv` file in the `assets` directory that define the tools and tool parameters that make sense to run together, for specific study type.
+> [!WARNING]
+> Note that the arguments defined in the paramsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files. In other words, the priority of the parameters will follow this order: paramsheet > command line flags > nextflow configuration file
+
+> [!WARNING]
+> For the moment, the pipeline only allows to run one config at a time through `--paramset_name`, but soon iterating multi configs through one pipeline run would be possible.
+
+### 1. Default paramsheet
+
+We provide a `paramsheet.csv` file in the `assets` directory that defines the parameter sets and tool parameters that make sense to run together, for specific study types.
 
 Each row defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments.
 
-> [!WARNING]
-> Note that the arguments defined in the toolsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files. In other words, the priority of the parameters will follow this order: toolsheet > command line flags > nextflow configuration file
+To run a given combination of tools, you can use the `--paramset_name` parameter.
 
-To run a given combination of tools, you can use the `--analysis_name` parameter.
+### 2. Custom paramsheet
 
-### 2. Custom toolsheet
-
-Optionally, one can also provide its own toolsheet CSV file using the `--toolsheet` flag.
-
-### 3. Multi config
-
-> [!WARNING]
-> Note that any parameter from the pipeline can be provided through the toolsheet. In essence, the toolsheet is a compact file with multiple nextflow configs, being each row one config.
-> For the moment, the pipeline only allows to run one config at a time through `--analysis_name`, but soon iterating multi configs through one pipeline run would be possible.
+Optionally, one can also provide their own paramsheet CSV file using the `--paramsheet` flag.
+You will be also able to run a specific config row from this custom file using `--paramset_name`.
 
 ## Working with the output R markdown file
 
@@ -429,7 +430,7 @@ nextflow run nf-core/differentialabundance \
     [--gtf mouse.gtf OR --features features.tsv] \
     --outdir <OUTDIR>  \
     -profile docker \
-    [--analysis_name <analysis_name>]
+    [--paramset_name <paramset_name>]
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.

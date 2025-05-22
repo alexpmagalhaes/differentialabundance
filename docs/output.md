@@ -12,7 +12,7 @@ This directory contains the main reporting output of the workflow.
 <summary>Output files</summary>
 
 - `report/`
-  - `*.html`: an HTML report file named according to the value of `params.analysis_name`, containing graphical and tabular summary results for the workflow run.
+  - `*.html`: an HTML report file named according to the value of `params.study_name`, containing graphical and tabular summary results for the workflow run.
   - `*.zip`: a zip file containing an R markdown file with parameters set and all necessary input files to open and customise the reporting.
 
 </details>
@@ -92,7 +92,7 @@ The `differential` folder is likely to be the core result set for most users, co
 <summary>Output files</summary>
 
 - `shinyngs_app/`
-  - `[analysis name]`:
+  - `[study name]`:
     - `data.rds`: serialized R object which can be used to generate a Shiny application
     - `app.R`: minimal R script that will source the data object and generate the app
 

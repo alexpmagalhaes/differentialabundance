@@ -69,14 +69,14 @@ workflow PIPELINE_INITIALISATION {
     )
 
     //
-    // Get paramsets based on toolsheet or default parameters
+    // Get paramsets based on paramsheet or default parameters
     //
-    paramsets = getToolConfigurations()
+    paramsets = getParamsetConfigurations()
     ch_paramsets = Channel.fromList(paramsets)
         .map { paramset -> [
             id: paramset.study_name,
-            analysis_name: paramset.analysis_name,
-            params: paramset.findAll{ k,v -> k != 'analysis_name' }
+            paramset_name: paramset.paramset_name,
+            params: paramset.findAll{ k,v -> k != 'paramset_name' }
         ]}
 
     //
@@ -312,10 +312,10 @@ def methodsDescriptionText(mqc_methods_yaml) {
     return description_html.toString()
 }
 
-// Get tool configurations based on whether analysis_name is provided
-def getToolConfigurations() {
-    // Use toolsheet if analysis_name is provided, otherwise use default params
-    def paramsets = (params.analysis_name) ? getToolsheetConfigurations() : getDefaultConfigurations()
+// Get configurations based on whether use paramsheet or default params
+def getParamsetConfigurations() {
+    // Use paramsheet if paramset_name is provided, otherwise use default params
+    def paramsets = (params.paramset_name) ? getParamsheetConfigurations() : getDefaultConfigurations()
     return paramsets.collect { paramset ->
         // some params are not useful through the pipeline run, remove them for cleaner meta
         def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
@@ -326,48 +326,48 @@ def getToolConfigurations() {
     }
 }
 
-// Get configurations from toolsheet
-// To be able to retrieve a full set of parameters considering both toolsheet rows
+// Get configurations from paramsheet
+// To be able to retrieve a full set of parameters considering both paramsheet rows
 // (highest priority) and pipeline params scope and validate them all together,
 // we need to do the following:
-// 1. get and validate toolsheet configurations
+// 1. get and validate paramsheet configurations
 // 2. fill missing params with pipeline params
-def getToolsheetConfigurations() {
-    // get toolsheet path
-    def toolsheet_path = file(params.toolsheet, checkIfExists: true)
+def getParamsheetConfigurations() {
+    // get paramsheet path
+    def paramsheet_path = file(params.paramsheet, checkIfExists: true)
 
-    // Create temporary schema for validation - with only the fields in the toolsheet
-    def schema_path = createToolsheetSchema(toolsheet_path)
+    // Create temporary schema for validation - with only the fields in the paramsheet
+    def schema_path = createParamsheetSchema(paramsheet_path)
 
-    // Load toolsheet and validate each row against the transformed schema
-    def raw_toolsheet = samplesheetToList(toolsheet_path, schema_path).collect { it -> it[0] }
+    // Load paramsheet and validate each row against the transformed schema
+    def raw_paramsheet = samplesheetToList(paramsheet_path, schema_path).collect { it -> it[0] }
 
-    def toolsheet = raw_toolsheet
+    def paramsheet = raw_paramsheet
         // remove empty values
         .collect { row ->
             return row.findAll { key, value -> value != [] }
         }
-        // Only keep row matching with analysis name
+        // Only keep row matching with paramset name
         .findAll { row ->
-            return row.analysis_name == params.analysis_name
+            return row.paramset_name == params.paramset_name
         }
 
-    if (toolsheet.isEmpty()) {
-        if (params.analysis_name) {
-            error("No configuration found in toolsheet for analysis_name '${params.analysis_name}'")
+    if (paramsheet.isEmpty()) {
+        if (params.paramset_name) {
+            error("No configuration found in paramsheet for paramset_name '${params.paramset_name}'")
         } else {
-            error("No valid configurations found in toolsheet")
+            error("No valid configurations found in paramsheet")
         }
     }
 
-    // return paramset with toolsheet params (highest priority) and pipeline params
-    return toolsheet
+    // return paramset with paramsheet params (highest priority) and pipeline params
+    return paramsheet
         .collect{ row ->
             // clean empty values with []
             def cleanparams = row.findAll { k, v -> v != [] } as Map
             // add missing params from pipeline params
             def fullparams = params + cleanparams
-            // sort toolsheet params based on pipeline params order
+            // sort paramsheet params based on pipeline params order
             def sortedparams = fullparams.sort { a, b ->
                     params.keySet().toList().indexOf(a.key) <=> params.keySet().toList().indexOf(b.key)
                 } as Map
@@ -377,43 +377,43 @@ def getToolsheetConfigurations() {
 
 // Get default configurations from pipeline parameters
 def getDefaultConfigurations() {
-    // replace null by string 'null' for analysis_name to avoid certain problems with null object
-    return [params + [analysis_name: 'null']]
+    // replace null by string 'null' for paramset_name to avoid certain problems with null object
+    return [params + [paramset_name: 'null']]
 }
 
-// Create a temporary schema file for toolsheet validation
+// Create a temporary schema file for paramsheet validation
 // This schema is derived from the pipeline's nextflow_schema.json by:
-// 1. Reading the toolsheet headers to determine which fields to include
+// 1. Reading the paramsheet headers to determine which fields to include
 // 2. Extracting only those properties (also adding them as meta) and
 // required fields from the pipeline schema
 // 3. Creating a schema that allows for an array of objects
 // @return The absolute path to the temporary schema file
-def createToolsheetSchema(toolsheet_path) {
+def createParamsheetSchema(paramsheet_path) {
     // Load and parse pipeline schema
     def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
     def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
 
-    // Get headers from toolsheet
-    def toolsheet_lines = toolsheet_path.newInputStream().withReader { it.readLines() }
-    def headers = toolsheet_lines[0].split(',')
-    // Ensure analysis_name is in headers
-    if (!headers.contains('analysis_name')) {
-        error("The toolsheet must contain an 'analysis_name' column")
+    // Get headers from paramsheet
+    def paramsheet_lines = paramsheet_path.newInputStream().withReader { it.readLines() }
+    def headers = paramsheet_lines[0].split(',')
+    // Ensure paramset_name is in headers
+    if (!headers.contains('paramset_name')) {
+        error("The paramsheet must contain a 'paramset_name' column")
     }
 
     // Extract all properties and required fields from schema
     def all_properties = extractPropertiesFromSchema(schema_json)
     def all_required = extractRequiredFromSchema(schema_json)
 
-    // Restrict properties and required fields to those in the toolsheet
+    // Restrict properties and required fields to those in the paramsheet
     def filtered_properties = all_properties.findAll { k, v -> headers.contains(k) }
     def filtered_required = all_required.findAll { k -> headers.contains(k) }
 
-    // Create samplesheet schema with filtered properties and analysis_name as required
+    // Create samplesheet schema with filtered properties and paramset_name as required
     def samplesheet_schema = [
         '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        'title': 'nf-core/differentialabundance - toolsheet schema',
-        'description': 'Schema for validating the toolsheet configuration',
+        'title': 'nf-core/differentialabundance - paramsheet schema',
+        'description': 'Schema for validating the paramsheet configuration',
         'type': 'array',
         'items': [
             'type': 'object',
@@ -455,8 +455,8 @@ def extractRequiredFromSchema(schema) {
             }
         }
     }
-    if (!all_required.contains('analysis_name')) {
-        all_required << 'analysis_name'
+    if (!all_required.contains('paramset_name')) {
+        all_required << 'paramset_name'
     }
     return all_required
 }
@@ -469,7 +469,7 @@ def extractRequiredFromSchema(schema) {
 // @param category: the category in which the module belong to
 // @return a channel with [simplified meta, files ...]
 // the simplified meta would have the following structure:
-// [analysis_names: [list of analysis names], params: [relevant params map], ...other k,v]
+// [paramset_names: [list of paramset names], params: [relevant params map], ...other k,v]
 def prepareModuleInput(channel, category) {
     return channel
         .map {
@@ -479,12 +479,12 @@ def prepareModuleInput(channel, category) {
             def simplifiedmeta = it[0] + [params: simplifiedparams]
 
             // use simplified meta as key
-            [simplifiedmeta, it[0].analysis_name, it[1..-1]]  // [ meta, analysis_name, [files] ]
+            [simplifiedmeta, it[0].paramset_name, it[1..-1]]  // [ meta, paramset_name, [files] ]
         }
         .groupTuple()
-        .map { simplifiedmeta, analysis_names, file_lists ->
-            // replace analysis_name by analysis_names
-            def meta = [analysis_names: analysis_names] + simplifiedmeta.findAll{ k,v -> k != 'analysis_name'}
+        .map { simplifiedmeta, paramset_names, file_lists ->
+            // replace paramset_name by paramset_names
+            def meta = [paramset_names: paramset_names] + simplifiedmeta.findAll{ k,v -> k != 'paramset_name'}
             // the list files are the same for the same simplified meta,
             // thus the list of files generated from grouping are just a repetition of the same files
         [meta] + file_lists[0]
@@ -492,32 +492,32 @@ def prepareModuleInput(channel, category) {
 }
 
 // prepare the output for the module by adding back the full paramsets
-// to the meta. This is done by matching with analysis_name.
+// to the meta. This is done by matching with paramset_name.
 // When provided, it will also remove the unnecesary keys from meta.
 // @param channel: the output channel from module
 // @param paramsets: the channel containing all the parameter sets
 // @param meta_keys_to_remove: a list of meta keys to remove. null if not
 // provided.
 // @param use_meta_key: use the base meta structure as key. So
-// [id: study_name, analysis_name: analysis_name, params: [:]]
+// [id: study_name, paramset_name: paramset_name, params: [:]]
 def prepareModuleOutput(channel, paramsets, List meta_keys_to_remove = null, Boolean use_meta_key = false) {
-    // Prepare the channel to have analysis_name as key
+    // Prepare the channel to have paramset_name as key
     channel_by_name = channel
-        // First parse the channel to have analysis_names as key
-        .map { [it[0].analysis_names] + it }
-        // Transpose the list of analysis_names
+        // First parse the channel to have paramset_names as key
+        .map { [it[0].paramset_names] + it }
+        // Transpose the list of paramset_names
         .transpose(by:0)
         .map {
-            def analysis_name = it[0]
-            // Replace analysis_names by analysis_name in the meta
-            def meta = [analysis_name: analysis_name] + it[1].findAll{ k,v -> k != 'analysis_names' }   // [analysis_name, params, ...]
-            // Put analysis name as key
-            [analysis_name, meta] + it[2..-1]  // [analysis_name, meta, files ...]
+            def paramset_name = it[0]
+            // Replace paramset_names by paramset_name in the meta
+            def meta = [paramset_name: paramset_name] + it[1].findAll{ k,v -> k != 'paramset_names' }   // [paramset_name, params, ...]
+            // Put paramset name as key
+            [paramset_name, meta] + it[2..-1]  // [paramset_name, meta, files ...]
         }
-    // Add back the full paramset by matching with paramsets channel with analysis_name as key
+    // Add back the full paramset by matching with paramsets channel with paramset_name as key
     channel_with_updated_paramsets = paramsets
-        .map { [it.analysis_name, it] }
-        // We use combine instead of join, because for the same analysis_name,
+        .map { [it.paramset_name, it] }
+        // We use combine instead of join, because for the same paramset_name,
         // different meta and files may have been generated because of the different contrasts
         .combine(channel_by_name, by:0)
         .map {
@@ -529,10 +529,10 @@ def prepareModuleOutput(channel, paramsets, List meta_keys_to_remove = null, Boo
             def meta = meta_cleaned + [params: meta_paramset.params]
 
             if (use_meta_key) {
-                // Define a key using the basic meta structure: only containing id, analysis_name and params, when asked.
+                // Define a key using the basic meta structure: only containing id, paramset_name and params, when asked.
                 // Note that all the channels in the pipeline have study_name as id, except those containing contrast info.
                 // Hence, we need to use the study_name as id in the key.
-                def key = [id: meta.params.study_name, analysis_name: meta.analysis_name, params: meta.params]
+                def key = [id: meta.params.study_name, paramset_name: meta.paramset_name, params: meta.params]
                 [key, meta] + it[3..-1] // [key, meta with full paramset, files ...]
             } else {
                 [meta] + it[3..-1]      // [meta with full paramset, files ...]
