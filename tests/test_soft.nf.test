@@ -40,7 +40,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                analysis_name       = "limma_soft"
+                paramset_name       = "limma_soft"
                 differential_method = null
             }
         }

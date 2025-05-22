@@ -11,7 +11,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir            = "$outputDir"
-                analysis_name     = "dream_rnaseq_gsea"
+                paramset_name     = "dream_rnaseq_gsea"
                 functional_method = null
             }
         }

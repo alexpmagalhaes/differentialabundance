@@ -10,8 +10,8 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                toolsheet           = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
-                analysis_name       = "deseq2"
+                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
+                paramset_name       = "deseq2"
 
                 // input data
                 input                    = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv'
@@ -49,8 +49,8 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                toolsheet           = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
-                analysis_name       = "gsea"
+                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
+                paramset_name       = "gsea"
 
                 // input data
                 input                    = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv'
@@ -88,8 +88,8 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                toolsheet           = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
-                analysis_name       = "gprofiler2"
+                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
+                paramset_name       = "gprofiler2"
 
                 // input data
                 input                    = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv'
