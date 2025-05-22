@@ -334,7 +334,7 @@ def getToolConfigurations() {
 // 2. fill missing params with pipeline params
 def getToolsheetConfigurations() {
     // get toolsheet path
-    def toolsheet_path = params.toolsheet
+    def toolsheet_path = file(params.toolsheet, checkIfExists: true)
 
     // Create temporary schema for validation - with only the fields in the toolsheet
     def schema_path = createToolsheetSchema(toolsheet_path)
@@ -394,7 +394,7 @@ def createToolsheetSchema(toolsheet_path) {
     def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
 
     // Get headers from toolsheet
-    def toolsheet_lines = new File(toolsheet_path).readLines()
+    def toolsheet_lines = toolsheet_path.newInputStream().withReader { it.readLines() }
     def headers = toolsheet_lines[0].split(',')
     // Ensure analysis_name is in headers
     if (!headers.contains('analysis_name')) {
