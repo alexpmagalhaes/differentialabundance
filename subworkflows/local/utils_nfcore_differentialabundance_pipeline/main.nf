@@ -183,11 +183,18 @@ def validateInputParameters(paramsets) {
             if (row.functional_method == 'gsea' && !row.gene_sets_files) {
                 error("GSEA activated but gene set file not specified!")
             } else if (row.functional_method == 'gprofiler2') {
-                if (!row.gprofiler2_token && !row.gprofiler2_organism) {
-                    error("To run gprofiler2, please provide a run token, GMT file or organism!")
+                if (row.gene_sets_files) {
+                    if (row.gene_sets_files.split(",").size() > 1) {
+                        error("gprofiler2 can currently only work with a single gene set file")
+                    }
+                } else {
+                    if (!row.gprofiler2_token && !row.gprofiler2_organism) {
+                        error("To run gprofiler2, please provide a run token, GMT file or organism!")
+                    }
                 }
-                if (row.gene_sets_files && row.gene_sets_files.split(",").size() > 1) {
-                    error("gprofiler2 can currently only work with a single gene set file")
+                // check if provided gprofiler2 background file exists
+                if (row.gprofiler2_background_file && row.gprofiler2_background_file != 'auto') {
+                    file(row.gprofiler2_background_file, checkIfExists: true)
                 }
             }
         }

@@ -535,7 +535,7 @@ workflow DIFFERENTIALABUNDANCE {
         .filter{meta, matrix -> meta.params.functional_method == 'gprofiler2' && meta.params.gprofiler2_background_file == "auto"}
         .mix(
             ch_paramsets
-                .filter{meta -> meta.params.functional_method == 'gprofiler2' && meta.params.gprofiler2_background_file }
+                .filter{meta -> meta.params.functional_method == 'gprofiler2' && meta.params.gprofiler2_background_file && meta.params.gprofiler2_background_file != "auto"}
                 .map{meta -> [meta, file(meta.params.gprofiler2_background_file, checkIfExists: true)]}
         )
         .mix(
@@ -587,17 +587,17 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     // Collect functional analysis results
-    // Note that 'functional_method' is additionally added to the meta in the functional subworkflow.
-    // Remove it to keep a consistent meta structure (needed for join/combine).
-    // Also note that these channels, the meta contain other info apart from the base paramset meta.
-    // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
-    // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
 
     ch_functional_results = DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_plot_html
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_all_enrich, remainder: true)
         .join(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gprofiler2_sub_enrich, remainder: true)
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.gsea_report)
 
+    // Note that 'functional_method' is additionally added to the meta in the functional subworkflow.
+    // Remove it to keep a consistent meta structure (needed for join/combine).
+    // Also note that these channels, the meta contain other info apart from the base paramset meta.
+    // Hence we create a key using the simple paramset meta with only meta.analysis_name and meta.params,
+    // by setting 'use_meta_key' to true. This will facilitate later on to join/combine channels.
     ch_functional_results = prepareModuleOutput(ch_functional_results, ch_paramsets, meta_keys_to_remove=['functional_method'], use_meta_key=true) // key, meta, [ functional results ]
 
     ch_versions = ch_versions
@@ -780,7 +780,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_validated_contrast)     // [meta, contrast file]
         .join(ch_differential_grouped)   // [meta, [differential results and models]]
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
-        .map { [it[0], it.tail().grep().flatten()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
+        .map { [it[0], it.tail().flatten().grep()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
         .multiMap { meta, report_file, files ->
             report_file:
