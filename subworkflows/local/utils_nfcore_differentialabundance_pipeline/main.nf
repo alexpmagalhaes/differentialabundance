@@ -367,11 +367,7 @@ def getParamsheetConfigurations() {
             def cleanparams = row.findAll { k, v -> v != [] } as Map
             // add missing params from pipeline params
             def fullparams = params + cleanparams
-            // sort paramsheet params based on pipeline params order
-            def sortedparams = fullparams.sort { a, b ->
-                    params.keySet().toList().indexOf(a.key) <=> params.keySet().toList().indexOf(b.key)
-                } as Map
-            return sortedparams
+            return fullparams
         }
 }
 
