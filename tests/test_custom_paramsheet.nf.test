@@ -10,7 +10,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
+                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsheet.csv"
                 paramset_name       = "deseq2"
 
                 // input data
@@ -49,7 +49,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsets.csv"
+                paramsheet          = "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/test_custom_paramsheet.csv"
                 paramset_name       = "gsea"
 
                 // input data
