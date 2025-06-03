@@ -343,14 +343,14 @@ def getParamsheetConfigurations() {
     def raw_paramsheet = samplesheetToList(paramsheet_path, schema_path).collect { it -> it[0] }
 
     def paramsheet = raw_paramsheet
-        // remove empty values
-        .collect { row ->
-            return row.findAll { key, value -> value != [] }
-        }
-        // Only keep row matching with paramset name
-        .findAll { row ->
-            return row.paramset_name == params.paramset_name
-        }
+            // remove empty values
+            .collect { row ->
+                return row.findAll { key, value -> value != [] }
+            }
+            // Only keep row matching with paramset name
+            .findAll { row ->
+                return row.paramset_name == params.paramset_name
+            }
 
     if (paramsheet.isEmpty()) {
         if (params.paramset_name) {
@@ -389,9 +389,24 @@ def createParamsheetSchema(paramsheet_path) {
     def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
     def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
 
-    // Get headers from paramsheet
-    def paramsheet_lines = paramsheet_path.newInputStream().withReader { it.readLines() }
-    def headers = paramsheet_lines[0].split(',')
+    // Detect YAML or CSV
+    def is_yaml = paramsheet_path.name.toLowerCase().endsWith('.yaml') || paramsheet_path.name.toLowerCase().endsWith('.yml')
+    def headers
+    if (is_yaml) {
+        // Parse YAML and get union of all keys from all configs
+        def yaml_content = paramsheet_path.text
+        def yaml_parser = new org.yaml.snakeyaml.Yaml()
+        def loaded = yaml_parser.load(yaml_content)
+        def configs = (loaded instanceof List) ? loaded : [loaded]
+        if (!configs || configs.size() == 0) {
+            error("YAML paramsheet is empty or invalid.")
+        }
+        headers = configs.collectMany { it.keySet() }.unique()
+    } else {
+        // CSV logic as before
+        def paramsheet_lines = paramsheet_path.newInputStream().withReader { it.readLines() }
+        headers = paramsheet_lines[0].split(',')
+    }
     // Ensure paramset_name is in headers
     if (!headers.contains('paramset_name')) {
         error("The paramsheet must contain a 'paramset_name' column")
