@@ -9,3 +9,4 @@ report/**/*.png
 *html
 shinyngs_app/**/data.rds
 **/*.png
+.DS_Store
