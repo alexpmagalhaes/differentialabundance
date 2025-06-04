@@ -134,13 +134,14 @@ workflow DIFFERENTIALABUNDANCE {
             def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
             yaml_data.contrasts.collect { contrast ->
                 if (contrast.containsKey('formula')) {
-                    tuple(meta, contrast.id)
+                return null
                 }
                 else if (contrast.containsKey('comparison')) { //  Necessary line for Maxquant to work. Check if it can be simplified to use contrast.id
                     tuple(meta, contrast.comparison[0])
                 }
             }
         }
+            .filter { it != null }
         .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
 
     ch_contrasts_variables_from_other = ch_contrast_variables_input.csv.splitCsv(header:true)
