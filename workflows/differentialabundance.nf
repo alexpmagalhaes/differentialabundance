@@ -799,21 +799,23 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // Render the final report
+    if (!params.skip_reports) {
+        println params.skip_reports
+        RMARKDOWNNOTEBOOK(
+            ch_report_input.report_file,
+            ch_report_input.report_params,
+            ch_report_input.input_files.map{ meta, files -> files }
+        )
 
-    RMARKDOWNNOTEBOOK(
-        ch_report_input.report_file,
-        ch_report_input.report_params,
-        ch_report_input.input_files.map{ meta, files -> files }
-    )
+        // Make a report bundle comprising the markdown document and all necessary
+        // input files
 
-    // Make a report bundle comprising the markdown document and all necessary
-    // input files
+        ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
+                .combine(ch_report_input.input_files, by:0)
+                .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
 
-    ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
-            .combine(ch_report_input.input_files, by:0)
-            .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
-
-    MAKE_REPORT_BUNDLE( ch_bundle_input )
+        MAKE_REPORT_BUNDLE( ch_bundle_input )
+    }
 }
 
 /*
