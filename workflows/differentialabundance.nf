@@ -684,15 +684,28 @@ workflow DIFFERENTIALABUNDANCE {
     // create temporary contrast files with the entries based on the order of the gathered
     // differential results
 
-    // As contrasts having 'formula' and 'comparison' won't have a meta.variable,
-    // and it is needed for "checkListIsSubset()" in make_app_from_files.R
-    // for backwards-compatibility, keep only the channels that have non-empty meta.variable
+    // As contrasts having 'formula' and 'comparison' won't have a variable,
+    // and it is needed for "checkListIsSubset()" in `SHINYNGS` make_app_from_files.R
+    // for backwards-compatibility, keep only the channels that have non-empty variable
+
+    // Filter by those channels containing 'variable', regroup
+    ch_contrasts_filtered = ch_contrasts
+        .transpose()
+        .filter { meta, contrast, variable, reference, target, formula, comparison ->
+            variable?.trim()
+        }
+        .groupTuple()
+
+    ch_differential_results_filtered = ch_differential_results
+        .filter { meta, contrast, results ->
+            contrast.variable?.trim()
+        }
 
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
     ch_differential_with_contrast = ch_shinyngs
-        .join( ch_differential_results.groupTuple() )   // [meta, [meta with contrast], [differential results]]
-        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
+        .join( ch_differential_results_filtered.groupTuple() )   // [meta, [meta with contrast], [differential results]]
+        .join( ch_contrasts_filtered )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
         .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
             // in this way we don't need to harcode the contrast keys
