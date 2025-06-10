@@ -696,7 +696,7 @@ workflow DIFFERENTIALABUNDANCE {
         }
         .groupTuple()
 
-    ch_differential_results_filtered = ch_differential_results
+    ch_differential_results_with_variable = ch_differential_results
         .filter { meta, contrast, results ->
             contrast.variable?.trim()
         }
@@ -704,7 +704,7 @@ workflow DIFFERENTIALABUNDANCE {
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
     ch_differential_with_contrast = ch_shinyngs
-        .join( ch_differential_results_filtered.groupTuple() )   // [meta, [meta with contrast], [differential results]]
+        .join( ch_differential_results_with_variable.groupTuple() )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts_filtered )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
         .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
