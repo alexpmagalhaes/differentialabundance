@@ -347,9 +347,13 @@ def getParamsheetConfigurations() {
             .collect { row ->
                 return row.findAll { key, value -> value != [] }
             }
-            // Only keep row matching with paramset name
             .findAll { row ->
-                return row.paramset_name == params.paramset_name
+                if (params.paramset_name == 'all') {
+                    return true
+                } else {
+                    // Only keep row matching with paramset name(s)
+                    return row.paramset_name in params.paramset_name.tokenize(',')
+                }
             }
 
     if (paramsheet.isEmpty()) {
@@ -488,9 +492,11 @@ def prepareModuleInput(channel, category) {
             def simplifiedparams = getRelevantParams(it[0].params, category)
             // replace meta.params by simplified params
             def simplifiedmeta = it[0] + [params: simplifiedparams]
+            // remove paramset_name from meta, and use as key
+            def key = simplifiedmeta.findAll { k, v -> k != 'paramset_name' }
 
             // use simplified meta as key
-            [simplifiedmeta, it[0].paramset_name, it[1..-1]]  // [ meta, paramset_name, [files] ]
+            [key, it[0].paramset_name, it[1..-1]]  // [ key, paramset_name, [files] ]
         }
         .groupTuple()
         .map { simplifiedmeta, paramset_names, file_lists ->
