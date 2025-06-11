@@ -3,6 +3,9 @@ lint:
     - assets/multiqc_config.yml
   files_unchanged:
     - .github/CONTRIBUTING.md
+    - assets/nf-core-differentialabundance_logo_light.png 
+    - images/nf-core-differentialabundance_logo_light.png
+    - images/nf-core-differentialabundance_logo_dark.png
   multiqc_config: false
   nextflow_config:
     - config_defaults:
