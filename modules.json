@@ -78,12 +78,12 @@
                     "propr/grea": {
                         "branch": "master",
                         "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
-                        "installed_by": ["abundance_differential_filter"]
+                        "installed_by": ["differential_functional_enrichment"]
                     },
                     "propr/propd": {
                         "branch": "master",
                         "git_sha": "25c228dd132d91596e87b636b0e03fd48d4c951a",
-                        "installed_by": ["modules"]
+                        "installed_by": ["abundance_differential_filter"]
                     },
                     "proteus/readproteingroups": {
                         "branch": "master",
