@@ -103,7 +103,7 @@
                     "shinyngs/staticdifferential": {
                         "branch": "master",
                         "git_sha": "d959d6328d104f5afea99b276f109ff5a3819e65",
-                       "installed_by": ["modules"]
+                        "installed_by": ["modules"]
                     },
                     "shinyngs/staticexploratory": {
                         "branch": "master",
