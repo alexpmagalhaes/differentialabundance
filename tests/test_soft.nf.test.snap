@@ -89,9 +89,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.2"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-05-23T13:41:58.709300026"
+        "timestamp": "2025-06-12T12:30:18.116185864"
     },
     "Test soft profile - with toolsheet": {
         "content": [
@@ -183,8 +183,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.2"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-05-23T13:44:06.079663019"
+        "timestamp": "2025-06-12T12:31:40.899514553"
     }
 }

@@ -5,6 +5,7 @@ nextflow_pipeline {
     tag "affy"
     tag "pipeline"
     config "../conf/affy.config"
+    profile "test_affy,affy"
 
     test("Test affy profile") {
 
@@ -95,7 +96,6 @@ nextflow_pipeline {
                 differential_min_fold_change = 1.5
 
                 // Activate GSEA
-                functional_method = 'gsea'
                 gene_sets_files   = 'https://raw.githubusercontent.com/nf-core/test-datasets/differentialabundance/testdata/h.all.v2022.1.Hs.symbols.gmt'
                 gsea_rnd_seed     = '10'
             }
