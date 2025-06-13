@@ -1,0 +1,7 @@
+contrasts:
+  - id: treatment_effect_classic_comparison
+    comparison: ["treatment", "Control", "Treated"]
+
+  - id: interaction_genotype_treatment
+    formula: "~ genotype * treatment"
+    make_contrasts_str: "genotypeWT.treatmentTreated"
