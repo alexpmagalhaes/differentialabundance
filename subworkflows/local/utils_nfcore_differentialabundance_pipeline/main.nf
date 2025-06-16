@@ -11,6 +11,7 @@
 include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
 include { samplesheetToList         } from 'plugin/nf-schema'
+include { validate                  } from 'plugin/nf-schema'
 include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
 include { imNotification            } from '../../nf-core/utils_nfcore_pipeline'
@@ -50,15 +51,6 @@ workflow PIPELINE_INITIALISATION {
         true,
         outdir,
         workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
-    )
-
-    //
-    // Validate parameters and generate parameter summary to stdout
-    //
-    UTILS_NFSCHEMA_PLUGIN (
-        workflow,
-        validate_params,
-        null
     )
 
     //
@@ -313,48 +305,53 @@ def methodsDescriptionText(mqc_methods_yaml) {
 }
 
 // Get configurations based on whether use paramsheet or default params
+// and validate them against the schema.
 def getParamsetConfigurations() {
     // Use paramsheet if paramset_name is provided, otherwise use default params
     def paramsets = (params.paramset_name) ? getParamsheetConfigurations() : getDefaultConfigurations()
     return paramsets.collect { paramset ->
-        // some params are not useful through the pipeline run, remove them for cleaner meta
-        def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
-        // non static params would interfere with cache
-        // remove them from meta to avoid problems with resume
-        def nonstaticparams = ['trace_report_suffix']
-        paramset.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map
-    }
+            // Some params are not useful through the pipeline run.
+            // Remove them for cleaner meta
+            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
+            // Non static params would interfere with cache.
+            // Remove them from meta to avoid problems with resume
+            def nonstaticparams = ['trace_report_suffix']
+            def cleanparamset = paramset.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map
+
+            // Remove null to skip validation on them
+            // This is needed because validate() will fail otherwise
+            def notnullparams = cleanparamset.findAll { k, v -> v != null } as Map
+
+            try {
+                // Validate against schema
+                validate(notnullparams, "${projectDir}/nextflow_schema.json")
+            } catch (e) {
+                // if validation fails, print error message and exit
+                println("Validation failed for paramsheet row: ${row.paramset_name}.")
+                validate(notnullparams, "${projectDir}/nextflow_schema.json")
+            }
+
+            return cleanparamset
+        }
 }
 
 // Get configurations from paramsheet
-// To be able to retrieve a full set of parameters considering both paramsheet rows
-// (highest priority) and pipeline params scope and validate them all together,
-// we need to do the following:
-// 1. get and validate paramsheet configurations
-// 2. fill missing params with pipeline params
 def getParamsheetConfigurations() {
-    // get paramsheet path
+    // Get paramsheet path
     def paramsheet_path = file(params.paramsheet, checkIfExists: true)
 
-    // Create temporary schema for validation - with only the fields in the paramsheet
-    def schema_path = createParamsheetSchema(paramsheet_path)
-
-    // Load paramsheet and validate each row against the transformed schema
-    def raw_paramsheet = samplesheetToList(paramsheet_path, schema_path).collect { it -> it[0] }
+    // Load configs from paramsheet as list of maps
+    def raw_paramsheet = loadYamlConfigs(paramsheet_path)
 
     def paramsheet = raw_paramsheet
-            // remove empty values
-            .collect { row ->
-                return row.findAll { key, value -> value != [] }
+        .findAll { row ->
+            if (params.paramset_name == 'all') {
+                return true
+            } else {
+                // Only keep row matching with paramset name(s)
+                return row.paramset_name in params.paramset_name.tokenize(',')
             }
-            .findAll { row ->
-                if (params.paramset_name == 'all') {
-                    return true
-                } else {
-                    // Only keep row matching with paramset name(s)
-                    return row.paramset_name in params.paramset_name.tokenize(',')
-                }
-            }
+        }
 
     if (paramsheet.isEmpty()) {
         if (params.paramset_name) {
@@ -364,116 +361,27 @@ def getParamsheetConfigurations() {
         }
     }
 
-    // return paramset with paramsheet params (highest priority) and pipeline params
     return paramsheet
         .collect{ row ->
-            // clean empty values with []
-            def cleanparams = row.findAll { k, v -> v != [] } as Map
-            // add missing params from pipeline params
-            def fullparams = params + cleanparams
-            return fullparams
+            // Note that the paramsheet may not contain all the parameters
+            // defined in the pipeline, so we need to merge them
+            def fullparamset = params + row
+            return fullparamset
         }
 }
 
 // Get default configurations from pipeline parameters
 def getDefaultConfigurations() {
-    // replace null by string 'null' for paramset_name to avoid certain problems with null object
-    return [params + [paramset_name: 'null']]
+    return [params]
 }
 
-// Create a temporary schema file for paramsheet validation
-// This schema is derived from the pipeline's nextflow_schema.json by:
-// 1. Reading the paramsheet headers to determine which fields to include
-// 2. Extracting only those properties (also adding them as meta) and
-// required fields from the pipeline schema
-// 3. Creating a schema that allows for an array of objects
-// @return The absolute path to the temporary schema file
-def createParamsheetSchema(paramsheet_path) {
-    // Load and parse pipeline schema
-    def pipeline_schema = new File("${projectDir}/nextflow_schema.json").text
-    def schema_json = new groovy.json.JsonSlurper().parseText(pipeline_schema)
-
-    // Detect YAML or CSV
-    def is_yaml = paramsheet_path.name.toLowerCase().endsWith('.yaml') || paramsheet_path.name.toLowerCase().endsWith('.yml')
-    def headers
-    if (is_yaml) {
-        // Parse YAML and get union of all keys from all configs
-        def yaml_content = paramsheet_path.text
-        def yaml_parser = new org.yaml.snakeyaml.Yaml()
-        def loaded = yaml_parser.load(yaml_content)
-        def configs = (loaded instanceof List) ? loaded : [loaded]
-        if (!configs || configs.size() == 0) {
-            error("YAML paramsheet is empty or invalid.")
-        }
-        headers = configs.collectMany { it.keySet() }.unique()
-    } else {
-        // CSV logic as before
-        def paramsheet_lines = paramsheet_path.newInputStream().withReader { it.readLines() }
-        headers = paramsheet_lines[0].split(',')
-    }
-    // Ensure paramset_name is in headers
-    if (!headers.contains('paramset_name')) {
-        error("The paramsheet must contain a 'paramset_name' column")
-    }
-
-    // Extract all properties and required fields from schema
-    def all_properties = extractPropertiesFromSchema(schema_json)
-    def all_required = extractRequiredFromSchema(schema_json)
-
-    // Restrict properties and required fields to those in the paramsheet
-    def filtered_properties = all_properties.findAll { k, v -> headers.contains(k) }
-    def filtered_required = all_required.findAll { k -> headers.contains(k) }
-
-    // Create samplesheet schema with filtered properties and paramset_name as required
-    def samplesheet_schema = [
-        '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        'title': 'nf-core/differentialabundance - paramsheet schema',
-        'description': 'Schema for validating the paramsheet configuration',
-        'type': 'array',
-        'items': [
-            'type': 'object',
-            'properties': filtered_properties,
-            'required': filtered_required
-        ]
-    ]
-
-    // Write temporary schema file
-    def temp_schema = File.createTempFile("samplesheet_schema", ".json")
-    def schema_string = new groovy.json.JsonBuilder(samplesheet_schema).toPrettyString()
-    temp_schema.text = schema_string
-
-    return temp_schema.absolutePath
-}
-
-// extract properties from schema
-def extractPropertiesFromSchema(schema) {
-    def all_properties = [:]
-    schema.$defs.each { group_name, group_def ->
-        if (group_def.properties) {
-            group_def.properties.each { prop_name, prop_def ->
-                // Add meta field to each property
-                def prop_with_meta = prop_def + [meta: [prop_name]]
-                all_properties[prop_name] = prop_with_meta
-            }
-        }
-    }
-    return all_properties
-}
-
-// extract required fields from schema
-def extractRequiredFromSchema(schema) {
-    def all_required = []
-    schema.$defs.each { group_name, group_def ->
-        if (group_def.required) {
-            group_def.required.each { req_prop ->
-                all_required << req_prop
-            }
-        }
-    }
-    if (!all_required.contains('paramset_name')) {
-        all_required << 'paramset_name'
-    }
-    return all_required
+// Load configurations from yaml file
+def loadYamlConfigs(yaml_path) {
+    def yaml_content = yaml_path.text
+    def yaml_parser = new org.yaml.snakeyaml.Yaml()
+    def loaded = yaml_parser.load(yaml_content)
+    def configs = (loaded instanceof List) ? loaded : [loaded]
+    return configs
 }
 
 // prepare the input for the module by keeping only the relevant params
