@@ -1,0 +1,176 @@
+nextflow_pipeline {
+
+    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (limma)"
+    script "../main.nf"
+    tag "rnaseq_limma"
+    tag "pipeline"
+    profile "test_rnaseq_limma,rnaseq_limma"
+
+    test("Test rnaseq limma profile") {
+
+        when {
+            params {
+                outdir        = "$outputDir"
+
+                study_name                 = 'SRP254919'
+                config_profile_name        = 'RNA-seq profile with limma'
+                config_profile_description = 'Settings for RNA-seq analysis with limma'
+
+                // Input data
+                input                    = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv'
+                matrix                   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.salmon.merged.gene_counts.top1000cov.tsv'
+                transcript_length_matrix = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.spoofed_lengths.tsv'
+                contrasts_yml            = 'https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml'
+
+                // To do: replace this with a cut-down mouse GTF matching the matrix for testing
+                gtf = 'https://ftp.ensembl.org/pub/release-81/gtf/mus_musculus/Mus_musculus.GRCm38.81.gtf.gz'
+
+                // Test dataset is too small for the nsub default value
+                deseq2_vst_nsub = 500
+
+                // Observations
+                observations_id_col   = 'sample'
+                observations_name_col = 'sample'
+
+                // Features
+                features_type          = 'gene'
+                features_id_col        = 'gene_id'
+                features_name_col      = 'gene_name'
+                features_metadata_cols = 'gene_id,gene_name,gene_biotype'
+
+                // Differential options
+                differential_feature_id_column   = "gene_id"
+                differential_feature_name_column = "gene_name"
+                differential_fc_column           = "log2FoldChange"
+                differential_pval_column         = "P.Value"
+                differential_qval_column         = "adj.P.Val"
+
+                // Apply a higher filter to check that the filtering works
+                filtering_min_abundance = 10
+
+                // Exploratory
+                exploratory_assay_names   = "raw,normalised"
+                exploratory_final_assay   = "normalised"
+                exploratory_log2_assays   = 'raw,normalised'
+                exploratory_main_variable = 'contrasts'
+
+                // Activate GSEA
+                functional_method = 'gsea'
+                gene_sets_files   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/gene_set_analysis/mh.all.v2022.1.Mm.symbols.gmt'
+                gsea_rnd_seed     = '10'
+
+                // Report options
+                report_contributors = 'Jane Doe\nDirector of Institute of Microbiology\nUniversity of Smallville;John Smith\nPhD student\nInstitute of Microbiology\nUniversity of Smallville'
+
+                // Other
+                round_digits = 3
+
+            }
+        }
+
+        then {
+            // stable_name: All files + folders in ${params.outdir}/ with a stable name
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            // stable_path: All files in ${params.outdir}/ with stable content
+            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    // Number of successful tasks
+                    workflow.trace.succeeded().size(),
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/collated_versions.yml"),
+                    // All stable path name, with a relative path
+                    stable_name,
+                    // All files with stable contents
+                    stable_path
+                ).match() }
+                )
+        }
+    }
+
+    test("Test rnaseq limma profile - with toolsheet") {
+
+        when {
+            params {
+                outdir              = "$outputDir"
+                paramset_name       = "limma_rnaseq_gsea"
+                differential_method = null
+                functional_method   = null
+
+                study_name                 = 'SRP254919'
+                config_profile_name        = 'RNA-seq profile with limma'
+                config_profile_description = 'Settings for RNA-seq analysis with limma'
+
+                // Input data
+                input                    = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv'
+                matrix                   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.salmon.merged.gene_counts.top1000cov.tsv'
+                transcript_length_matrix = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.spoofed_lengths.tsv'
+                contrasts_yml            = 'https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml'
+
+                // To do: replace this with a cut-down mouse GTF matching the matrix for testing
+                gtf = 'https://ftp.ensembl.org/pub/release-81/gtf/mus_musculus/Mus_musculus.GRCm38.81.gtf.gz'
+
+                // Test dataset is too small for the nsub default value
+                deseq2_vst_nsub = 500
+
+                // Observations
+                observations_id_col   = 'sample'
+                observations_name_col = 'sample'
+
+                // Features
+                features_type          = 'gene'
+                features_id_col        = 'gene_id'
+                features_name_col      = 'gene_name'
+                features_metadata_cols = 'gene_id,gene_name,gene_biotype'
+
+                // Differential options
+                differential_feature_id_column   = "gene_id"
+                differential_feature_name_column = "gene_name"
+                differential_fc_column           = "log2FoldChange"
+                differential_pval_column         = "P.Value"
+                differential_qval_column         = "adj.P.Val"
+
+                // Apply a higher filter to check that the filtering works
+                filtering_min_abundance = 10
+
+                // Exploratory
+                exploratory_assay_names   = "raw,normalised"
+                exploratory_final_assay   = "normalised"
+                exploratory_log2_assays   = 'raw,normalised'
+                exploratory_main_variable = 'contrasts'
+
+                // Activate GSEA
+                //functional_method = 'gsea' // This is set in the toolsheet ../assets/paramsheet.csv
+                gene_sets_files   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/gene_set_analysis/mh.all.v2022.1.Mm.symbols.gmt'
+                gsea_rnd_seed     = '10'
+
+                // Report options
+                report_contributors = 'Jane Doe\nDirector of Institute of Microbiology\nUniversity of Smallville;John Smith\nPhD student\nInstitute of Microbiology\nUniversity of Smallville'
+
+                // Other
+                round_digits = 3
+            }
+        }
+
+        then {
+            // stable_name: All files + folders in ${params.outdir}/ with a stable name
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            // stable_path: All files in ${params.outdir}/ with stable content
+            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    // Number of successful tasks
+                    workflow.trace.succeeded().size(),
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/collated_versions.yml"),
+                    // All stable path name, with a relative path
+                    stable_name,
+                    // All files with stable contents
+                    stable_path
+                ).match() }
+                )
+        }
+    }
+}
