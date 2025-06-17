@@ -12,3 +12,4 @@ shinyngs_app/**/data.rds
 .DS_Store
 *.dds.rld.rds
 **/**/*.dds.rld.rds
+**/**/*.limma.rds
