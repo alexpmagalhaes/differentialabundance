@@ -210,8 +210,8 @@
                 "paramsheet": {
                     "type": "string",
                     "description": "Path to a paramsheet file",
-                    "help_text": "A CSV file that defines a nextflow config per row.",
-                    "pattern": "^\\S+\\.(csv|yaml|yml)$",
+                    "help_text": "A YAML file that defines 1+ nextflow config(s).",
+                    "pattern": "^\\S+\\.(yaml|yml)$",
                     "format": "file-path",
                     "mimetype": "text/csv"
                 }
