@@ -1,21 +1,21 @@
 nextflow_pipeline {
 
-    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (test)"
+    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (dream)"
     script "../main.nf"
-    tag "test"
+    tag "rnaseq_dream"
     tag "pipeline"
-    profile "test"
+    profile "test_rnaseq_dream"
 
-    test("Test profile - with toolsheet") {
+    test("Test rnaseq dream profile - with toolsheet") {
 
         when {
             params {
                 outdir              = "$outputDir"
-                paramset_name       = "deseq2_rnaseq_gsea"
+                paramset_name       = "dream_rnaseq"
                 differential_method = null
                 functional_method   = null
 
-            }
+                }
         }
 
         then {
@@ -39,43 +39,14 @@ nextflow_pipeline {
         }
     }
 
-    test("Test profile - csv contrasts") { // make sure we keep backwards compatibility with csv contrasts
 
-        when {
-            params {
 
-                outdir        = "$outputDir"
-                contrasts_yml = null
-                contrasts     = "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.contrasts.csv"
-
-            }
-        }
-
-        then {
-            // stable_name: All files + folders in ${params.outdir}/ with a stable name
-            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
-            // stable_path: All files in ${params.outdir}/ with stable content
-            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
-            assertAll(
-                { assert workflow.success},
-                { assert snapshot(
-                    // Number of successful tasks
-                    workflow.trace.succeeded().size(),
-                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
-                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_differentialabundance_software_versions.yml"),
-                    // All stable path name, with a relative path
-                    stable_name,
-                    // All files with stable contents
-                    stable_path
-                ).match() }
-                )
-        }
-    }
-    test("Test profile - yml no formula") { // make sure we keep backwards compatibility with yaml contrasts that don't use formula
+    test("Test rnaseq dream profile - complex contrast") {
 
         when {
             params {
                 outdir        = "$outputDir"
+
             }
         }
 
@@ -90,7 +61,6 @@ nextflow_pipeline {
                     // Number of successful tasks
                     workflow.trace.succeeded().size(),
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
-                    removeNextflowVersion("$outputDir/pipeline_info/collated_versions.yml"),
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_differentialabundance_software_versions.yml"),
                     // All stable path name, with a relative path
                     stable_name,
@@ -100,4 +70,5 @@ nextflow_pipeline {
                 )
         }
     }
+
 }
