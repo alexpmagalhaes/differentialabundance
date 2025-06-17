@@ -58,14 +58,16 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         def meta_with_contrast = mergeMaps(meta_contrast, meta_with_method)
         input:
             [ meta_with_contrast, input ]
+        input_without_contrast:
+            [ meta_with_method, input ]
         genesets:
             [ meta_with_contrast, genesets ]
         contrasts_and_samples:
             [ meta_with_contrast, samplesheet ]
         features:
-            [ meta_with_method, featuresheet ]
-        features_cols:
-            [ features_id, features_symbol ]
+            [ [meta_with_method, featuresheet], [features_id, features_symbol] ]
+        meta_key:
+            [ meta_with_method, meta_with_contrast ]
     }
     ch_input_for_gsea = ch_input
         .filter{ it[4] == 'gsea' }
@@ -87,27 +89,43 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // Perform enrichment analysis with GSEA
     // ----------------------------------------------------
 
-    // NOTE that GCT input can be more than 1, if they come from different tools (eg. limma, deseq2).
     // CLS input can be as many as combinations of input x contrasts
-    // Whereas features can be only one file.
+    // But not for GCT and CHIP
 
-    CUSTOM_TABULARTOGSEAGCT(ch_input_for_gsea.input)
-
-    CUSTOM_TABULARTOGSEACLS(ch_input_for_gsea.contrasts_and_samples)
+    CUSTOM_TABULARTOGSEACLS( ch_input_for_gsea.contrasts_and_samples )
 
     CUSTOM_TABULARTOGSEACHIP(
-        ch_input_for_gsea.features.first(),
-        ch_input_for_gsea.features_cols.first()
+        ch_input_for_gsea.features.unique().map{it[0]},
+        ch_input_for_gsea.features.unique().map{it[1]}
     )
 
-    ch_input_for_gsea = CUSTOM_TABULARTOGSEAGCT.out.gct
-        .join(CUSTOM_TABULARTOGSEACLS.out.cls)
+    CUSTOM_TABULARTOGSEAGCT( ch_input_for_gsea.input_without_contrast.unique() )
+
+    // switch the meta by the one with contrast
+    ch_chip_gct = CUSTOM_TABULARTOGSEACHIP.out.chip
+        .join( CUSTOM_TABULARTOGSEAGCT.out.gct )
+        .combine( ch_input_for_gsea.meta_key, by:0 )
+        .map { meta, chip, gct, meta_with_contrast ->
+            return [ meta_with_contrast, chip, gct ]
+        }
+
+    // prepare the input for GSEA
+    ch_input_for_gsea = ch_chip_gct
+        .join( CUSTOM_TABULARTOGSEACLS.out.cls )
         .join( ch_input_for_gsea.genesets )
+        .multiMap { meta, chip, gct, cls, genesets ->
+            input:
+                [ meta, gct, cls, genesets ]
+            contrast:
+                [ meta.reference, meta.target ]
+            chip:
+                [ meta, chip ]
+        }
 
     GSEA_GSEA(
-        ch_input_for_gsea,
-        ch_input_for_gsea.map{ tuple(it[0].reference, it[0].target) },
-        CUSTOM_TABULARTOGSEACHIP.out.chip.first()
+        ch_input_for_gsea.input,
+        ch_input_for_gsea.contrast,
+        ch_input_for_gsea.chip
     )
 
     // ----------------------------------------------------
