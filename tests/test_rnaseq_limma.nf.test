@@ -2,15 +2,16 @@ nextflow_pipeline {
 
     name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (limma)"
     script "../main.nf"
-    profile "+test_rnaseq_limma"
     tag "rnaseq_limma"
     tag "pipeline"
 
-    test("Test rnaseq limma profile") {
+    test("Test rnaseq limma profile - limma_rnaseq_gsea") {
 
         when {
             params {
                 outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "limma_rnaseq_gsea"
             }
         }
 
@@ -35,14 +36,13 @@ nextflow_pipeline {
         }
     }
 
-    test("Test rnaseq limma profile - with toolsheet") {
+    test("Test rnaseq limma profile - limma_rnaseq_gsea,limma_rnaseq_gprofiler2") {
 
         when {
             params {
-                outdir              = "$outputDir"
-                paramset_name       = "limma_rnaseq_gsea"
-                differential_method = null
-                functional_method   = null
+                outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "limma_rnaseq_gsea,limma_rnaseq_gprofiler2"
             }
         }
 
@@ -66,4 +66,5 @@ nextflow_pipeline {
                 )
         }
     }
+
 }

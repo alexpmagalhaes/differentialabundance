@@ -2,15 +2,16 @@ nextflow_pipeline {
 
     name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (affy)"
     script "../main.nf"
-    profile "+test_affy"
     tag "affy"
     tag "pipeline"
 
-    test("Test affy profile") {
+    test("Test affy profile - limma_affy_gsea") {
 
         when {
             params {
-                outdir        = "$outputDir"
+                outdir              = "$outputDir"
+                paramsheet          = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name       = "limma_affy_gsea"
             }
         }
 
@@ -37,14 +38,13 @@ nextflow_pipeline {
         }
     }
 
-    test("Test affy profile - with toolsheet") {
+    test("Test affy profile - limma_affy_gsea,limma_affy_gprofiler2") {
 
         when {
             params {
                 outdir              = "$outputDir"
-                paramset_name       = "limma_affy_gsea"
-                differential_method = null
-                functional_method   = null
+                paramsheet          = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name       = "limma_affy_gsea,limma_affy_gprofiler2"
             }
         }
 

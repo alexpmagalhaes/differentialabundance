@@ -1,0 +1,288 @@
+- paramset_name: deseq2_rnaseq
+  differential_method: deseq2
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  features_id_col: gene_id
+  features_name_col: gene_name
+  features_metadata_cols: gene_id,gene_name,gene_biotype
+
+  exploratory_assay_names: raw,normalised,variance_stabilised
+  exploratory_final_assay: variance_stabilised
+  exploratory_log2_assays: raw,normalised
+
+  differential_file_suffix: ".deseq2.results.tsv"
+  differential_fc_column: log2FoldChange
+  differential_pval_column: pvalue
+  differential_qval_column: padj
+  differential_feature_id_column: gene_id
+  differential_feature_name_column: gene_name
+
+- paramset_name: deseq2_rnaseq_gsea
+  differential_method: deseq2
+  functional_method: gsea
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  features_id_col: gene_id
+  features_name_col: gene_name
+  features_metadata_cols: gene_id,gene_name,gene_biotype
+
+  exploratory_assay_names: raw,normalised,variance_stabilised
+  exploratory_final_assay: variance_stabilised
+  exploratory_log2_assays: raw,normalised
+
+  differential_file_suffix: ".deseq2.results.tsv"
+  differential_fc_column: log2FoldChange
+  differential_pval_column: pvalue
+  differential_qval_column: padj
+  differential_feature_id_column: gene_id
+  differential_feature_name_column: gene_name
+
+- paramset_name: deseq2_rnaseq_gprofiler2
+  differential_method: deseq2
+  functional_method: gprofiler2
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  features_id_col: gene_id
+  features_name_col: gene_name
+  features_metadata_cols: gene_id,gene_name,gene_biotype
+
+  exploratory_assay_names: raw,normalised,variance_stabilised
+  exploratory_final_assay: variance_stabilised
+  exploratory_log2_assays: raw,normalised
+
+  differential_file_suffix: ".deseq2.results.tsv"
+  differential_fc_column: log2FoldChange
+  differential_pval_column: pvalue
+  differential_qval_column: padj
+  differential_feature_id_column: gene_id
+  differential_feature_name_column: gene_name
+
+- paramset_name: limma_rnaseq
+  differential_method: limma
+  limma_use_voom: true
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: limma_rnaseq_gsea
+  differential_method: limma
+  limma_use_voom: true
+  functional_method: gsea
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: limma_rnaseq_gprofiler2
+  differential_method: limma
+  limma_use_voom: true
+  functional_method: gprofiler2
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: dream_rnaseq
+  differential_method: dream
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".dream.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: dream_rnaseq_gsea
+  differential_method: dream
+  functional_method: gsea
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".dream.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: dream_rnaseq_gprofiler2
+  differential_method: dream
+  functional_method: gprofiler2
+
+  study_type: rnaseq
+  study_abundance_type: counts
+
+  observations_id_col: sampleId
+  observations_name_col: sampleId
+
+  differential_file_suffix: ".dream.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Geneid
+  differential_feature_name_column: Geneid
+
+- paramset_name: limma_affy
+  differential_method: limma
+
+  study_type: affy_array
+  study_abundance_type: intensities
+
+  features_id_col: PROBEID
+  features_metadata_cols: PROBEID,ENSEMBL,SYMBOL,GENETYPE
+  features_name_col: SYMBOL
+
+  exploratory_assay_names: raw,normalised
+  exploratory_final_assay: normalised
+  exploratory_log2_assays: null
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: PROBEID
+  differential_feature_name_column: SYMBOL
+
+  shinyngs_build_app: true
+
+- paramset_name: limma_affy_gsea
+  differential_method: limma
+  functional_method: gsea
+
+  study_type: affy_array
+  study_abundance_type: intensities
+
+  features_id_col: PROBEID
+  features_metadata_cols: PROBEID,ENSEMBL,SYMBOL,GENETYPE
+  features_name_col: SYMBOL
+
+  exploratory_assay_names: raw,normalised
+  exploratory_final_assay: normalised
+  exploratory_log2_assays: null
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: PROBEID
+  differential_feature_name_column: SYMBOL
+
+  shinyngs_build_app: true
+
+- paramset_name: limma_affy_gprofiler2
+  differential_method: limma
+  functional_method: gprofiler2
+
+  study_type: affy_array
+  study_abundance_type: intensities
+
+  features_id_col: PROBEID
+  features_metadata_cols: PROBEID,ENSEMBL,SYMBOL,GENETYPE
+  features_name_col: SYMBOL
+
+  exploratory_assay_names: raw,normalised
+  exploratory_final_assay: normalised
+  exploratory_log2_assays: null
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: PROBEID
+  differential_feature_name_column: SYMBOL
+
+  shinyngs_build_app: true
+
+- paramset_name: limma_soft
+  differential_method: limma
+
+  study_type: geo_soft_file
+  study_abundance_type: intensities
+
+  observations_id_col: id
+  observations_name_col: id
+
+  features_id_col: ID
+  features_metadata_cols: ID,ENTREZ_GENE_ID,Gene Symbol,Sequence Type
+  features_name_col: Gene Symbol
+
+  exploratory_assay_names: normalised
+  exploratory_final_assay: normalised
+  exploratory_log2_assays: null
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: ID
+  differential_feature_name_column: Symbol
+
+- paramset_name: limma_maxquant
+  differential_method: limma
+
+  study_type: maxquant
+  study_abundance_type: intensities
+
+  features_id_col: Majority protein IDs
+  features_name_col: Majority protein IDs
+  features_metadata_cols: Majority protein IDs
+  features_type: protein
+
+  exploratory_assay_names: raw,normalised
+  exploratory_final_assay: normalised
+  exploratory_log2_assays: null
+
+  differential_file_suffix: ".limma.results.tsv"
+  differential_fc_column: logFC
+  differential_pval_column: P.Value
+  differential_qval_column: adj.P.Val
+  differential_feature_id_column: Majority protein IDs
+  differential_feature_name_column: Majority protein IDs
+
+  proteus_measurecol_prefix: LFQ intensity
+
+  shinyngs_build_app: false
