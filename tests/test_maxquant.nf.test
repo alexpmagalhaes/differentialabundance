@@ -14,8 +14,7 @@ nextflow_pipeline {
                 study_name                 = 'PXD043349'
                 config_profile_name        = 'MaxQuant test profile'
                 config_profile_description = 'MaxQuant test dataset to check pipeline function'
-
-                }
+            }
         }
 
         then {

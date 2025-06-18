@@ -13,7 +13,6 @@ nextflow_pipeline {
             params {
                 outdir                     = "$outputDir"
                 study_name                 = 'GSE50790'
-
             }
         }
 

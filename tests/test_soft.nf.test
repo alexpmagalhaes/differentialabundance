@@ -13,7 +13,7 @@ nextflow_pipeline {
 
         when {
             params {
-                outdir                     = "$outputDir"
+                outdir              = "$outputDir"
 
             }
         }
@@ -41,11 +41,7 @@ nextflow_pipeline {
 
     test("Test soft profile - with toolsheet") {
 
-
-
         when {
-
-
             params {
                 outdir              = "$outputDir"
                 paramset_name       = "limma_soft"

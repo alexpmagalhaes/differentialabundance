@@ -14,7 +14,6 @@ nextflow_pipeline {
                 paramset_name       = "deseq2_rnaseq_gsea"
                 differential_method = null
                 functional_method   = null
-
             }
         }
 
@@ -43,11 +42,9 @@ nextflow_pipeline {
 
         when {
             params {
-
                 outdir        = "$outputDir"
                 contrasts_yml = null
                 contrasts     = "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.contrasts.csv"
-
             }
         }
 

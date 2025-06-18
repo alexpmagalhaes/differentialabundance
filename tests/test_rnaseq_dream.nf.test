@@ -14,8 +14,7 @@ nextflow_pipeline {
                 paramset_name       = "dream_rnaseq"
                 differential_method = null
                 functional_method   = null
-
-                }
+           }
         }
 
         then {
@@ -40,13 +39,10 @@ nextflow_pipeline {
     }
 
 
-
     test("Test rnaseq dream profile - complex contrast") {
-
         when {
             params {
                 outdir        = "$outputDir"
-
             }
         }
 
