@@ -151,32 +151,6 @@
   # Other
   round_digits: 3
 
-- paramset_name: dream_rnaseq_gprofiler2
-  include: paramsheet/dream_rnaseq_gprofiler2
-
-  study_name: SRP254919
-
-  # Input data
-  input: https://github.com/nf-core/test-datasets/raw/differentialabundance/modules_testdata/variancepartition_dream/metadata.tsv
-  matrix: https://github.com/nf-core/test-datasets/raw/differentialabundance/modules_testdata/variancepartition_dream/counts.tsv
-  contrasts_yml: https://github.com/nf-core/test-datasets/raw/differentialabundance/testdata/formula_contrasts/rnaseq_complex_contrast.yaml
-  gtf: https://ftp.ensembl.org/pub/release-81/gtf/mus_musculus/Mus_musculus.GRCm38.81.gtf.gz
-
-  # Filtering
-  filtering_min_abundance: 10
-
-  # Report options
-  report_contributors: |-
-    Jane Doe
-    Director of Institute of Microbiology
-    University of Smallville;John Smith
-    PhD student
-    Institute of Microbiology
-    University of Smallville
-
-  # Other
-  round_digits: 3
-
 - paramset_name: limma_affy
   include: paramsheet/limma_affy
 

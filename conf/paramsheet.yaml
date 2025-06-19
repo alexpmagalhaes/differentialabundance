@@ -68,14 +68,6 @@
   differential_pval_column: P.Value
   differential_qval_column: adj.P.Val
 
-- paramset_name: dream_rnaseq_gsea
-  include: paramsheet/dream_rnaseq
-  functional_method: gsea
-
-- paramset_name: dream_rnaseq_gprofiler2
-  include: paramsheet/dream_rnaseq
-  functional_method: gprofiler2
-
 - paramset_name: limma_affy
   differential_method: limma
 
