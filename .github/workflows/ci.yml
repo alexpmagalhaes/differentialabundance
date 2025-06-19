@@ -45,7 +45,7 @@ jobs:
           - "soft"
           - "rnaseq_limma"
           - "rnaseq_dream"
-          - "custom_paramsheet"
+          - "all"
         compute_profile:
           - "docker"
           - "singularity"
