@@ -382,11 +382,8 @@ def loadYamlConfigs(yaml_path) {
 
     // Resolve includes for each config
     configs = configs.collect { config ->
-        println('-------------------')
-        println(config.paramset_name)
         config = resolveIncludes(config)
         config.remove('include')
-        println(config)
         return config
     }
 
@@ -400,7 +397,6 @@ def resolveIncludes(config) {
         def includePath = config.include.split('/')
         def includeFile = includePath[0]
         def paramsetName = includePath[1]
-        println(paramsetName)
 
         // Load the included YAML file
         def includeFilePath = file("${projectDir}/conf/${includeFile}.yaml")
