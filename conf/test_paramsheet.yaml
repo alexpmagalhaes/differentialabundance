@@ -1,57 +1,3 @@
-- paramset_name: deseq2_rnaseq
-  differential_method: deseq2
-
-  study_name: SRP254919
-  study_type: rnaseq
-  study_abundance_type: counts
-
-  # Input data
-  input: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv
-  matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.salmon.merged.gene_counts.top1000cov.tsv
-  transcript_length_matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.spoofed_lengths.tsv
-  contrasts_yml: https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml
-  gtf: https://ftp.ensembl.org/pub/release-81/gtf/mus_musculus/Mus_musculus.GRCm38.81.gtf.gz
-
-  # Features
-  features_id_col: gene_id
-  features_name_col: gene_name
-  features_metadata_cols: gene_id,gene_name,gene_biotype
-
-  # Observations
-  observations_id_col: sample
-  observations_name_col: sample
-
-  # Exploratory plots
-  exploratory_assay_names: raw,normalised,variance_stabilised
-  exploratory_final_assay: variance_stabilised
-  exploratory_log2_assays: raw,normalised
-  exploratory_main_variable: contrasts
-  deseq2_vst_nsub: 500
-
-  # Differential analysis params
-  differential_file_suffix: ".deseq2.results.tsv"
-  differential_fc_column: log2FoldChange
-  differential_pval_column: pvalue
-  differential_qval_column: padj
-  differential_feature_id_column: gene_id
-  differential_feature_name_column: gene_name
-
-  # Filtering
-  filtering_min_abundance: 10
-
-  # Report options
-  report_contributors: |-
-    Jane Doe
-    Director of Institute of Microbiology
-    University of Smallville;John Smith
-    PhD student
-    Institute of Microbiology
-    University of Smallville
-
-  # Other
-  round_digits: 3
-  gsea_rnd_seed: "10"
-
 - paramset_name: deseq2_rnaseq_gsea
   differential_method: deseq2
   functional_method: gsea
@@ -150,60 +96,6 @@
 
   # Filtering
   filtering_min_abundance: 10
-
-  # Report options
-  report_contributors: |-
-    Jane Doe
-    Director of Institute of Microbiology
-    University of Smallville;John Smith
-    PhD student
-    Institute of Microbiology
-    University of Smallville
-
-  # Other
-  round_digits: 3
-
-- paramset_name: limma_rnaseq
-  differential_method: limma
-  limma_use_voom: true
-
-  study_name: SRP254919
-  study_type: rnaseq
-  study_abundance_type: counts
-
-  # Input data
-  input: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv
-  matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.salmon.merged.gene_counts.top1000cov.tsv
-  transcript_length_matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.spoofed_lengths.tsv
-  contrasts_yml: https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml
-  gtf: https://ftp.ensembl.org/pub/release-81/gtf/mus_musculus/Mus_musculus.GRCm38.81.gtf.gz
-
-  # Features
-  features_type: gene
-  features_id_col: gene_id
-  features_name_col: gene_name
-  features_metadata_cols: gene_id,gene_name,gene_biotype
-
-  # Observations
-  observations_id_col: sample
-  observations_name_col: sample
-
-  # Differential analysis params
-  differential_file_suffix: ".limma.results.tsv"
-  differential_fc_column: logFC
-  differential_pval_column: P.Value
-  differential_qval_column: adj.P.Val
-  differential_feature_id_column: gene_id
-  differential_feature_name_column: gene_name
-
-  # Filtering
-  filtering_min_abundance: 10
-
-  # Exploratory
-  exploratory_assay_names: raw,normalised
-  exploratory_final_assay: normalised
-  exploratory_log2_assays: raw,normalised
-  exploratory_main_variable: contrasts
 
   # Report options
   report_contributors: |-
@@ -647,7 +539,6 @@
   # Input data
   input: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv
   matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.salmon.merged.gene_counts.top1000cov.tsv
-  transcript_length_matrix: https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.spoofed_lengths.tsv
   contrasts_yml: https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/differentialabundance/testdata/SRP254919.contrasts.yaml
 
   # Features
@@ -676,6 +567,3 @@
 
   # Filtering
   filtering_min_abundance: 10
-
-  # Other
-  round_digits: 3
