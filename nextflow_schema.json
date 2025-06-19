@@ -211,7 +211,7 @@
                     "type": "string",
                     "description": "Path to a paramsheet file",
                     "help_text": "A YAML file that defines 1+ nextflow config(s).",
-                    "pattern": "^\\S+\\.(yaml|yml)$",
+                    "pattern": "^\\S+\\.yaml$",
                     "format": "file-path",
                     "mimetype": "text/csv"
                 }

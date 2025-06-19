@@ -8,9 +8,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
 include { validate                  } from 'plugin/nf-schema'
 include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
@@ -327,7 +325,7 @@ def getParamsetConfigurations() {
                 validate(notnullparams, "${projectDir}/nextflow_schema.json")
             } catch (e) {
                 // if validation fails, print error message and exit
-                println("Validation failed for paramsheet row: ${row.paramset_name}.")
+                println("Validation failed for paramsheet row: ${paramset.paramset_name}. Error: ${e.message}")
                 validate(notnullparams, "${projectDir}/nextflow_schema.json")
             }
 
@@ -381,7 +379,51 @@ def loadYamlConfigs(yaml_path) {
     def yaml_parser = new org.yaml.snakeyaml.Yaml()
     def loaded = yaml_parser.load(yaml_content)
     def configs = (loaded instanceof List) ? loaded : [loaded]
+
+    // Resolve includes for each config
+    configs = configs.collect { config ->
+        println('-------------------')
+        println(config.paramset_name)
+        config = resolveIncludes(config)
+        config.remove('include')
+        println(config)
+        return config
+    }
+
     return configs
+}
+// Helper function to resolve includes recursively
+def resolveIncludes(config) {
+    def yaml_parser = new org.yaml.snakeyaml.Yaml()
+
+    if (config.containsKey('include')) {
+        def includePath = config.include.split('/')
+        def includeFile = includePath[0]
+        def paramsetName = includePath[1]
+        println(paramsetName)
+
+        // Load the included YAML file
+        def includeFilePath = file("${projectDir}/conf/${includeFile}.yaml")
+        if (!includeFilePath.exists()) {
+            error("Included file '${includeFilePath}' not found.")
+        }
+        def includeContent = yaml_parser.load(includeFilePath.text)
+        def includeConfigs = (includeContent instanceof List) ? includeContent : [includeContent]
+
+        // Find the paramset with the given name
+        def includedConfig = includeConfigs.find { it.paramset_name == paramsetName }
+        if (!includedConfig) {
+            error("Paramset '${paramsetName}' not found in included file '${includeFilePath}'.")
+        }
+
+        // Recursively resolve includes in the included config
+        includedConfig = resolveIncludes(includedConfig)
+
+        // Merge configs
+        includedConfig.putAll(config)
+        config =  includedConfig
+    }
+    return config
 }
 
 // prepare the input for the module by keeping only the relevant params
