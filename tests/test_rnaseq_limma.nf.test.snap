@@ -494,10 +494,6 @@
                 "tables/processed_abundance/all.normalised_counts.tsv"
             ],
             [
-                "full_model_with_interactions_SRP254919.MArrayLM.limma.rds:md5,ae2905a6b60971b1973de7e08629b36f",
-                "interaction_genotype_treatment_SRP254919.MArrayLM.limma.rds:md5,49743cd373136c72b62257b2b8c8671d",
-                "treatment_effect_classic_comparison_SRP254919.MArrayLM.limma.rds:md5,e56db153561e1249c21e2e9c07ad100c",
-                "treatment_plus_genotype_SRP254919.MArrayLM.limma.rds:md5,4b606ccefb5f07dbba1f3da25d631440",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
                 "gene_sets_treatment_effect_classic_comparison_SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_ADIPOGENESIS.tsv:md5,5296126cd4428fbf51c0fe2287adad1b",
@@ -546,22 +542,14 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "full_model_with_interactions_SRP254919.limma.results.tsv:md5,d9a97a42238ddbae2b137fc3df939dc4",
-                "full_model_with_interactions_SRP254919.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "interaction_genotype_treatment_SRP254919.limma.results.tsv:md5,8855023f8424c83aa1746ce0a9c0af51",
-                "interaction_genotype_treatment_SRP254919.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "treatment_effect_classic_comparison_SRP254919.limma.results.tsv:md5,e16e74a38c9bb790fa1ebe1e7c11c3fc",
-                "treatment_effect_classic_comparison_SRP254919.limma.results_filtered.tsv:md5,0bfc9215edc6aad064c3ce6abc81bfce",
-                "treatment_plus_genotype_SRP254919.limma.results.tsv:md5,cd800e4258dca0e683c02614f2980f3e",
-                "treatment_plus_genotype_SRP254919.limma.results_filtered.tsv:md5,1370b6954019867882ca8f3011b3598f",
                 "all.normalised_counts.tsv:md5,ebe30cc05e93aea1f04ee8598ec62c94"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-05T18:28:09.613652925"
+        "timestamp": "2025-06-23T19:02:51.473979373"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
