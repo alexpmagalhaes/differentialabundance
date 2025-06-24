@@ -89,14 +89,14 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // LIMMA_NORM directly. It internally runs normalization + DE analysis.
 
     LIMMA_NORM(
-        norm_inputs.contrasts_for_norm.filter{it[0].differential_method == 'limma'},
+        norm_inputs.contrasts_for_norm_with_formula.filter{it[0].differential_method == 'limma'},
         norm_inputs.samples_and_matrix.filter{it[0].differential_method == 'limma'}
     )
 
     ch_versions = ch_versions.mix(LIMMA_NORM.out.versions.first())
 
     LIMMA_DIFFERENTIAL(
-        inputs.contrasts_for_diff.filter{ it[0].differential_method == 'limma' },
+        inputs.contrasts_for_diff_with_formula.filter{ it[0].differential_method == 'limma' },
         inputs.samples_and_matrix.filter{ it[0].differential_method == 'limma' }
     )
 
@@ -114,7 +114,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     // DESEQ2_NORM directly. It internally runs normalization + DE analysis.
 
     DESEQ2_NORM(
-        norm_inputs.contrasts_for_norm_with_formula.filter{it[0].differential_method == 'deseq2'},
+        norm_inputs.contrasts_for_norm.filter{it[0].differential_method == 'deseq2'},
         norm_inputs.samples_and_matrix.filter{it[0].differential_method == 'deseq2'},
         norm_inputs.control_features.filter{it[0].differential_method == 'deseq2'},
         norm_inputs.transcript_length.filter{it[0].differential_method == 'deseq2'}
@@ -123,7 +123,7 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
     ch_versions = ch_versions.mix(DESEQ2_NORM.out.versions.first())
 
     DESEQ2_DIFFERENTIAL(
-        inputs.contrasts_for_diff_with_formula.filter{it[0].differential_method == 'deseq2'},
+        inputs.contrasts_for_diff.filter{it[0].differential_method == 'deseq2'},
         inputs.samples_and_matrix.filter{it[0].differential_method == 'deseq2'},
         inputs.control_features.filter{it[0].differential_method == 'deseq2'},
         inputs.transcript_length.filter{it[0].differential_method == 'deseq2'}
@@ -199,8 +199,8 @@ workflow ABUNDANCE_DIFFERENTIAL_FILTER {
                     stat_column: 'adj.P.Val', stat_cardinality: '<='
                 ],
                 'propd' : [
-                    fc_column: 'lfc', fc_cardinality: '>=',
-                    stat_column: 'weighted_connectivity', stat_cardinality: '>='
+                    fc_column: 'LFC', fc_cardinality: '>=',
+                    stat_column: 'significant', stat_cardinality: '<='
                 ],
                 'dream' : [
                     fc_column: 'logFC', fc_cardinality: '>=',
