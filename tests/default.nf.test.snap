@@ -511,13 +511,9 @@
                 "tables/processed_abundance/all.vst.tsv"
             ],
             [
-                "full_model_with_interactions_SRP254919.dds.rld.rds:md5,2eee2f25cb649b6cce558b72d0224f07",
                 "full_model_with_interactions_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
-                "interaction_genotype_treatment_SRP254919.dds.rld.rds:md5,a9aa08081c7bbc9410dab4bb67955a09",
                 "interaction_genotype_treatment_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
-                "treatment_effect_classic_comparison_SRP254919.dds.rld.rds:md5,849507173fa03075d9220b7993271f14",
                 "treatment_effect_classic_comparison_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
-                "treatment_plus_genotype_SRP254919.dds.rld.rds:md5,f4d17cf20cc46812a9346527b2057e8b",
                 "treatment_plus_genotype_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
@@ -542,9 +538,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-13T21:06:13.284914544"
+        "timestamp": "2025-06-24T15:45:46.414198829"
     },
     "Test profile - yml no formula": {
         "content": [
