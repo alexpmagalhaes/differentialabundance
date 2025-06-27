@@ -1359,6 +1359,9 @@
     "properties": {
         "skip_reports": {
             "type": "boolean"
+        },
+        "report_grouping_variable": {
+            "type": "string"
         }
     }
 }
