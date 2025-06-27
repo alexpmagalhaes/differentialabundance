@@ -789,6 +789,27 @@ workflow DIFFERENTIALABUNDANCE {
         .groupTuple()                                 // [ meta, [meta with contrast], [functional results] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [functional results] ]
 
+// If users provide a `report_grouping_variable` then update the contrasts file 'variable' column with that information
+    if (params.report_grouping_variable) {
+        ch_validated_contrast = ch_validated_contrast
+            .splitCsv(header: true, sep: '\t')
+            .map { meta, row ->
+                def variable = row.variable?.trim()
+                if (!variable || variable == 'NA') {
+                    row.variable = params.report_grouping_variable
+                }
+                [meta, row]
+            }
+            .groupTuple()
+            .map { meta, rows ->
+                def header = rows[0].keySet().join('\t')
+                def lines = rows.collect { it.values().join('\t') }
+                def content = ([header] + lines).join('\n')
+                def outFile = file("${workflow.workDir}/${meta.id ?: meta.paramset_name}_contrast_variable_filled.tsv")
+                outFile.text = content
+                [meta, outFile]
+            }
+    }
     // Prepare input for report generation
     // Each paramset will generate one markdown report by gathering all the files created with the same paramset
 
