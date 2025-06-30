@@ -796,16 +796,17 @@ workflow DIFFERENTIALABUNDANCE {
             .map { meta, row ->
                 def variable = row.variable?.trim()
                 if (!variable || variable == 'NA') {
-                    row.variable = params.report_grouping_variable
+                    row.grouping = (!variable || variable == 'NA') ? params.report_grouping_variable : ''
                 }
+                if (!row.containsKey('grouping')) row.grouping = ''
                 [meta, row]
             }
             .groupTuple()
             .map { meta, rows ->
-                def header = rows[0].keySet().join('\t')
+                def header = (rows[0].keySet() + 'grouping').unique().join('\t')
                 def lines = rows.collect { it.values().join('\t') }
                 def content = ([header] + lines).join('\n')
-                def outFile = file("${workflow.workDir}/${meta.id ?: meta.paramset_name}_contrast_variable_filled.tsv")
+                def outFile = file("${workflow.workDir}/${meta.id ?: meta.paramset_name}_contrast_variable_grouping.tsv")
                 outFile.text = content
                 [meta, outFile]
             }

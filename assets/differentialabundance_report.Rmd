@@ -285,11 +285,18 @@ if (! 'id' %in% colnames(contrasts)){
     contrasts$id <- apply(contrasts, 1, paste, collapse='_')
 }
 
+# If 'variable' is empty, then use 'grouping' column
+contrasts$variable_or_grouping <- ifelse(
+  is.na(contrasts$variable) | contrasts$variable == "",
+  contrasts$grouping,
+  contrasts$variable
+)
+
 # Identify informative variables- those with a number of values greater than 1
 # but less than N, with N being the number of observations. Make sure contrast
 # variables are first in the list
 
-informative_variables <- unique(c(contrasts$variable, chooseGroupingVariables(observations)))
+informative_variables <- unique(c(contrasts$variable_or_grouping, chooseGroupingVariables(observations)))
 
 # Remove any informative variables that group observations the same way
 informative_variables <- informative_variables[ ! duplicated(lapply(structure(informative_variables, names= informative_variables), function(x) as.numeric(factor(observations[[x]], levels=unique(observations[[x]])))))]
@@ -333,7 +340,7 @@ informative_variables <- rownames(pca_vs_meta)[order(pca_vs_meta[,1])]
 
 # Pick the variable used for coloring purposes etc
 if (params$exploratory_main_variable == 'contrasts'){
-    main_grouping_variable <- contrasts$variable[1]
+    main_grouping_variable <- contrasts$variable_or_grouping[1]
 }else if (params$exploratory_main_variable == 'auto_pca'){
     main_grouping_variable <- informative_variables[1]
 }else{
@@ -439,7 +446,7 @@ names(differential_results) <- differential_names
 # Function to make friendly contrast name from contrast components, including optional bits
 
 name_contrast <- function(i){
-    contrast_name <- paste(contrasts$target[i], 'versus', contrasts$reference[i], 'in', contrasts$variable[i])
+    contrast_name <- paste(contrasts$target[i], 'versus', contrasts$reference[i], 'in', contrasts$variable_or_grouping[i])
     contrast_vals <- contrasts[i,]
     populated <- colnames(contrasts)[! (is.na(contrast_vals) | contrast_vals == '' | is.null(contrast_vals))]
     optional <- setdiff(populated, c('id', 'target', 'reference', 'variable'))
@@ -504,7 +511,7 @@ cat(paste0("\n## ", ucfirst(params$observations_type), "s\n"))
 A summary of `r params$observations_type` metadata is below:
 
 ```{r, echo=FALSE, results='asis'}
-display_columns <- union(c(params$observations_id_col, unique(contrasts$variable)), informative_variables)
+display_columns <- union(c(params$observations_id_col, unique(contrasts$variable_or_grouping)), informative_variables)
 minimal_fetchngs_cols <- c('sample', 'sample_title', 'strandedness', 'library_strategy', 'scientific_name')
 
 # If the data came via fetchngs then we can infer a couple of things about the most useful columns
@@ -546,7 +553,7 @@ contrasts_to_print$model <- sapply(contrasts_to_print$Id, function(id) {
 
 print( htmltools::tagList(datatable(contrasts_to_print, caption = paste0("Table of contrasts"), rownames = FALSE, options = list(dom = ifelse(nrow(contrasts_to_print) > 10, 'tp', 't'))) ))
 ```
-Note: For formula-based contrasts without a 'variable', the column was automatically filled with `params$report_grouping_variable` to support grouping in plots and reports.
+Note: For formula-based contrasts without a 'variable', the column 'grouping' was automatically filled with `params$report_grouping_variable` to support grouping in plots and reports.
 
 # Results
 
