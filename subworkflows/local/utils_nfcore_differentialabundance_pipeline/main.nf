@@ -206,23 +206,6 @@ def validateInputParameters(paramsets) {
         if (!(row.contrasts_yml || row.contrasts)) {
             error("Either '--contrasts' and '--contrasts_yml' must be set. Please specify one of these options to define contrasts.")
         }
-
-        if (row.contrasts_yml && !row.skip_reports && !row.report_grouping_variable) {
-            log.warn """
-                    =======================================================================
-                    You are using a formula-based contrasts YAML file (--contrasts_yml)
-                    but have not provided --report_grouping_variable.
-
-                    This can cause errors when rendering reports if no grouping variable
-                    is available in the contrasts table (the 'variable' column is empty).
-
-                    Please specify a grouping variable to use in reports, e.g.:
-                        --report_grouping_variable 'treatment'
-
-                    Or set --skip_reports if you do not need reporting.
-                    =======================================================================
-                    """
-        }
     }
 }
 
