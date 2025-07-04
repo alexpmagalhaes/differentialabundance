@@ -690,7 +690,7 @@ workflow DIFFERENTIALABUNDANCE {
     differential_with_contrast = ch_shinyngs
         .join( ch_differential_results
             .filter { meta, contrast, results -> contrast.variable?.trim() }
-            .groupTuple() 
+            .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
         .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
