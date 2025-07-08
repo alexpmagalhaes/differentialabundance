@@ -676,9 +676,6 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Make (and optionally deploy) the shinyngs app
 
-    ch_shinyngs = ch_paramsets
-        .filter{ it.params.shinyngs_build_app }
-
     // To prepare the input for shinyngs app we need to first make sure that the differential
     // results are parsed in the same order as the contrast file
     // To do so, as we cannot rely on the order of the channels as they are asynchronous, we
@@ -687,7 +684,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
-    differential_with_contrast = ch_shinyngs
+    differential_with_contrast = ch_paramsets
         .join( ch_differential_results
             .filter { meta, contrast, results -> contrast.variable?.trim() }
             .groupTuple()
@@ -715,7 +712,7 @@ workflow DIFFERENTIALABUNDANCE {
         }
         // parse the channel to have the contrast file with the corresponding meta
         .map { [it.baseName, it] }
-        .join( ch_shinyngs.map { [it.paramset_name, it] } )
+        .join( ch_paramsets.map { [it.paramset_name, it] } )
         .map { paramset_name, contrast_file, meta ->
             [meta, contrast_file]
         }
@@ -724,12 +721,14 @@ workflow DIFFERENTIALABUNDANCE {
     ch_shinyngs_input = differential_with_contrast.differential_results
         .join(ch_contrasts_sorted)
         .join(ch_all_matrices)
+        .filter { row ->
+            row[0].params.shinyngs_build_app
+        }
         .multiMap { meta, meta_with_contrast, differential_results, contrast_file, samplesheet, features, matrices ->
             matrices: [meta, samplesheet, features, matrices]
             contrasts_and_differential: [meta, contrast_file, differential_results]
             contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
         }
-
     SHINYNGS_APP(
         ch_shinyngs_input.matrices,    // meta, samples, features, [  matrices ]
         ch_shinyngs_input.contrasts_and_differential,   // meta, contrast file, [ differential results ]
