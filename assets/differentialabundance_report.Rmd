@@ -220,7 +220,7 @@ report_subtitle <- paste0(ifelse(is.null(params$report_author), '', paste0('By '
 ```
 
 ---
-title:  "<img src=\"`r file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`r report_title`"
+title:  "<img id=\"logo\" src=\"`r file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`r report_title`"
 subtitle: `r report_subtitle`
 ---
 \

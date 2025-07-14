@@ -453,6 +453,8 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     ch_filtered_matrix = prepareModuleOutput(CUSTOM_MATRIXFILTER.out.filtered, ch_paramsets)
+    
+    ch_filtered_matrix.map{meta, matrix -> matrix}.dump(tag:'ch_filtered_matrix wo meta') // meta, filtered matrix file
 
     // ========================================================================
     // Differential analysis
@@ -543,6 +545,9 @@ workflow DIFFERENTIALABUNDANCE {
                 .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
                 .map{meta -> [meta, []]}
         )
+
+ 
+    ch_background.map{meta, matrix -> matrix}.dump(tag:'ch_background matrix wo meta map')
 
     // Prepare input for functional analysis
 

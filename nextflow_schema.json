@@ -15,15 +15,15 @@
                 "study_name": {
                     "type": "string",
                     "default": "study",
-                    "description": "A string to identify results in the output directory",
-                    "help_text": "Also used as an identifier in some processes",
+                    "description": "A string identifier used to name result files in the output directory",
+                    "help_text": "String must not contain any special characters, i.e. spaces or underscores. String is also used as an identifier in some processes.",
                     "fa_icon": "fas fa-signature"
                 },
                 "study_type": {
                     "type": "string",
                     "default": "rnaseq",
                     "description": "A string identifying the technology used to produce the data",
-                    "help_text": "Currently 'rnaseq' or 'affy_array' may be specified.",
+                    "help_text": "Currently one of 'rnaseq', 'affy_array' (microarray), 'maxquant' (proteomics) or 'geo_soft_file' [GEO SOFT](https://www.ncbi.nlm.nih.gov/geo/info/soft.html) may be specified.",
                     "enum": ["rnaseq", "affy_array", "maxquant", "geo_soft_file"],
                     "fa_icon": "far fa-keyboard"
                 },
@@ -34,14 +34,14 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.(csv|tsv)$",
                     "schema": "assets/schema_input.json",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/differentialabundance/usage#samplesheet-input).",
+                    "description": "Path to CSV/TSV file containing information about the samples in the experiment.",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a CSV/TSV file with 3 columns, and a header row. See [usage docs](https://nf-co.re/differentialabundance/usage#observations-samplesheet-input).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "contrasts": {
                     "type": "string",
-                    "description": "A CSV file describing sample contrasts",
-                    "help_text": "This file is used to define groups of samples from 'input' to compare.  It must contain at least the columns 'variable', 'reference', 'target' and 'blocking', where 'variable' is a column in the input sample sheet, 'reference' and 'target' are values in that column, and blocking is a colon-separated list of additional 'blocking' variables (can be an empty string)",
+                    "description": "A CSV/TSV file describing sample contrasts",
+                    "help_text": "This file is used to define groups of samples from 'input' to compare. It must contain at least the columns 'variable', 'reference', 'target' and 'blocking', where 'variable' is a column in the input sample sheet, 'reference' and 'target' are values in that column, and blocking is a colon-separated list of additional 'blocking' variables (can be an empty string)",
                     "pattern": "^\\S+\\.(csv|tsv)$",
                     "format": "file-path",
                     "mimetype": "text/csv",
@@ -67,6 +67,7 @@
                     "type": "string",
                     "default": "counts",
                     "description": "Type of abundance measure used, platform-dependent",
+                    "enum": ["counts", "intensities"],
                     "fa_icon": "fas fa-keyboard"
                 },
                 "round_digits": {
@@ -95,7 +96,7 @@
                 "transcript_length_matrix": {
                     "type": "string",
                     "fa_icon": "fas fa-border-all",
-                    "description": "(RNA-seq only): optional transcript length matrix with samples and genes as the abundance matrix",
+                    "description": "(RNA-seq only): optional transcript/gene length matrix with samples and transcript_ids/gene_ids as in the abundance matrix",
                     "help_text": "If provided, this file willl be used to provide transcript lengths to DESeq2 to model length bias across samples"
                 },
                 "affy_cel_files_archive": {
@@ -213,7 +214,8 @@
                     "help_text": "A CSV file that defines a nextflow config per row.",
                     "pattern": "^\\S+\\.csv$",
                     "format": "file-path",
-                    "mimetype": "text/csv"
+                    "mimetype": "text/csv",
+                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/paramsheet.csv"
                 }
             }
         },
@@ -355,13 +357,13 @@
             "properties": {
                 "filtering_min_abundance": {
                     "type": "number",
-                    "default": 1,
+                    "default": 1.0,
                     "description": "Minimum abundance value",
                     "fa_icon": "fas fa-compress-alt"
                 },
                 "filtering_min_samples": {
                     "type": "number",
-                    "default": 1,
+                    "default": 1.0,
                     "description": "Minimum observations that must pass the threshold to retain the row/ feature (e.g. gene).",
                     "fa_icon": "fas fa-compress-alt"
                 },
@@ -540,13 +542,13 @@
                 },
                 "differential_min_fold_change": {
                     "type": "number",
-                    "default": 2,
+                    "default": 2.0,
                     "description": "Minimum fold change used to calculate differential feature numbers",
                     "fa_icon": "fas fa-angle-double-down"
                 },
                 "differential_max_pval": {
                     "type": "number",
-                    "default": 1,
+                    "default": 1.0,
                     "description": "Maximum p value used to calculate differential feature numbers",
                     "fa_icon": "fas fa-angle-double-up"
                 },
@@ -800,7 +802,7 @@
                 },
                 "limma_p_value": {
                     "type": "number",
-                    "default": 1,
+                    "default": 1.0,
                     "description": "cutoff value for adjusted p-values. Only genes with lower p-values are listed.",
                     "fa_icon": "fas fa-angle-double-up"
                 },
@@ -1082,7 +1084,7 @@
             "properties": {
                 "report_file": {
                     "type": "string",
-                    "default": "${projectDir}/assets/differentialabundance_report.Rmd",
+                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/differentialabundance_report.Rmd",
                     "description": "Rmd report template from which to create the pipeline report",
                     "help_text": "The pipeline will always generate a default report which gives a good overview of the analysis results. Should this default report not suit your needs, you can provide the path to a custom report instead.",
                     "format": "file-path",
@@ -1098,19 +1100,19 @@
                 },
                 "logo_file": {
                     "type": "string",
-                    "default": "${projectDir}/docs/images/nf-core-differentialabundance_logo_light.png",
+                    "default": "/home/afijo01/repos/forks/differentialabundance/docs/images/nf-core-differentialabundance_logo_light.png",
                     "description": "A logo to display in the report instead of the generic pipeline logo",
                     "fa_icon": "far fa-font-awesome-logo-full"
                 },
                 "css_file": {
                     "type": "string",
-                    "default": "${projectDir}/assets/nf-core_style.css",
+                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/nf-core_style.css",
                     "description": "CSS to use to style the output, in lieu of the default nf-core styling",
                     "fa_icon": "far fa-file-code"
                 },
                 "citations_file": {
                     "type": "string",
-                    "default": "${projectDir}/CITATIONS.md",
+                    "default": "/home/afijo01/repos/forks/differentialabundance/CITATIONS.md",
                     "description": "A markdown file containing citations to include in the fiinal report",
                     "fa_icon": "fas fa-ad"
                 },
