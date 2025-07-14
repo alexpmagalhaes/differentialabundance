@@ -1357,5 +1357,10 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "skip_reports": {
+            "type": "boolean"
+        }
+    }
 }
