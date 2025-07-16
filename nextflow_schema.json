@@ -215,7 +215,7 @@
                     "pattern": "^\\S+\\.csv$",
                     "format": "file-path",
                     "mimetype": "text/csv",
-                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/paramsheet.csv"
+                    "default": "/home/afijo01/repos/nf-core/differentialabundance/assets/paramsheet.csv"
                 }
             }
         },
@@ -827,7 +827,8 @@
                 },
                 "gene_sets_files": {
                     "type": "string",
-                    "description": "Gene sets in GMT or GMX-format; for GSEA: multiple comma-separated input files in either format are possible. For gprofiler2: A single file in GMT format is possible; this has lowest priority and will be overridden by --gprofiler2_token and --gprofiler2_organism.",
+                    "description": "Gene sets in [GMT or GMX-format](https://docs.gsea-msigdb.org/#GSEA/Data_Formats/#gene-set-database-formats); for GSEA: multiple comma-separated input files in either format are possible. For gprofiler2: A single file in GMT format is possible; this has lowest priority and will be overridden by --gprofiler2_token and --gprofiler2_organism.",
+                    "help": "For GSEA the gene sets have to contain gene symbols. You can check out example files at https://biit.cs.ut.ee/gprofiler//static/gprofiler_full_<short_organism_name>.name.gmt. A list of short organism names cat be found at https://biit.cs.ut.ee/gprofiler/page/organism-list",
                     "fa_icon": "fas fa-bars"
                 }
             }
@@ -972,7 +973,7 @@
                 "gprofiler2_organism": {
                     "type": "string",
                     "description": "Short name of the organism that is analyzed, e.g. hsapiens for homo sapiens.",
-                    "help_text": "Set this to the short organism name consisting of the first letter of the genus and the full species name, e.g. hsapiens for Homo sapiens, mmusculus for Mus musculus. This has second priority and will be overridden by --gprofiler2_token."
+                    "help_text": "Set this to the [short organism name](https://biit.cs.ut.ee/gprofiler/page/organism-list) consisting of the first letter of the genus and the full species name, e.g. hsapiens for Homo sapiens, mmusculus for Mus musculus. This has second priority and will be overridden by --gprofiler2_token."
                 },
                 "gprofiler2_significant": {
                     "type": "boolean",
@@ -1084,7 +1085,7 @@
             "properties": {
                 "report_file": {
                     "type": "string",
-                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/differentialabundance_report.Rmd",
+                    "default": "/home/afijo01/repos/nf-core/differentialabundance/assets/differentialabundance_report.Rmd",
                     "description": "Rmd report template from which to create the pipeline report",
                     "help_text": "The pipeline will always generate a default report which gives a good overview of the analysis results. Should this default report not suit your needs, you can provide the path to a custom report instead.",
                     "format": "file-path",
@@ -1100,19 +1101,19 @@
                 },
                 "logo_file": {
                     "type": "string",
-                    "default": "/home/afijo01/repos/forks/differentialabundance/docs/images/nf-core-differentialabundance_logo_light.png",
+                    "default": "/home/afijo01/repos/nf-core/differentialabundance/docs/images/nf-core-differentialabundance_logo_light.png",
                     "description": "A logo to display in the report instead of the generic pipeline logo",
                     "fa_icon": "far fa-font-awesome-logo-full"
                 },
                 "css_file": {
                     "type": "string",
-                    "default": "/home/afijo01/repos/forks/differentialabundance/assets/nf-core_style.css",
+                    "default": "/home/afijo01/repos/nf-core/differentialabundance/assets/nf-core_style.css",
                     "description": "CSS to use to style the output, in lieu of the default nf-core styling",
                     "fa_icon": "far fa-file-code"
                 },
                 "citations_file": {
                     "type": "string",
-                    "default": "/home/afijo01/repos/forks/differentialabundance/CITATIONS.md",
+                    "default": "/home/afijo01/repos/nf-core/differentialabundance/CITATIONS.md",
                     "description": "A markdown file containing citations to include in the fiinal report",
                     "fa_icon": "fas fa-ad"
                 },
@@ -1129,7 +1130,7 @@
                 "report_contributors": {
                     "type": "string",
                     "description": "Semicolon-separated string of contributor info that should be listed in the report.",
-                    "help_text": "List here names, roles, affiliations, contact info etc. of contributors to your project. Entries of different contributors are separated by semicolons, linebreaks within a contributor are separated by \n. The first line of each contributor will be bold in the report. E.g.: 'Jane Doe\nDirector of Institute of Microbiology\nUniversity of Smallville;John Smith\nPhD student\nUniversity of Smallville'"
+                    "help_text": "List here names, roles, affiliations, contact info etc. of contributors to your project. Entries of different contributors are separated by semicolons, linebreaks within a contributor are separated by `\n`. The first line of each contributor will be bold in the report. E.g.: 'Jane Doe`\n`Director of Institute of Microbiology`\n`University of Smallville;John Smith`\n`PhD student`\n`University of Smallville'"
                 },
                 "report_description": {
                     "type": "string",
