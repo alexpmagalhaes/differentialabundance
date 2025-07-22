@@ -111,6 +111,7 @@ nextflow_pipeline {
                 exploratory_log2_assays = "raw"
                 skip_reports        = true
                 transcript_length_matrix = null
+                deseq2_seed         = 1
 
             }
         }
