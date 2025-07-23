@@ -508,7 +508,7 @@
                 "tables/gprofiler2/treatment_plus_genotype_SRP254919/treatment_plus_genotype_SRP254919.gprofiler2.all_enriched_pathways.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv",
-                "tables/processed_abundance/all.vst.tsv"
+                "tables/processed_abundance/all.rlog.tsv"
             ],
             [
                 "full_model_with_interactions_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
@@ -520,27 +520,27 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "full_model_with_interactions_SRP254919.deseq2.results.tsv:md5,1e782efed784cafe7421253ee9ff28fb",
-                "full_model_with_interactions_SRP254919.deseq2.results_filtered.tsv:md5,fb11e416e76395d0dac9eb6276674208",
-                "interaction_genotype_treatment_SRP254919.deseq2.results.tsv:md5,e0a7dbf694f50d56cecf02145f1b7d0e",
-                "interaction_genotype_treatment_SRP254919.deseq2.results_filtered.tsv:md5,fb11e416e76395d0dac9eb6276674208",
-                "treatment_effect_classic_comparison_SRP254919.deseq2.results.tsv:md5,33348a4bee2e4b0ee5e338069e33bdc3",
-                "treatment_effect_classic_comparison_SRP254919.deseq2.results_filtered.tsv:md5,fb11e416e76395d0dac9eb6276674208",
-                "treatment_plus_genotype_SRP254919.deseq2.results.tsv:md5,296bb24aba674df2d254e7e78f19d49e",
-                "treatment_plus_genotype_SRP254919.deseq2.results_filtered.tsv:md5,82b641576e5f9dfe793b5bb5343f24de",
+                "full_model_with_interactions_SRP254919.deseq2.results.tsv:md5,2445cb3e070e63b30979b8c0d672265d",
+                "full_model_with_interactions_SRP254919.deseq2.results_filtered.tsv:md5,24b3287c1e1162d047ced9dda147d54f",
+                "interaction_genotype_treatment_SRP254919.deseq2.results.tsv:md5,6246219a561f9c766d7ad74d5f1bb9c3",
+                "interaction_genotype_treatment_SRP254919.deseq2.results_filtered.tsv:md5,24b3287c1e1162d047ced9dda147d54f",
+                "treatment_effect_classic_comparison_SRP254919.deseq2.results.tsv:md5,1af3f9dadd2d953d68f0faf656bf503f",
+                "treatment_effect_classic_comparison_SRP254919.deseq2.results_filtered.tsv:md5,65e7a9d354eb71db7f13576cc2d5d7e7",
+                "treatment_plus_genotype_SRP254919.deseq2.results.tsv:md5,c5ba9280afcfd2f32ec536dc89e87143",
+                "treatment_plus_genotype_SRP254919.deseq2.results_filtered.tsv:md5,20db1de736d1e1bb9a8af6822437d935",
                 "full_model_with_interactions_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "interaction_genotype_treatment_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "treatment_effect_classic_comparison_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "treatment_plus_genotype_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "all.normalised_counts.tsv:md5,43b8e7cfbf4ff13ad94a13bb99c7e220",
-                "all.vst.tsv:md5,8ed84ebc1e543c41b7f318291d1f9807"
+                "all.normalised_counts.tsv:md5,c2d7cc11637ad01ea49fff4a744965c9",
+                "all.rlog.tsv:md5,bce2521996537372c72f4083f66c5d3b"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.4"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-06-24T15:45:46.414198829"
+        "timestamp": "2025-07-23T18:01:39.181451501"
     },
     "Test profile - yml no formula": {
         "content": [

@@ -112,7 +112,9 @@ nextflow_pipeline {
                 skip_reports        = true
                 transcript_length_matrix = null
                 deseq2_seed         = 1
-
+                round_digits        = 2
+                deseq2_vs_method    = 'rlog'
+                deseq2_shrink_lfc   = false
             }
         }
 
