@@ -119,6 +119,24 @@ run_shrink <- function(...) {
   )
 }
 
+# coercion helper
+
+coerce_opt <- function(x, target_class) {
+  switch(target_class,
+    character = x,
+    numeric   = as.numeric(x),
+    integer   = as.integer(x),
+    logical   = {
+      l <- tolower(x)
+      if (l %in% c("true","t","1"))  TRUE
+      else if (l %in% c("false","f","0")) FALSE
+      else stop("Cannot coerce to logical: ", x)
+    },
+    stop("Unhandled class in opt_types: ", target_class)
+  )
+}
+
+
 ################################################
 ################################################
 ## PARSE PARAMETERS FROM NEXTFLOW             ##
@@ -169,21 +187,22 @@ opt <- list(
   seed = NULL
 )
 opt_types <- lapply(opt, class)
+# seed should be an integer, even though default is NULL
+opt_types[['seed']]         <- 'integer'
+# round_digits is numeric
+opt_types[['round_digits']] <- 'numeric'
 
 # Apply parameter overrides
-
 args_opt <- parse_args('$task.ext.args')
-for ( ao in names(args_opt)){
-  if (! ao %in% names(opt)){
-    stop(paste("Invalid option:", ao))
-  }else{
 
-    # Preserve classes from defaults where possible
-    if (! is.null(opt[[ao]])){
-      args_opt[[ao]] <- as(args_opt[[ao]], opt_types[[ao]])
-    }
-    opt[[ao]] <- args_opt[[ao]]
+for (ao in names(args_opt)) {
+  if (!ao %in% names(opt)) {
+    stop("Invalid option: ", ao)
   }
+  # pick the target class
+  target <- opt_types[[ao]][1]
+  # now actually coerce
+  opt[[ao]] <- coerce_opt(args_opt[[ao]], target)
 }
 
 
@@ -192,12 +211,13 @@ if ( ! is.null(opt\$round_digits)){
 }
 
 # If there is no option supplied, convert string "null" to NULL
-keys <- c("formula", "contrast_string", "contrast_variable", "reference_level", "target_level", "seed", "blocking_variable", "transcript_lengths_file")
+keys <- c("formula", "contrast_string", "contrast_variable", "reference_level", "target_level", "seed", "blocking_variables", "transcript_lengths_file")
 opt[keys] <- lapply(opt[keys], nullify)
 
 if ( ! is.null(opt\$seed)){
+  opt\$seed <- as.integer(opt\$seed)
   set.seed(opt\$seed)
-}
+  }
 
 # Check if required parameters have been provided
 if (is_valid_string(opt\$formula)) {
@@ -412,6 +432,7 @@ if (opt\$control_genes_file != '' && opt\$sizefactors_from_controls){
   print(paste('Estimating size factors using', length(control_genes), 'control genes'))
   dds <- estimateSizeFactors(dds, controlGenes=rownames(count.table) %in% control_genes)
 }
+bp <- SnowParam(workers = opt\$cores, RNGseed = opt\$seed, type = "SOCK")
 
 dds <- DESeq(
   dds,
@@ -420,8 +441,8 @@ dds <- DESeq(
   minReplicatesForReplace = opt\$min_replicates_for_replace,
   useT = opt\$use_t,
   sfType = opt\$sf_type,
-  parallel=TRUE, BPPARAM=MulticoreParam(opt\$cores)
-)
+  parallel=TRUE,
+  BPPARAM=bp)
 
 if (!is.null(opt\$contrast_string)) {
   coef_names <- resultsNames(dds)
