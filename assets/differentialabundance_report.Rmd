@@ -238,13 +238,6 @@ htmltools::includeCSS(params$css)
 ```
 
 
-```{r logostring, echo=FALSE}
-logo_str <- paste0("background-image: url(\"", params$logo, "\");
-")
-writeLines(logo_str,"logo_string.txt")
-```
-
-
 ```{r results="asis", echo=FALSE}
 cat(paste0("
 <style>
