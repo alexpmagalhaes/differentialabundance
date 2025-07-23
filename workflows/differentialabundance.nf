@@ -63,7 +63,6 @@ workflow DIFFERENTIALABUNDANCE {
         .map { meta ->
             [ meta, file(meta.params.input, checkIfExists: true) ]
         }
-    //ch_samplesheet.dump(tag:'ch_samplesheet dump')
 
     // Create input channels based on study type
     ch_input = ch_samplesheet
@@ -374,8 +373,6 @@ workflow DIFFERENTIALABUNDANCE {
     ch_validated_samplemeta = prepareModuleOutput(VALIDATOR.out.sample_meta, ch_paramsets)
     ch_validated_featuremeta = prepareModuleOutput(VALIDATOR.out.feature_meta, ch_paramsets)
 
-    //ch_validated_contrast.dump(tag:'ch_validated_contrast')
-
     // For Affy, we've validated multiple input matrices for raw and norm,
     // we'll separate them out again here
 
@@ -458,10 +455,6 @@ workflow DIFFERENTIALABUNDANCE {
     )
 
     ch_filtered_matrix = prepareModuleOutput(CUSTOM_MATRIXFILTER.out.filtered, ch_paramsets)
-    
-    ch_filtered_matrix.map{meta, matrix -> matrix}
-
-    //ch_filtered_matrix.dump(tag:'ch_filtered_matrix wo meta') // meta, filtered matrix file
 
     // ========================================================================
     // Differential analysis
@@ -552,9 +545,6 @@ workflow DIFFERENTIALABUNDANCE {
                 .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
                 .map{meta -> [meta, []]}
         )
-
- 
-    ch_background.map{meta, matrix -> matrix}
     
     // Prepare input for functional analysis
 
@@ -699,7 +689,7 @@ workflow DIFFERENTIALABUNDANCE {
             .filter { meta, contrast, results -> contrast.variable?.trim() }
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
-        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
+        .join( ch_contrasts )   // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
         .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
             // in this way we don't need to harcode the contrast keys
@@ -712,15 +702,12 @@ workflow DIFFERENTIALABUNDANCE {
             contrast_maps: [meta, contrast_maps]
         }
 
-    //ch_paramsets.dump(tag: 'ch_paramsets input for ch sorted') // meta, paramset
-    differential_with_contrast.contrast_maps.dump(tag:'differential_with_contrast.contrast_maps')
-
     // Save temporary contrast csv files with the entries ordered by the differential results
     ch_contrasts_sorted = differential_with_contrast.contrast_maps
         .collectFile { meta, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
             def content = contrast_map.collect { it.values().join(',') }
-            def lines = header + '\n' + content.join('\n')
+            def lines = header + '\n' + content.join('\n') + '\n'
             ["${meta.paramset_name}.csv", lines]
         }
         // parse the channel to have the contrast file with the corresponding meta
@@ -729,8 +716,6 @@ workflow DIFFERENTIALABUNDANCE {
         .map { paramset_name, contrast_file, meta ->
             [meta, contrast_file]
         }
-
-    ch_contrasts_sorted.dump(tag: 'ch_contrasts_sorted') // meta, contrast file
 
     // Parse input for shinyngs app
     ch_shinyngs_input = differential_with_contrast.differential_results
@@ -822,7 +807,6 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Render the final report
     if (!params.skip_reports) {
-        ch_report_input.input_files.dump(tag: 'ch_report_input') // meta, report_file, report_params, input_files   
 
         RMARKDOWNNOTEBOOK(
             ch_report_input.report_file,
