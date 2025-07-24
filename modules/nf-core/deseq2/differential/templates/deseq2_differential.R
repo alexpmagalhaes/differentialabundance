@@ -136,6 +136,8 @@ coerce_opt <- function(x, target_class) {
   )
 }
 
+  RhpcBLASctl::blas_set_num_threads(1)
+  RhpcBLASctl::omp_set_num_threads(1)
 
 ################################################
 ################################################
