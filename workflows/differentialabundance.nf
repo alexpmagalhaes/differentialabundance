@@ -686,19 +686,6 @@ workflow DIFFERENTIALABUNDANCE {
     // and it is needed for "checkListIsSubset()" in `SHINYNGS` make_app_from_files.R
     // for backwards-compatibility, keep only the channels that have non-empty variable
 
-    // Filter by those channels containing 'variable', regroup
-    ch_contrasts_filtered = ch_contrasts
-        .transpose()
-        .filter { meta, contrast, variable, reference, target, formula, comparison ->
-            variable?.trim()
-        }
-        .groupTuple()
-
-    ch_differential_results_with_variable = ch_differential_results
-        .filter { meta, contrast, results ->
-            contrast.variable?.trim()
-        }
-
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
     differential_with_contrast = ch_paramsets
