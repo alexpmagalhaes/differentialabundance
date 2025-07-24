@@ -526,8 +526,6 @@
                 "interaction_genotype_treatment_SRP254919.deseq2.results_filtered.tsv:md5,24b3287c1e1162d047ced9dda147d54f",
                 "treatment_effect_classic_comparison_SRP254919.deseq2.results.tsv:md5,1af3f9dadd2d953d68f0faf656bf503f",
                 "treatment_effect_classic_comparison_SRP254919.deseq2.results_filtered.tsv:md5,65e7a9d354eb71db7f13576cc2d5d7e7",
-                "treatment_plus_genotype_SRP254919.deseq2.results.tsv:md5,c5ba9280afcfd2f32ec536dc89e87143",
-                "treatment_plus_genotype_SRP254919.deseq2.results_filtered.tsv:md5,20db1de736d1e1bb9a8af6822437d935",
                 "full_model_with_interactions_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "interaction_genotype_treatment_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "treatment_effect_classic_comparison_SRP254919.gprofiler2.all_enriched_pathways.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -540,7 +538,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.6"
         },
-        "timestamp": "2025-07-23T18:01:39.181451501"
+        "timestamp": "2025-07-24T16:46:01.377784674"
     },
     "Test profile - yml no formula": {
         "content": [
