@@ -682,7 +682,7 @@ workflow DIFFERENTIALABUNDANCE {
     // create temporary contrast files with the entries based on the order of the gathered
     // differential results
 
-        // As contrasts having 'formula' and 'comparison' won't have a variable,
+    // As contrasts having 'formula' and 'comparison' won't have a variable,
     // and it is needed for "checkListIsSubset()" in `SHINYNGS` make_app_from_files.R
     // for backwards-compatibility, keep only the channels that have non-empty variable
 
