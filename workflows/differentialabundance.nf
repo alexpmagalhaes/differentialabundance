@@ -807,7 +807,6 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Render the final report
     if (!params.skip_reports) {
-
         RMARKDOWNNOTEBOOK(
             ch_report_input.report_file,
             ch_report_input.report_params,

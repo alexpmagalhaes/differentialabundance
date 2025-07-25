@@ -237,7 +237,6 @@ knitr::opts_chunk$set(echo = TRUE)
 htmltools::includeCSS(params$css)
 ```
 
-
 ```{r results="asis", echo=FALSE}
 cat(paste0("
 <style>
