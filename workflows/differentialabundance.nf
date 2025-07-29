@@ -545,7 +545,7 @@ workflow DIFFERENTIALABUNDANCE {
                 .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
                 .map{meta -> [meta, []]}
         )
-    
+
     // Prepare input for functional analysis
 
     // - use normalized matrix, if method is gsea
