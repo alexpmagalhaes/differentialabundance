@@ -1,5 +1,5 @@
 process CUSTOM_FILTERDIFFERENTIALTABLE {
-    tag "$meta.id"
+    tag "$meta"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
