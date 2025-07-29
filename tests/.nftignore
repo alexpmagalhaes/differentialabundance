@@ -16,3 +16,5 @@ shinyngs_app/**/data.rds
 **/**/*.limma.rds
 *.{limma,dream}.{results,results_filtered}.tsv
 **/**/*.{limma,dream}.{results,results_filtered}.tsv
+tables/differential/treatment_plus_genotype_SRP254919.deseq2.results.tsv
+tables/differential/treatment_plus_genotype_SRP254919.deseq2.results_filtered.tsv
