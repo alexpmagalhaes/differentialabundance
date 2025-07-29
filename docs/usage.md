@@ -20,7 +20,7 @@ With the above in mind, running this workflow requires:
 ## Observations (samplesheet) input
 
 ```bash
---input '[path to samplesheet file].{csv,tsv}'
+--input '[path to samplesheet file].(csv|tsv)'
 ```
 
 The samplesheet file can be tab or comma separated. This may well be the same sample sheet used to generate the input matrix. For example, in RNA-seq this might be the same sample sheet, perhaps derived from [fetchngs](https://github.com/nf-core/fetchngs), that was input to the [RNA-seq workflow](https://github.com/nf-core/rnaseq). It may be necessary to add columns that describe the groups you want to compare. The columns that the pipeline requires are:
@@ -64,7 +64,7 @@ The `file` column in this example is used to specify the data file associated wi
 ### RNA-seq and similar
 
 ```bash
---matrix '[path to matrix file].{csv,tsv}'
+--matrix '[path to matrix file].(csv|tsv)'
 ```
 
 This is a numeric matrix file, comma or tab-separated, with features as rows and observations in columns. The features correspond to the supplied feature set. The parameters `--observations_id_col` and `--features_id_col` define which of the associated fields should be matched in those inputs.
@@ -131,7 +131,7 @@ The contrasts file references the observations file to define groups of samples 
 ### CSV/TSV contrasts file
 
 ```bash
---contrasts '[path to contrasts file].{csv,tsv}'
+--contrasts '[path to contrasts file].(csv|tsv)'
 ```
 
 Based on the sample sheet above we could define contrasts as indicated below:
