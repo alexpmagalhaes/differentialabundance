@@ -214,8 +214,7 @@
                     "help_text": "A CSV file that defines a nextflow config per row.",
                     "pattern": "^\\S+\\.csv$",
                     "format": "file-path",
-                    "mimetype": "text/csv",
-                    "default": "${projectDir}/assets/paramsheet.csv"
+                    "mimetype": "text/csv"
                 }
             }
         },
