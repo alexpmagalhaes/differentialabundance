@@ -1,5 +1,5 @@
 pipeline_info/*.{html,json,txt,yml}
-report/gsea/**/*.symbols.Gsea.rpt
+plots/gsea/**/*.{rpt,html,png}
 report/*.html
 report/*.zip
 report/*.png

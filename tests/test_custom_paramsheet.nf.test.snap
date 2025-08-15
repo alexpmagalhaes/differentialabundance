@@ -304,22 +304,6 @@
                 "treatment_mCherry_hND6_sample_number_SRP254919.deseq2.sizefactors.tsv:md5,0703c421c53b260f91568dfc0436c054",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
-                "gene_sets_treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.html:md5,d7ff9935148862c6e927237e7745b23d",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.Gsea.rpt:md5,23bf6f3e29ebadc81540e946d8cded78",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.html:md5,9a417c40aad6ab4c4b91b63e0f4e0bea",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.html:md5,b9b43c26f02fe3f7ee81a130f1856c48",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.heat_map_corr_plot.html:md5,65df68322e6271be76fcd717fb97be81",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.index.html:md5,b0594916589cb72db3d0cc887f75e7e3",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.neg_snapshot.html:md5,4c94fe74c22cb1e969866a7a81a31fe7",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.pos_snapshot.html:md5,f23f32b61ed1a7b15266bb63ad6f796d",
-                "gene_sets_treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.html:md5,5577e6d679f032597bf315295f2283ee",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.Gsea.rpt:md5,ea234416e029310ff59fe2a830fb93b5",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.html:md5,4cbe23b9b8353a065a56818b163bcb02",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.html:md5,e57dc4dbdb051fa1ffc6e936350af238",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.heat_map_corr_plot.html:md5,1826dca12418a661de42e23a9920d6f9",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.index.html:md5,5ed54aac27458ed03f00f55ad77b01e3",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.neg_snapshot.html:md5,f9587089c6b0406195dc48bb94f9a846",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.pos_snapshot.html:md5,6c4cc27e155ea2e5856c6113be228cd7",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
@@ -346,9 +330,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-07-29T16:39:33.964260125"
+        "timestamp": "2025-08-01T11:34:25.31139907"
     },
     "Test profile - gsea": {
         "content": [
@@ -518,22 +502,6 @@
                 "treatment_mCherry_hND6_sample_number_SRP254919.deseq2.sizefactors.tsv:md5,0703c421c53b260f91568dfc0436c054",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
-                "gene_sets_treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.html:md5,d7ff9935148862c6e927237e7745b23d",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.Gsea.rpt:md5,54a52dd63ad851dcc199d7223f1e62bf",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.html:md5,2e10bc2082972084be173424ba50b9bd",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.html:md5,4a1341be08a838fe4ba83b495a4a0ae2",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.heat_map_corr_plot.html:md5,65df68322e6271be76fcd717fb97be81",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.index.html:md5,eac1e59c77b3c1dc8cfd381b4bfd99c0",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.neg_snapshot.html:md5,4c94fe74c22cb1e969866a7a81a31fe7",
-                "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.pos_snapshot.html:md5,f23f32b61ed1a7b15266bb63ad6f796d",
-                "gene_sets_treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.html:md5,5577e6d679f032597bf315295f2283ee",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.Gsea.rpt:md5,9b1f6e7b40039800e81cd68adaa5247f",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_hND6.html:md5,24eb01b9f0f3e8a0f44a80737fc2d364",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.html:md5,3b67b8a8b1b97d792df34b0001d93870",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.heat_map_corr_plot.html:md5,1826dca12418a661de42e23a9920d6f9",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.index.html:md5,75d152beb901a373f92b85913428b60f",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.neg_snapshot.html:md5,f9587089c6b0406195dc48bb94f9a846",
-                "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.pos_snapshot.html:md5,6c4cc27e155ea2e5856c6113be228cd7",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
@@ -560,8 +528,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-07-29T16:40:49.591435886"
+        "timestamp": "2025-08-01T11:35:44.675635047"
     }
 }
