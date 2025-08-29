@@ -1090,7 +1090,7 @@
                     "description": "Rmd report template from which to create the pipeline report",
                     "help_text": "The pipeline will always generate a default report which gives a good overview of the analysis results. Should this default report not suit your needs, you can provide the path to a custom report instead.",
                     "format": "file-path",
-                    "pattern": "^\\S+\\.Rmd$",
+                    "pattern": "^\\S+\\.qmd$",
                     "fa_icon": "fas fa-book"
                 },
                 "email": {

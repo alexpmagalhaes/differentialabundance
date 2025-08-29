@@ -24,7 +24,7 @@ include { SHINYNGS_STATICDIFFERENTIAL as PLOT_DIFFERENTIAL  } from '../modules/n
 include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/nf-core/shinyngs/validatefomcomponents/main'
 include { CUSTOM_MATRIXFILTER                               } from '../modules/nf-core/custom/matrixfilter/main'
 include { ATLASGENEANNOTATIONMANIPULATION_GTF2FEATUREANNOTATION as GTF_TO_TABLE } from '../modules/nf-core/atlasgeneannotationmanipulation/gtf2featureannotation/main'
-include { RMARKDOWNNOTEBOOK                                 } from '../modules/nf-core/rmarkdownnotebook/main'
+include { QUARTONOTEBOOK                                    } from '../modules/nf-core/quartonotebook/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_RAW                  } from '../modules/nf-core/affy/justrma/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_NORM                 } from '../modules/nf-core/affy/justrma/main'
 include { PROTEUS_READPROTEINGROUPS as PROTEUS              } from '../modules/nf-core/proteus/readproteingroups/main'
@@ -811,16 +811,17 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Render the final report
     if (!params.skip_reports) {
-        RMARKDOWNNOTEBOOK(
+        QUARTONOTEBOOK(
             ch_report_input.report_file,
             ch_report_input.report_params,
-            ch_report_input.input_files.map{ meta, files -> files }
+            ch_report_input.input_files.map{ meta, files -> files },
+            Channel.of([])
         )
 
         // Make a report bundle comprising the markdown document and all necessary
         // input files
 
-        ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
+        ch_bundle_input = QUARTONOTEBOOK.out.notebook
                 .combine(ch_report_input.input_files, by:0)
                 .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
 
