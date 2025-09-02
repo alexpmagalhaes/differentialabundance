@@ -36,6 +36,7 @@ process QUARTONOTEBOOK {
         meta: meta,
         cpus: task.cpus,
         artifact_dir: "artifacts",
+        input_dir: "./",
     ] + (parameters ?: [:])
     // Parse parameters through a YAML file, which is better than CLI because:
     //  - No issue with escaping

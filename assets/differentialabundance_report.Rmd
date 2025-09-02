@@ -11,7 +11,7 @@ output:
         pdf_document: true
     pdf_document:
         toc: yes
-date: "`r Sys.Date()`"
+date: "`{r} Sys.Date()`"
 params:
     meta: NULL
     input_dir: NULL
@@ -152,11 +152,95 @@ params:
     gprofiler2_min_diff: NULL
     gprofiler2_palette_name: NULL
     gene_sets_files: NULL
+    paramset_name: null
+    contrasts: null
+    contrasts_yml: null
+    querygse: null
+    matrix: null
+    transcript_length_matrix: null
+    control_features: null
+    sizefactors_from_controls: null
+    outdir: "results"
+    paramsheet: null
+    gtf: null
+    filtering_min_proportion_not_na: 0.5
+    filtering_min_samples_not_na: 2
+    deseq2_seed: 1
+    limma_use_voom: false
+    immunedeconv_run: false
+    immunedeconv_method: "xcell"
+    immunedeconv_function: "deconvolute"
+    shinyngs_build_app: false
+    skip_reports: false
+    shinyngs_deploy_to_shinyapps_io: false
+    shinyngs_shinyapps_account: null
+    shinyngs_shinyapps_app_name: null
+    logo_file: null
+    css_file: null
+    citations_file: null
+    genome: null
+    igenomes_base: null
+    igenomes_ignore: false
+    publish_dir_mode: "copy"
+    email: null
+    email_on_fail: null
+    plaintext_email: false
+    monochrome_logs: false
+    hook_url: null
+    version: null
+    pipelines_testdata_base_path: null
+    config_profile_name: null
+    config_profile_description: null
+    custom_config_version: null
+    custom_config_base: null
+    config_profile_contact: null
+    config_profile_url: null
+    validate_params: true
+    globalConfig: null
+    outputDir: null
+    aws_batch_account_id: null
+    aws_batch_ecr: null
+    pipelines_ecr: null
+    pipelines_manual_ecr: null
+    docker_env: null
+    godm_dev_account_id: null
+    godm_prod_account_id: null
+    godm_dev: null
+    input: null
+    godm_dev_ecr: null
+    godm_prod_ecr: null
+    godm_docker_env: null
+    godm_ecr: null
+    awsAccountId: null
+    registry: null
+    schema_ignore_params: null
+    validationSchemaIgnoreParams: null
+    maxMemory: "128.GB"
+    maxCpus: 16
+    maxTime: "240.h"
+    executionEnv: null
+    profileList: null
+    profileDescription: null
+    clusterQueue: null
+    max_memory: "128.GB"
+    max_cpus: 16
+    max_time: "240.h"
+    referenceEnv: null
+    referenceDataDir: null
+    reportsDir: "reports"
+    logDir: "logs"
+    maxRetries: 3
+    errorStrategy: "terminate"
+    notification_url_dev: null
+    notification_url_prod: null
+    notification_url: null
+    execParameterDescription: null
 ---
 
 <!-- Load libraries -->
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 library(knitr)
 library(yaml)
 library(shinyngs)
@@ -166,7 +250,8 @@ library(DT)
 
 <!-- Define some functions -->
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
     if (digits == -1) {
         return(df)                              # if -1, return df without rounding
@@ -187,12 +272,23 @@ round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
 }
 ```
 
-```{r include = FALSE}
+```{r}
+#| include: false
 # Load the datatables js
 datatable(NULL)
 ```
 
-```{r, include=FALSE}
+```{r}
+#| include: false
+cat("input_dir:", params$input_dir, "\n")
+cat("versions_file:", params$versions_file, "\n")
+
+file_path <- file.path(params$input_dir, params$versions_file)
+cat("Full path:", file_path, "\n")
+
+if (!file.exists(file_path)) {
+  stop("Versions file does not exist at: ", file_path)
+}
 versions <- unlist(yaml.load_file(file.path(params$input_dir, params$versions_file)), recursive = FALSE)
 params_table <- data.frame(Parameter = names(unlist(params)), Value = unlist(params), row.names = NULL)
 
@@ -220,24 +316,28 @@ report_subtitle <- paste0(ifelse(is.null(params$report_author), '', paste0('By '
 ```
 
 ---
-title:  "<img src=\"`r file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`r report_title`"
-subtitle: `r report_subtitle`
+
+title:  "<img src=\"`{r} file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`{r} params$report_title`"
+subtitle: "`{r} params$report_subtitle`"
 ---
-\
 
 <!-- set notebook defaults -->
 
-```{r setup, include=FALSE}
+```{r}
+#| include: false
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 <!-- Include the CSS and set the logo -->
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 htmltools::includeCSS(params$css)
 ```
 
-```{r results="asis", echo=FALSE}
+```{r}
+#| echo: false
+#| results: asis
 cat(paste0("
 <style>
 #TOC {
@@ -249,19 +349,7 @@ cat(paste0("
 
 <!-- Include PI/contact info if provided -->
 
-```{r, results='asis', echo=F, eval=!is.null(params$report_contributors)}
-contributors <- gsub("\n", "<br>", params$report_contributors, fixed = TRUE)
-contributors <- lapply(simpleSplit(contributors, ";"), function(s) {
-    splt <- simpleSplit(s, "<br>")
-    paste0("**", head(splt, 1), "**<br>", paste(tail(splt, -1), collapse = "<br>"))
-})
 
-for (r in seq_along(contributors)) {
-    if (r %% 2 == 1) cat("<div class='div-row'>")
-    cat(paste0("<div class='div-column'>", contributors[r], "</div>"))
-    if (r %% 2 == 0 || r == length(contributors)) cat("</div>")
-}
-```
 
 <!-- Load input data -->
 
@@ -362,6 +450,7 @@ treatment-mCherry-hND6-batcheffect.deseq2.results.tsv
 -->
 
 ```{r, echo=FALSE}
+#| echo: false
 differential_file_suffix <- params$differential_file_suffix
 if (is.null(differential_file_suffix)) {
     differential_file_suffix <- paste0(".", params$differential_method, ".results.tsv")
@@ -435,6 +524,7 @@ names(differential_results) <- differential_names
 <!-- Calculate some summary statistics -->
 
 ```{r, echo=FALSE}
+#| echo: false
 
 # Function to make friendly contrast name from contrast components, including optional bits
 
@@ -492,16 +582,18 @@ names(differential_tables) <- names(sig_differential)
 
 # Abstract
 
-This report summarises differential `r params$features_type` analysis as performed by the nf-core/differentialabundance pipeline.
+This report summarises differential `{r} params$features_type` analysis as performed by the nf-core/differentialabundance pipeline.
 
 # Data
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 cat(paste0("\n## ", ucfirst(params$observations_type), "s\n"))
 ```
 
 
-A summary of `r params$observations_type` metadata is below:
+A summary of `{r} params$observations_type` metadata is below:
 
 ```{r, echo=FALSE, results='asis'}
 display_columns <- union(c(params$observations_id_col, unique(contrasts$variable)), informative_variables)
@@ -526,9 +618,11 @@ print( htmltools::tagList(datatable(observations_to_print, caption = paste(ucfir
 
 ## Contrasts
 
-Comparisons were made between `r params$observations_type` groups defined using `r params$observation_type` metadata columns, as described in the following table of contrasts:
+Comparisons were made between `{r} params$observations_type` groups defined using `{r} params$observation_type` metadata columns, as described in the following table of contrasts:
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 contrasts_to_print <- contrasts
 colnames(contrasts_to_print) <- prettifyVariablename(colnames(contrasts_to_print))
 
@@ -551,7 +645,7 @@ print( htmltools::tagList(datatable(contrasts_to_print, caption = paste0("Table 
 
 ## Counts
 
-Input was a matrix of `r nrow(assay_data$raw)` `r params$features_type`s for `r ncol(assay_data$raw)` `r params$observations_type`s`r ifelse(nrow(assay_data$normalised) < nrow(assay_data$raw), paste0(', reduced to ', nrow(assay_data$normalised), ' ', params$features_type, 's after filtering for low abundance'), '')`.
+Input was a matrix of `{r} nrow(assay_data$raw)` `{r} params$features_type`s for `{r} ncol(assay_data$raw)` `{r} params$observations_type`s`{r} ifelse(nrow(assay_data$normalised) < nrow(assay_data$raw), paste0(', reduced to ', nrow(assay_data$normalised), ' ', params$features_type, 's after filtering for low abundance'), '')`.
 
 ## Exploratory analysis
 
@@ -562,6 +656,8 @@ The following plots show the abundance value distributions of input matrices. A 
 #### Box plots
 
 ```{r, echo=FALSE, results='asis', fig.height=8}
+#| echo: false
+#| results: asis
 
 p <- ggplot_boxplot(
     assay_data,
@@ -575,11 +671,13 @@ p <- ggplot_boxplot(
 print(p)
 ```
 
-Whiskers in the above boxplots show `r params$exploratory_whisker_distance` times the inter-quartile range.
+Whiskers in the above boxplots show `{r} params$exploratory_whisker_distance` times the inter-quartile range.
 
 #### Density plots
 
 ```{r, echo=FALSE, results='asis', fig.height=8}
+#| echo: false
+#| results: asis
 plotly_densityplot(
     assay_data,
     experiment = observations,
@@ -590,14 +688,18 @@ plotly_densityplot(
 ```
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 cat(paste0("\n### ", ucfirst(params$observations_type), " relationships\n"))
 ```
 
 #### Principal components plots {.tabset}
 
-Principal components analysis was conducted based on the `r params$exploratory_n_features` most variable `r params$features_type`s. Each component was annotated with its percent contribution to variance.
+Principal components analysis was conducted based on the `{r} params$exploratory_n_features` most variable `{r} params$features_type`s. Each component was annotated with its percent contribution to variance.
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 # Create nested list to save the percentVars for reusing in the scree plot
 percentVar_list <- list()
 for (assay_type in rev(names(assay_data))){
@@ -683,6 +785,8 @@ For the variance stabilised matrix, an ANOVA test was used to determine assocati
 The resulting p values are illustrated below.
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 
 # This is a little hack to work around a bug in d3heatmap with single-row data
 # frames.
@@ -721,9 +825,11 @@ for (variable in rownames(pca_vs_meta)){
 
 #### Clustering dendrograms {.tabset}
 
-A hierarchical clustering of `r params$features_type`s was undertaken based on `r ifelse(params$exploratory_n_features == -1, paste0("all ", params$features_type), paste0("the ", params$exploratory_n_features, " most variable ", params$features_type))`s. Distances between `r params$features_type`s were estimated based on `r params$exploratory_cor_method` correlation, which were then used to produce a clustering via the `r params$exploratory_clustering_method` method with `hclust()` in R.
+A hierarchical clustering of `{r} params$features_type`s was undertaken based on `{r} ifelse(params$exploratory_n_features == -1, paste0("all ", params$features_type), paste0("the ", params$exploratory_n_features, " most variable ", params$features_type))`s. Distances between `r params$features_type`s were estimated based on `{r} params$exploratory_cor_method` correlation, which were then used to produce a clustering via the `{r} params$exploratory_clustering_method` method with `hclust()` in R.
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 for (assay_type in rev(names(assay_data))){
     for (iv in informative_variables){
         cat(paste0("\n##### ", prettifyVariablename(assay_type), " (", iv, ")\n"))
@@ -804,15 +910,19 @@ foo <- lapply(informative_variables[iv_min_group_sizes > 2], function(iv){
 ## Differential analysis
 
 ```{r, echo=FALSE, results='asis', eval=params$study_type %in% c('rnaseq')}
+#| echo: false
+#| results: asis
 # For DESeq2, add some more explanation to the report
 cat(paste0(
 "The `DESeq2 R` package was used for differential analysis. p-values were adjusted with the ", params$deseq2_p_adjust_method, " method to reduce the number of false positives. ", ucfirst(params$features_type), "s were considered differential if, for the respective contrast, the adjusted p-value was equal to or lower than ", params$deseq2_alpha, " and the absolute log2 fold change was equal to or higher than ", params$deseq2_lfc_threshold, "."
 ))
 ```
 
-### Differential `r params$features_type` `r params$study_abundance_type` {.tabset}
+### Differential `{r} params$features_type` `{r} params$study_abundance_type` {.tabset}
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 foo <- lapply(names(p_value_types), function(pvt){
     cat("\n#### ", pvt, "\n")
     print( htmltools::tagList(datatable(differential_tables[[pvt]], caption = paste0('Differential ',  params$features_type, " ", params$abundance_type, ' (target relative to reference)'), options = list(dom = 't'), rownames = TRUE) ))
@@ -821,6 +931,9 @@ foo <- lapply(names(p_value_types), function(pvt){
 ```
 
 ```{r, echo=FALSE, results='asis', eval = FALSE}
+#| echo: false
+#| results: asis
+#| eval: false
 differential_summary_string <- paste(
     paste(
     lapply(
