@@ -987,8 +987,8 @@ if (!is.null(params$functional_method)){
             gmt_name <- basename(tools::file_path_sans_ext(gmt_file))
             cat("\n##### ", gmt_name ," {.tabset}\n")
 
-            reference_gsea_tables <- paste0(differential_names, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$reference, '.tsv')
-            target_gsea_tables <- paste0(differential_names, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$target, '.tsv')
+            reference_gsea_tables <- paste0(gsea_contrasts$id, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$reference, '.tsv')
+            target_gsea_tables <- paste0(gsea_contrasts$id, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$target, '.tsv')
 
             for (i in seq_len(nrow(gsea_contrasts))) {
                 cat("\n###### ", contrast_descriptions[i], "\n")
