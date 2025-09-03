@@ -12,14 +12,14 @@ process QUARTONOTEBOOK {
         : 'community.wave.seqera.io/library/jupyter_matplotlib_papermill_quarto_r-rmarkdown:6d15193ce3dfc665'}"
 
     input:
-    tuple val(meta), path(notebook)
+    tuple val(meta), path(notebook, arity: '1..*')
     val(parameters)
     path input_files
     path extensions
 
     output:
     tuple val(meta), path("*.html")                               , emit: html
-    tuple val(meta), path(notebook)                               , emit: notebook
+    tuple val(meta), path(notebook, arity: '1..*')                , emit: notebook
     tuple val(meta), path("params.yml")                           , emit: params_yaml
     tuple val(meta), path("${notebook_parameters.artifact_dir}/*"), emit: artifacts  , optional: true
     tuple val(meta), path("_extensions")                          , emit: extensions , optional: true
@@ -72,12 +72,18 @@ process QUARTONOTEBOOK {
     export OMP_NUM_THREADS="${task.cpus}"
     export NUMBA_NUM_THREADS="${task.cpus}"
 
-    # Render notebook
-    quarto render \\
-        ${notebook} \\
-        ${args} \\
-        --execute-params params.yml \\
-        --output ${prefix}.html
+    for file in ${notebook}; do
+        # Get base name
+        full_basename=\$(basename "\$file")
+        base_name="\${full_basename%%.*}"
+
+        # Render notebook
+        quarto render \\
+            "\$file" \\
+            ${args} \\
+            --execute-params params.yml \\
+            --output "${prefix}_\${base_name}.html"
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
