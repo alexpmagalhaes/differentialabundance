@@ -545,14 +545,8 @@
                 "interaction_genotype_treatment_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
                 "treatment_effect_classic_comparison_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
                 "treatment_plus_genotype_SRP254919.deseq2.sizefactors.tsv:md5,727aa118b484c9956c9abac80f09cafe",
-                "treatment_effect_classic_comparison_SRP254919.gprofiler2.gost_results.rds:md5,f998063c30498a5d38398be25f9d0c60",
-                "treatment_effect_classic_comparison_SRP254919.gprofiler2.gost_results.rds:md5,f998063c30498a5d38398be25f9d0c60",
-                "treatment_plus_genotype_SRP254919.gprofiler2.gost_results.rds:md5,d15ce1e767bf360711d67618244b750b",
-                "treatment_plus_genotype_SRP254919.gprofiler2.gost_results.rds:md5,d15ce1e767bf360711d67618244b750b",
                 "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
                 "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
-                "treatment_effect_classic_comparison_SRP254919.gprofiler2.gostplot.html:md5,24d0f1b4906121e900f95da1523706a0",
-                "treatment_plus_genotype_SRP254919.gprofiler2.gostplot.html:md5,eeb4cc75c076e26f2ae62fb3de485536",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
@@ -580,7 +574,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-03T15:56:00.993083639"
+        "timestamp": "2025-09-04T13:41:25.55678279"
     },
     "Test profile - yml no formula": {
         "content": [
