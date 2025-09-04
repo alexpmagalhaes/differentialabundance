@@ -809,19 +809,20 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, files]
         }
     ch_quarto_templates = Channel.of(
-        [[id:'test'], [
-            file("$projectDir/assets/differentialabundance_report.Rmd"),
-            file("$projectDir/assets/quarto_report.qmd")
-        ]]
+        [[id:'test'], 
+            file("$projectDir/assets/differentialabundance_report.Rmd")],
+         [[id:'test'],
+            file("$projectDir/assets/quarto_report.qmd")]
     )
+
     // Render the final report
     if (!params.skip_reports) {
         QUARTONOTEBOOK(
             // ch_report_input.report_file,
             ch_quarto_templates,
-            ch_report_input.report_params,
-            ch_report_input.input_files.map{ meta, files -> files },
-            Channel.of([])
+            ch_report_input.report_params.first(),
+            ch_report_input.input_files.map{ meta, files -> files }.first(),
+            Channel.value([])
         )
 
         // Make a report bundle comprising the markdown document and all necessary
