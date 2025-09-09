@@ -603,53 +603,120 @@ percentVar_list <- list()
 for (assay_type in rev(names(assay_data))){
 
     pca_data <- pca_datas[[assay_type]]
-    for (iv in informative_variables){
 
-        cat(paste0("\n##### ", prettifyVariablename(assay_type), " (", iv, ")\n"))
+    plotdata <- pca_data$coords
+    percentVar <- pca_data$percentVar
+    plotdata$name <- rownames(plotdata)
+    labels <- paste0(colnames(plotdata), " (", sprintf("%.1f", percentVar), "%)")
 
-        plotdata <- pca_data$coords
-        plotdata$colorby <- factor(
-        observations[[iv]],
-        levels = unique(observations[[iv]])
-        )
-        pcaColorScale <- makeColorScale(length(unique(observations[[iv]])), palette = params$exploratory_palette_name)
+    cat(paste0("\n##### ", prettifyVariablename(assay_type), "\n"))
 
-        # Make plotting data combining PCA coords with coloring groups etc
+    plot_types <- if (ncol(pca_data$coords) >= 3)
+      list("2" = "scatter", "3" = "scatter3d") else list("2" = "scatter")
 
-        plotdata$name <- rownames(plotdata)
-        percentVar <- pca_data$percentVar
-        labels <- paste0(colnames(plotdata), " (", sprintf("%.1f", percentVar), "%)")
-        ncats <- length(unique(plotdata$colorby))
+    for (d in names(plot_types)) {
 
-        plot_types <- list("2" = "scatter", "3" = "scatter3d")
+        fig <- plot_ly()
+        trace_indices <- list()
+        trace_counter <- 0L
 
-        for (d in names(plot_types)) {
+        for (iv in informative_variables){
 
-        # Default plot args whatever we're doing
+            plotdata$colorby <- factor(
+                observations[[iv]],
+                levels = unique(observations[[iv]])
+            )
+            pcaColorScale <- makeColorScale(length(unique(plotdata$colorby)), palette = params$exploratory_palette_name)
+            lvls <- levels(plotdata$colorby)
 
-        plot_args <- list(
-            x = pca_data$coords[, 1],
-            y = pca_data$coords[, 2],
-            xlab = labels[1],
-            ylab = labels[2],
-            colorby = plotdata$colorby,
-            plot_type = plot_types[[d]],
-            palette = pcaColorScale,
-            legend_title = prettifyVariablename(iv),
-            labels = plotdata$name,
-            show_labels = TRUE
-        )
+            start_idx <- trace_counter + 1L
+            for (j in seq_along(lvls)) {
+                idx <- which(plotdata$colorby == lvls[j])
+                trace_counter <- trace_counter + 1L
 
-        if (d == "3") {
-            plot_args$z <- pca_data$coords[, 3]
-            plot_args$zlab <- labels[3]
+                if (d == "2") {
+                    fig <- fig %>%
+                        add_markers(
+                            x = pca_data$coords[, 1][idx],
+                            y = pca_data$coords[, 2][idx],
+                            text = plotdata$name[idx],
+                            hoverinfo = "text+x+y",
+                            name = lvls[j],
+                            legendgroup = iv,
+                            showlegend = (iv == informative_variables[1]),
+                            marker = list(size = 8, color = pcaColorScale[j]),
+                            visible = (iv == informative_variables[1])
+                        )
+                } else { # "3"
+                    fig <- fig %>%
+                        add_markers(
+                            x = pca_data$coords[, 1][idx],
+                            y = pca_data$coords[, 2][idx],
+                            z = pca_data$coords[, 3][idx],
+                            type = "scatter3d",
+                            mode = "markers",
+                            text = plotdata$name[idx],
+                            hoverinfo = "text+x+y+z",
+                            name = lvls[j],
+                            legendgroup = iv,
+                            showlegend = (iv == informative_variables[1]),
+                            marker = list(size = 3, color = pcaColorScale[j]),
+                            visible = (iv == informative_variables[1])
+                        )
+                }
+            }
+            end_idx <- trace_counter
+            trace_indices[[iv]] <- start_idx:end_idx
         }
 
-        print(htmltools::tagList(do.call("plotly_scatterplot", plot_args)))
+        total_traces <- trace_counter
+        updatemenus <- list(list(
+            type = "dropdown",
+            active = 0,
+            x = 1, xanchor = "right",
+            y = 1.1, yanchor = "top",
+            buttons = lapply(seq_along(informative_variables), function(i) {
+                iv <- informative_variables[i]
+                vis <- rep(FALSE, total_traces); vis[trace_indices[[iv]]] <- TRUE
+                showleg <- rep(FALSE, total_traces); showleg[trace_indices[[iv]]] <- TRUE
+                list(
+                    label = prettifyVariablename(iv),
+                    method = "update",
+                    args = list(
+                        list(visible = vis, showlegend = showleg),
+                        list(title = paste("Color by", prettifyVariablename(iv)))
+                    )
+                )
+            })
+        ))
+
+        if (d == "2") {
+            fig <- fig %>%
+                layout(
+                    updatemenus = updatemenus,
+                    xaxis = list(title = labels[1]),
+                    yaxis = list(title = labels[2]),
+                    title = paste("Color by", prettifyVariablename(informative_variables[1])),
+                    legend = list(title = list(text = prettifyVariablename(informative_variables[1])))
+                )
+        } else {
+            fig <- fig %>%
+                layout(
+                    updatemenus = updatemenus,
+                    scene = list(
+                        xaxis = list(title = labels[1]),
+                        yaxis = list(title = labels[2]),
+                        zaxis = list(title = labels[3])
+                    ),
+                    title = paste("Color by", prettifyVariablename(informative_variables[1]))
+                )
         }
-        if (! assay_type %in% names(percentVar_list)){
+
+        print(htmltools::tagList(fig))
+    }
+
+    if (! assay_type %in% names(percentVar_list)){
         percentVar_list[[assay_type]] <- percentVar
-        }
     }
 }
 ```
