@@ -750,28 +750,37 @@ percentVar_list <- list()
 for (assay_type in rev(names(assay_data))){
 
     pca_data <- pca_datas[[assay_type]]
-         plotdata <- pca_data$coords
+
+    plotdata <- pca_data$coords
     percentVar <- pca_data$percentVar
     plotdata$name <- rownames(plotdata)
     labels <- paste0(colnames(plotdata), " (", sprintf("%.1f", percentVar), "%)")
+
     cat(paste0("\n##### ", prettifyVariablename(assay_type), "\n"))
+
     plot_types <- if (ncol(pca_data$coords) >= 3)
       list("2" = "scatter", "3" = "scatter3d") else list("2" = "scatter")
+
     for (d in names(plot_types)) {
+
         fig <- plot_ly()
         trace_indices <- list()
         trace_counter <- 0L
+
         for (iv in informative_variables){
+
             plotdata$colorby <- factor(
                 observations[[iv]],
                 levels = unique(observations[[iv]])
             )
             pcaColorScale <- makeColorScale(length(unique(plotdata$colorby)), palette = params$exploratory_palette_name)
             lvls <- levels(plotdata$colorby)
+
             start_idx <- trace_counter + 1L
             for (j in seq_along(lvls)) {
                 idx <- which(plotdata$colorby == lvls[j])
                 trace_counter <- trace_counter + 1L
+
                 if (d == "2") {
                     fig <- fig %>%
                         add_markers(
@@ -806,6 +815,7 @@ for (assay_type in rev(names(assay_data))){
             end_idx <- trace_counter
             trace_indices[[iv]] <- start_idx:end_idx
         }
+
         total_traces <- trace_counter
         updatemenus <- list(list(
             type = "dropdown",
@@ -826,6 +836,7 @@ for (assay_type in rev(names(assay_data))){
                 )
             })
         ))
+
         if (d == "2") {
             fig <- fig %>%
                 layout(
@@ -847,8 +858,10 @@ for (assay_type in rev(names(assay_data))){
                     title = paste("Color by", prettifyVariablename(informative_variables[1]))
                 )
         }
+
         print(htmltools::tagList(fig))
     }
+
     if (! assay_type %in% names(percentVar_list)){
         percentVar_list[[assay_type]] <- percentVar
     }
@@ -915,6 +928,8 @@ d3heatmap::d3heatmap(
 
 for (variable in rownames(pca_vs_meta)){
     sig_comps <- pca_vs_meta[variable,] < 0.1
+
+    sig_comps[is.na(sig_comps)] <- FALSE
 
     if (any(sig_comps)){
         min_sig_comp <- min(which(sig_comps))
