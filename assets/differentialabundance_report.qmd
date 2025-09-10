@@ -1,17 +1,17 @@
 ---
-output:
-    html_document:
+title-block: none
+format:
+    html:
+        css: nf-core_style.css
         toc: true                               # table of contents
-        toc_float: true                         # float the table of contents to the left of the main document content
-        toc_depth: 4                            # header levels 1,2,3
+        toc-location: left                      # float the table of contents to the left of the main document content
+        toc-depth: 4                            # header levels 1,2,3
+        toc-image: nf-core-differentialabundance_logo_light.png
         theme: default
-        number_sections: false                  # add section numbering to headers
-        df_print: paged                         # tables are printed as an html table with support for pagination over rows and columns
-        highlight: pygments
-        pdf_document: true
-    pdf_document:
-        toc: yes
-date: "`{r} Sys.Date()`"
+        number-sections: false                  # add section numbering to headers
+        df-print: paged                         # tables are printed as an html table with support for pagination over rows and columns
+        embed-resources: true
+        self-contained: true
 params:
     meta: NULL
     input_dir: NULL
@@ -152,6 +152,7 @@ params:
     gprofiler2_min_diff: NULL
     gprofiler2_palette_name: NULL
     gene_sets_files: NULL
+    # Missing Nextflow params
     paramset_name: null
     contrasts: null
     contrasts_yml: null
@@ -235,6 +236,7 @@ params:
     notification_url_prod: null
     notification_url: null
     execParameterDescription: null
+
 ---
 
 <!-- Load libraries -->
@@ -272,14 +274,15 @@ round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
 }
 ```
 
-```{r}
+```{r, warning=FALSE}
 #| include: false
 # Load the datatables js
 datatable(NULL)
 ```
 
-```{r}
+```{r, warning=FALSE}
 #| include: false
+#| warning: false
 cat("input_dir:", params$input_dir, "\n")
 cat("versions_file:", params$versions_file, "\n")
 
@@ -313,13 +316,35 @@ make_params_table <- function(name, pattern = NULL, remove_pattern = FALSE){
 
 report_title <- paste0('Differential ',  params$features_type, ' abundance report', ifelse(is.null(params$report_title), '', paste0(': ', params$report_title)))
 report_subtitle <- paste0(ifelse(is.null(params$report_author), '', paste0('By ', params$report_author, ', ')), '<br>differentialabundance workflow version', versions[["Workflow.nf-core/differentialabundance"]])
+
 ```
 
----
+```{r, echo=FALSE, results='asis'}
+library(htmltools)
 
-title:  "<img src=\"`{r} file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`{r} params$report_title`"
-subtitle: "`{r} params$report_subtitle`"
----
+HTML(paste0('
+<div style="display:flex; align-items:center; margin-bottom:10px;">
+  <img src="', file.path(params$input_dir, params$logo), '" style="height:120px;"/>
+  <div>
+    <h1 style="margin:0;">', report_title, '</h1>
+  </div>
+</div>
+<div>
+  <h3 style="margin:0; font-weight:bold; font-size:110%; color:black;">', report_subtitle, '</h3>
+</div>
+<div>
+  <p style="margin:0; font-size:100%; color:black; font-style:italic;">', Sys.Date(), '</p>
+</div>
+<div style="height:20px;"></div>
+'))
+```
+
+<!-- ---
+
+title:  "<img src=\"`{r} file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`{r} I(report_title)`"
+subtitle: "`{r} I(report_subtitle)`"
+date: "`{r} Sys.Date()`"
+--- -->
 
 <!-- set notebook defaults -->
 
@@ -349,7 +374,19 @@ cat(paste0("
 
 <!-- Include PI/contact info if provided -->
 
+```{r, results='asis', echo=F, eval=!is.null(params$report_contributors)}
+contributors <- gsub("\n", "<br>", params$report_contributors, fixed = TRUE)
+contributors <- lapply(simpleSplit(contributors, ";"), function(s) {
+    splt <- simpleSplit(s, "<br>")
+    paste0("**", head(splt, 1), "**<br>", paste(tail(splt, -1), collapse = "<br>"))
+})
 
+for (r in seq_along(contributors)) {
+    if (r %% 2 == 1) cat("<div class='div-row'>")
+    cat(paste0("<div class='div-column'>", contributors[r], "</div>"))
+    if (r %% 2 == 0 || r == length(contributors)) cat("</div>")
+}
+```
 
 <!-- Load input data -->
 
@@ -449,8 +486,9 @@ treatment-mCherry-hND6-batcheffect.deseq2.results.tsv
 (with blocking being optional) and the suffix is defined in parameters.
 -->
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 #| echo: false
+#| warning: false
 differential_file_suffix <- params$differential_file_suffix
 if (is.null(differential_file_suffix)) {
     differential_file_suffix <- paste0(".", params$differential_method, ".results.tsv")
@@ -523,9 +561,9 @@ names(differential_results) <- differential_names
 
 <!-- Calculate some summary statistics -->
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 #| echo: false
-
+#| wanring: false
 # Function to make friendly contrast name from contrast components, including optional bits
 
 name_contrast <- function(i){
@@ -618,11 +656,12 @@ print( htmltools::tagList(datatable(observations_to_print, caption = paste(ucfir
 
 ## Contrasts
 
-Comparisons were made between `{r} params$observations_type` groups defined using `{r} params$observation_type` metadata columns, as described in the following table of contrasts:
+Comparisons were made between `{r} params$observations_type` groups defined using 
+`{r} params$observations_type` metadata columns, as described in the following table of contrasts:
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE}
 #| echo: false
-#| results: asis
+
 contrasts_to_print <- contrasts
 colnames(contrasts_to_print) <- prettifyVariablename(colnames(contrasts_to_print))
 
@@ -638,7 +677,12 @@ contrasts_to_print$model <- sapply(contrasts_to_print$Id, function(id) {
     }
 })
 
-print( htmltools::tagList(datatable(contrasts_to_print, caption = paste0("Table of contrasts"), rownames = FALSE, options = list(dom = ifelse(nrow(contrasts_to_print) > 10, 'tp', 't'))) ))
+datatable(
+  contrasts_to_print,
+  caption = "Table of contrasts",
+  rownames = FALSE,
+  options = list(dom = ifelse(nrow(contrasts_to_print) > 10, 'tp', 't'))
+)
 ```
 
 # Results
@@ -655,9 +699,9 @@ The following plots show the abundance value distributions of input matrices. A 
 
 #### Box plots
 
-```{r, echo=FALSE, results='asis', fig.height=8}
+```{r, echo=FALSE, fig.height=8}
 #| echo: false
-#| results: asis
+
 
 p <- ggplot_boxplot(
     assay_data,
@@ -668,23 +712,23 @@ p <- ggplot_boxplot(
     whisker_distance = params$exploratory_whisker_distance,
     base_size=8
 )
-print(p)
+p
 ```
 
 Whiskers in the above boxplots show `{r} params$exploratory_whisker_distance` times the inter-quartile range.
 
 #### Density plots
 
-```{r, echo=FALSE, results='asis', fig.height=8}
+```{r, echo=FALSE, fig.height=8}
 #| echo: false
-#| results: asis
-plotly_densityplot(
+p <- plotly_densityplot(
     assay_data,
     experiment = observations,
     colorby = observations_name_col,
     expressiontype = paste("count per", params$features_type),
     makeColorScale(length(unique(observations[[params$observations_id_col]])), palette = "Set1")
 )
+p
 ```
 
 ```{r, echo=FALSE, results='asis'}
@@ -693,71 +737,128 @@ plotly_densityplot(
 cat(paste0("\n### ", ucfirst(params$observations_type), " relationships\n"))
 ```
 
-#### Principal components plots {.tabset}
+#### Principal components plots 
+::: {.panel-tabset}
 
 Principal components analysis was conducted based on the `{r} params$exploratory_n_features` most variable `{r} params$features_type`s. Each component was annotated with its percent contribution to variance.
 
 ```{r, echo=FALSE, results='asis'}
 #| echo: false
-#| results: asis
+
 # Create nested list to save the percentVars for reusing in the scree plot
 percentVar_list <- list()
 for (assay_type in rev(names(assay_data))){
 
     pca_data <- pca_datas[[assay_type]]
-    for (iv in informative_variables){
-
-        cat(paste0("\n##### ", prettifyVariablename(assay_type), " (", iv, ")\n"))
-
-        plotdata <- pca_data$coords
-        plotdata$colorby <- factor(
-        observations[[iv]],
-        levels = unique(observations[[iv]])
-        )
-        pcaColorScale <- makeColorScale(length(unique(observations[[iv]])), palette = params$exploratory_palette_name)
-
-        # Make plotting data combining PCA coords with coloring groups etc
-
-        plotdata$name <- rownames(plotdata)
-        percentVar <- pca_data$percentVar
-        labels <- paste0(colnames(plotdata), " (", sprintf("%.1f", percentVar), "%)")
-        ncats <- length(unique(plotdata$colorby))
-
-        plot_types <- list("2" = "scatter", "3" = "scatter3d")
-
-        for (d in names(plot_types)) {
-
-        # Default plot args whatever we're doing
-
-        plot_args <- list(
-            x = pca_data$coords[, 1],
-            y = pca_data$coords[, 2],
-            xlab = labels[1],
-            ylab = labels[2],
-            colorby = plotdata$colorby,
-            plot_type = plot_types[[d]],
-            palette = pcaColorScale,
-            legend_title = prettifyVariablename(iv),
-            labels = plotdata$name,
-            show_labels = TRUE
-        )
-
-        if (d == "3") {
-            plot_args$z <- pca_data$coords[, 3]
-            plot_args$zlab <- labels[3]
+         plotdata <- pca_data$coords
+    percentVar <- pca_data$percentVar
+    plotdata$name <- rownames(plotdata)
+    labels <- paste0(colnames(plotdata), " (", sprintf("%.1f", percentVar), "%)")
+    cat(paste0("\n##### ", prettifyVariablename(assay_type), "\n"))
+    plot_types <- if (ncol(pca_data$coords) >= 3)
+      list("2" = "scatter", "3" = "scatter3d") else list("2" = "scatter")
+    for (d in names(plot_types)) {
+        fig <- plot_ly()
+        trace_indices <- list()
+        trace_counter <- 0L
+        for (iv in informative_variables){
+            plotdata$colorby <- factor(
+                observations[[iv]],
+                levels = unique(observations[[iv]])
+            )
+            pcaColorScale <- makeColorScale(length(unique(plotdata$colorby)), palette = params$exploratory_palette_name)
+            lvls <- levels(plotdata$colorby)
+            start_idx <- trace_counter + 1L
+            for (j in seq_along(lvls)) {
+                idx <- which(plotdata$colorby == lvls[j])
+                trace_counter <- trace_counter + 1L
+                if (d == "2") {
+                    fig <- fig %>%
+                        add_markers(
+                            x = pca_data$coords[, 1][idx],
+                            y = pca_data$coords[, 2][idx],
+                            text = plotdata$name[idx],
+                            hoverinfo = "text+x+y",
+                            name = lvls[j],
+                            legendgroup = iv,
+                            showlegend = (iv == informative_variables[1]),
+                            marker = list(size = 8, color = pcaColorScale[j]),
+                            visible = (iv == informative_variables[1])
+                        )
+                } else { # "3"
+                    fig <- fig %>%
+                        add_markers(
+                            x = pca_data$coords[, 1][idx],
+                            y = pca_data$coords[, 2][idx],
+                            z = pca_data$coords[, 3][idx],
+                            type = "scatter3d",
+                            mode = "markers",
+                            text = plotdata$name[idx],
+                            hoverinfo = "text+x+y+z",
+                            name = lvls[j],
+                            legendgroup = iv,
+                            showlegend = (iv == informative_variables[1]),
+                            marker = list(size = 3, color = pcaColorScale[j]),
+                            visible = (iv == informative_variables[1])
+                        )
+                }
+            }
+            end_idx <- trace_counter
+            trace_indices[[iv]] <- start_idx:end_idx
         }
-
-        print(htmltools::tagList(do.call("plotly_scatterplot", plot_args)))
+        total_traces <- trace_counter
+        updatemenus <- list(list(
+            type = "dropdown",
+            active = 0,
+            x = 1, xanchor = "right",
+            y = 1.1, yanchor = "top",
+            buttons = lapply(seq_along(informative_variables), function(i) {
+                iv <- informative_variables[i]
+                vis <- rep(FALSE, total_traces); vis[trace_indices[[iv]]] <- TRUE
+                showleg <- rep(FALSE, total_traces); showleg[trace_indices[[iv]]] <- TRUE
+                list(
+                    label = prettifyVariablename(iv),
+                    method = "update",
+                    args = list(
+                        list(visible = vis, showlegend = showleg),
+                        list(title = paste("Color by", prettifyVariablename(iv)))
+                    )
+                )
+            })
+        ))
+        if (d == "2") {
+            fig <- fig %>%
+                layout(
+                    updatemenus = updatemenus,
+                    xaxis = list(title = labels[1]),
+                    yaxis = list(title = labels[2]),
+                    title = paste("Color by", prettifyVariablename(informative_variables[1])),
+                    legend = list(title = list(text = prettifyVariablename(informative_variables[1])))
+                )
+        } else {
+            fig <- fig %>%
+                layout(
+                    updatemenus = updatemenus,
+                    scene = list(
+                        xaxis = list(title = labels[1]),
+                        yaxis = list(title = labels[2]),
+                        zaxis = list(title = labels[3])
+                    ),
+                    title = paste("Color by", prettifyVariablename(informative_variables[1]))
+                )
         }
-        if (! assay_type %in% names(percentVar_list)){
+        print(htmltools::tagList(fig))
+    }
+    if (! assay_type %in% names(percentVar_list)){
         percentVar_list[[assay_type]] <- percentVar
-        }
     }
 }
+cat(":::")
 ```
 
 ```{r, echo=FALSE, results='asis', eval=params$report_scree}
-cat(paste0("\n#### Scree plot {.tabset}"))
+cat(paste0("\n#### Scree plot\n"))
+cat("::: {.panel-tabset}")
 cat(paste0("\nThe following scree plot visualizes what percentage of total variation in the data can be explained by each of the principal components computed.\n"))
 #iv <- informative_variables[1]
 
@@ -776,6 +877,7 @@ for (assay_type in names(percentVar_list)) {
     )
     cat("\n")
 }
+cat(":::")
 ```
 
 #### Principal components/ metadata associations
@@ -823,7 +925,8 @@ for (variable in rownames(pca_vs_meta)){
 }
 ```
 
-#### Clustering dendrograms {.tabset}
+#### Clustering dendrograms
+::: {.panel-tabset}
 
 A hierarchical clustering of `{r} params$features_type`s was undertaken based on `{r} ifelse(params$exploratory_n_features == -1, paste0("all ", params$features_type), paste0("the ", params$exploratory_n_features, " most variable ", params$features_type))`s. Distances between `r params$features_type`s were estimated based on `{r} params$exploratory_cor_method` correlation, which were then used to produce a clustering via the `{r} params$exploratory_clustering_method` method with `hclust()` in R.
 
@@ -848,7 +951,7 @@ for (assay_type in rev(names(assay_data))){
             "s\n(", params$exploratory_clustering_method, " clustering, ", params$exploratory_cor_method, " correlation)"),
         cluster_method = params$exploratory_clustering_method,
         palette = dendroColorScale,
-        labelspace = 0.25
+        labelspace = 0.55
         )
         # Defaults in shinyngs make the text in this plot a bit big for the report, so
         # scale it down a bit
@@ -856,6 +959,7 @@ for (assay_type in rev(names(assay_data))){
         cat("\n")
     }
 }
+cat(":::")
 ```
 
 ```{r, echo=FALSE, results='asis', warning=FALSE}
@@ -865,7 +969,8 @@ for (assay_type in rev(names(assay_data))){
 iv_min_group_sizes <- unlist(lapply(informative_variables, function(x) min(table(observations[[x]]))))
 
 if (any(iv_min_group_sizes > 2)){
-    cat("\n### Outlier detection {.tabset}\n")
+    cat("\n### Outlier detection\n")
+    cat("::: {.panel-tabset}")
     cat("\nOutlier detection based on [median absolute deviation](https://archive.ph/o3thZ) was undertaken, the outlier scoring is plotted below. For more on MAD, see [this wiki article](https://en.wikipedia.org/wiki/Median_absolute_deviation).\n")
 }
 
@@ -905,6 +1010,7 @@ foo <- lapply(informative_variables[iv_min_group_sizes > 2], function(iv){
         }
     }
 })
+cat(":::")
 ```
 
 ## Differential analysis
@@ -918,16 +1024,21 @@ cat(paste0(
 ))
 ```
 
-### Differential `{r} params$features_type` `{r} params$study_abundance_type` {.tabset}
+### Differential `{r} params$features_type` `{r} params$study_abundance_type`
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE, results='asis', warning=FALSE}
 #| echo: false
 #| results: asis
+
+cat("::: {.panel-tabset}")
+
 foo <- lapply(names(p_value_types), function(pvt){
     cat("\n#### ", pvt, "\n")
     print( htmltools::tagList(datatable(differential_tables[[pvt]], caption = paste0('Differential ',  params$features_type, " ", params$abundance_type, ' (target relative to reference)'), options = list(dom = 't'), rownames = TRUE) ))
     cat("\n")
 })
+
+cat(":::")
 ```
 
 ```{r, echo=FALSE, results='asis', eval = FALSE}
@@ -948,11 +1059,16 @@ differential_summary_string <- paste(
     )
 )
 cat(differential_summary_string)
+
 ```
 
-### Differential `r params$features_type` details
+### Differential `{r} params$features_type` details
 
-```{r, echo=FALSE, results='asis', warning=FALSE, message=FALSE}
+```{r, results='asis'}
+#| echo: false
+#| results: asis
+#| warning: false
+#| message: false
 
 # Display all warnings related to number of rows
 if (length(warnings_list) > 0) {
@@ -960,8 +1076,8 @@ if (length(warnings_list) > 0) {
 }
 
 for (i in 1:nrow(contrasts)){
-    cat("\n#### ", contrast_descriptions[i], "  {.tabset}\n")
-
+    cat("\n#### ", contrast_descriptions[i], "\n")
+    cat("::: {.panel-tabset}", "\n\n")
     ## Make a volcano plot for the contrast first
 
     # Label features with symbol as well as identifier
@@ -982,7 +1098,7 @@ for (i in 1:nrow(contrasts)){
     p_value_thresholds <- list(Adjusted = params$differential_max_qval, Unadjusted = params$differential_max_pval)
 
     for (pvt in names(p_value_types)){
-        cat("\n##### ", pvt, " p values\n")
+        cat("\n##### ", pvt, " p values", "\n\n")
         pval_column <- p_value_types[[pvt]]
 
         de_fc <- abs(full_de[[params$differential_fc_column]]) >= abs(log2(params$differential_min_fold_change))
@@ -1033,9 +1149,9 @@ for (i in 1:nrow(contrasts)){
         p <- do.call(plotly_scatterplot, plot_args) %>%
         layout(xaxis = list(range=list(-max_fc, max_fc)))
 
-        print(htmltools::tagList(p))
+        p
 
-        ## ... then show tables of the up/ down genes
+        # ... then show tables of the up/ down genes
 
         for (dir in c('up', 'down')){
         contrast_de <- sig_differential[[pvt]][[i]][[dir]]
@@ -1066,6 +1182,7 @@ for (i in 1:nrow(contrasts)){
                 theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
             print(gene_biotype_plot)
+            cat("\n")
         } else {
             cat("Column 'Gene biotype' does not exist. Skipping plot.\n")
         }
@@ -1074,15 +1191,21 @@ for (i in 1:nrow(contrasts)){
         }
         }
     }
+    cat(":::")
 }
 ```
 
 <!-- Gene set analysis results -->
 
-```{r, echo=FALSE, results='asis'}
+```{r, warning=FALSE, results='asis'}
+#| echo: false
+#| results: asis
+#| warning: false
+
 if (!is.null(params$functional_method)){
     cat("\n### Gene set analysis\n")
-    cat("\n#### ", toupper(params$functional_method) ," {.tabset}\n")
+    cat("\n#### ", toupper(params$functional_method) ,"\n", "\n")
+    cat("::: {.panel-tabset}\n")
 
     if (params$functional_method == 'gsea') {
 
@@ -1098,7 +1221,8 @@ if (!is.null(params$functional_method)){
 
         for (gmt_file in simpleSplit(params$gene_sets_files)) {
             gmt_name <- basename(tools::file_path_sans_ext(gmt_file))
-            cat("\n##### ", gmt_name ," {.tabset}\n")
+            cat("\n##### ", gmt_name ,"\n")
+            cat("::: {.panel-tabset}", "\n")
 
             reference_gsea_tables <- paste0(differential_names, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$reference, '.tsv')
             target_gsea_tables <- paste0(differential_names, ".", gmt_name, '.gsea_report_for_', gsea_contrasts$target, '.tsv')
@@ -1130,6 +1254,7 @@ if (!is.null(params$functional_method)){
                     cat("\n*Reference GSEA file missing: ", reference_gsea_tables[i], "*\n")
                 }
             }
+            cat(":::\n")
         }
     }
     }  else if (params$functional_method == 'gprofiler2') {
@@ -1157,12 +1282,17 @@ if (!is.null(params$functional_method)){
             cat("\n")
         }
     }
+
+    cat(":::", "\n")
 }
 ```
 
 # Methods
 
 ```{r, echo=FALSE, results='asis', eval=params$study_type == 'maxquant'}
+#| echo: false
+#| results: asis
+
 cat(paste0("\n## Protein abundance import\n"))
 make_params_table('importing maxquant output', 'proteus_', remove_pattern = TRUE)
 ```
@@ -1170,10 +1300,14 @@ make_params_table('importing maxquant output', 'proteus_', remove_pattern = TRUE
 ## Filtering
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 make_params_table('feature-wise filtering', 'filtering_', remove_pattern = TRUE)
 ```
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 filtering_string <- paste0('Filtering was carried out by selecting ', params$features_type, 's with an abundance of at least ', params$filtering_min_abundance)
 
 if (is.null(params$filtering_grouping_var)){
@@ -1195,6 +1329,8 @@ cat(filtering_string)
 ## Exploratory analysis
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 make_params_table('exploratory analysis', 'exploratory_', remove_pattern = TRUE)
 ```
 
@@ -1202,6 +1338,8 @@ make_params_table('exploratory analysis', 'exploratory_', remove_pattern = TRUE)
 
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 if (params$differential_method == 'deseq2'){
     make_params_table('DESeq2', 'deseq2_', remove_pattern = TRUE)
 }
@@ -1211,10 +1349,13 @@ make_params_table('downstream differential analysis', 'differential_', remove_pa
 <!-- If any gene set methods have been activated show their params -->
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 if (!is.null(params$functional_method)){
     cat("\n### Gene set analysis\n")
-    cat("\n#### ", toupper(params$functional_method) ,"  {.tabset}\n")
+    cat("\n#### ", toupper(params$functional_method), "\n")
     make_params_table(toupper(params$functional_method), paste0(params$functional_method, '_'), remove_pattern = TRUE)
+    # cat("\n", ":::")
 }
 ```
 
@@ -1223,6 +1364,8 @@ if (!is.null(params$functional_method)){
 ## All parameters
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 print( htmltools::tagList(datatable(params_table, caption = "All parameters", rownames = FALSE) ))
 ```
 
@@ -1231,11 +1374,14 @@ print( htmltools::tagList(datatable(params_table, caption = "All parameters", ro
 **Note:** For a more detailed accounting of the software and commands used (including containers), consult the execution report produced as part of the 'pipeline info' for this workflow.
 
 ```{r, echo=FALSE, results='asis'}
+#| echo: false
+#| results: asis
 versions_table <- data.frame(do.call(rbind, strsplit(names(versions), split = '\\.')), unlist(versions))
 colnames(versions_table) <- c('Component', 'Software', 'Version')
 print( htmltools::tagList(datatable(versions_table, caption = "Software versions", rownames = FALSE, options = list(dom = 'ft', paging = FALSE)) ))
 ```
 
 ```{r, echo=FALSE, results='asis'}
-htmltools::includeMarkdown(params$citations)
+citations_md <- readLines(params$citations)
+cat(citations_md, sep = "\n")
 ```
