@@ -819,7 +819,9 @@ workflow DIFFERENTIALABUNDANCE {
     // Render the final report
     if (!params.skip_reports) {
         QUARTONOTEBOOK(
-            ch_report_input.report_file,
+            ch_report_input.report_file.map { meta, report_file ->
+                [meta + [report_file_name: report_file.baseName], report_file]
+            },
             ch_report_input.report_params.first(),
             ch_report_input.input_files.map{ meta, files -> files }.first(),
             Channel.value([])
@@ -829,6 +831,7 @@ workflow DIFFERENTIALABUNDANCE {
         // input files
 
         ch_bundle_input = QUARTONOTEBOOK.out.notebook
+            .map { meta, notebook -> [meta.findAll { key, value -> key != 'report_file_name' }, notebook] }  // Remove report_file_name from meta
             .groupTuple()  // Group all notebooks by meta (same paramset)
             .join(ch_report_input.input_files.groupTuple().map { meta, files_list -> [meta, files_list[0]] })  // Take input files once per paramset
             .map { meta, notebooks, input_files -> [meta, notebooks + input_files] }  // [meta, [all notebooks + input files]]
