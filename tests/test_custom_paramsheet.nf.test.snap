@@ -85,8 +85,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/SRP254919",
                 "shinyngs_app/SRP254919/app.R",
@@ -132,9 +132,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-17T09:59:11.644008654"
+        "timestamp": "2025-09-11T19:56:16.49673495"
     },
     "Test profile - deseq2": {
         "content": [
@@ -224,8 +224,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -325,9 +325,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-17T09:55:48.476497111"
+        "timestamp": "2025-09-11T19:51:47.954108087"
     },
     "Test profile - gsea": {
         "content": [
@@ -417,8 +417,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -518,8 +518,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-17T09:57:08.6693888"
+        "timestamp": "2025-09-11T19:54:04.925432979"
     }
 }

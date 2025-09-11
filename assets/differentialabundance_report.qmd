@@ -14,7 +14,7 @@ format:
         self-contained: true
 params:
     meta: NULL
-    input_dir: NULL
+    input_dir: ./
     artifact_dir: NULL
     cpus: 1
     study_type: NULL

@@ -1142,13 +1142,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Whether to generate a scree plot in the report"
-                },
-                "input_dir": {
-                    "type": "string",
-                    "default": "./",
-                    "hidden": true,
-                    "fa_icon": "fas fa-user-edit",
-                    "description": "Input directory for report"
                 }
             },
             "required": ["report_file", "logo_file", "css_file"]

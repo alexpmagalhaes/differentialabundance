@@ -1,0 +1,321 @@
+---
+title-block: none
+format:
+    html:
+        css: nf-core_style.css
+        toc: true                               # table of contents
+        toc-location: left                      # float the table of contents to the left of the main document content
+        toc-depth: 4                            # header levels 1,2,3
+        toc-image: nf-core-differentialabundance_logo_light.png
+        theme: default
+        number-sections: false                  # add section numbering to headers
+        df-print: paged                         # tables are printed as an html table with support for pagination over rows and columns
+        embed-resources: true
+        self-contained: true
+params:
+    meta: NULL
+    input_dir: "./"
+    artifact_dir: NULL
+    cpus: 1
+    study_type: NULL
+    study_name: NULL
+    study_abundance_type: NULL
+    report_file: NULL,
+    report_title: NULL,
+    report_contributors: NULL
+    report_author: NULL,
+    report_description: NULL,
+    report_scree: NULL
+    round_digits: NULL
+    observations_type: NULL
+    observations: NULL                                          # GSE156533.samplesheet.csv
+    observations_id_col: NULL
+    observations_name_col: NULL
+    features: NULL
+    features_type: NULL
+    features_id_col: NULL
+    features_name_col: NULL
+    features_metadata_cols: NULL
+    features_gtf_feature_type: NULL
+    features_gtf_table_first_field: NULL
+    exploratory_log2_assays: NULL
+    raw_matrix: null                                            # e.g. 0_salmon.merged.gene_counts_length_scaled.tsv
+    normalised_matrix: null
+    variance_stabilised_matrix: null                            # e.g. test_files/3_treatment-WT-P23H.vst.tsv
+    contrasts_file: null                                        # e.g. GSE156533.contrasts.yaml
+    differential_table: file.csv
+    proteus_measurecol_prefix: NULL
+    proteus_norm_function: NULL
+    proteus_plotsd_method: NULL
+    proteus_plotmv_loess: NULL
+    proteus_palette_name: NULL
+    affy_cel_files_archive: NULL
+    affy_file_name_col: NULL
+    affy_background: NULL
+    affy_bgversion: NULL
+    affy_destructive: NULL
+    affy_cdfname: NULL
+    affy_rm_mask: NULL
+    affy_rm_outliers: NULL
+    affy_rm_extra: NULL
+    affy_build_annotation: NULL
+    limma_ndups: NULL
+    limma_spacing: NULL
+    limma_block: NULL
+    limma_correlation: NULL
+    limma_method: NULL
+    limma_proportion: NULL
+    limma_stdev_coef_lim: NULL
+    limma_trend: NULL
+    limma_robust: NULL
+    limma_winsor_tail_p: NULL
+    limma_adjust_method: NULL
+    limma_p_value: NULL
+    limma_lfc: NULL
+    limma_confint: NULL
+    exploratory_n_features: null
+    exploratory_clustering_method: null
+    exploratory_cor_method: null
+    exploratory_whisker_distance: null
+    exploratory_mad_threshold: null
+    exploratory_main_variable: null
+    exploratory_assay_names: NULL
+    exploratory_final_assay: NULL
+    exploratory_palette_name: NULL
+    versions_file: null                                         # e.g 17_software_versions.yml
+    logo: null
+    css: null
+    citations: null
+    filtering_min_samples: 1
+    filtering_min_abundance: 1
+    filtering_min_proportion: NULL
+    filtering_grouping_var: NULL
+    differential_method: NULL
+    differential_file_suffix: NULL
+    differential_feature_id_column: NULL
+    differential_feature_name_column: NULL
+    differential_fc_column: NULL
+    differential_pval_column: NULL
+    differential_qval_column: NULL
+    differential_min_fold_change: NULL
+    differential_foldchanges_logged: NULL
+    differential_max_pval: NULL
+    differential_max_qval: NULL
+    differential_palette_name: NULL
+    differential_subset_to_contrast_samples: NULL
+    deseq2_test: NULL
+    deseq2_fit_type: NULL
+    deseq2_sf_type: NULL
+    deseq2_min_replicates_for_replace: NULL
+    deseq2_use_t: NULL
+    deseq2_lfc_threshold: NULL
+    deseq2_alt_hypothesis: NULL
+    deseq2_independent_filtering: NULL
+    deseq2_p_adjust_method: NULL
+    deseq2_alpha: NULL
+    deseq2_minmu: NULL
+    deseq2_vs_method: NULL
+    deseq2_shrink_lfc: NULL
+    deseq2_cores: NULL
+    deseq2_vs_blind: NULL
+    deseq2_vst_nsub: NULL
+    functional_method: NULL
+    gsea_nperm: NULL
+    gsea_permute: NULL
+    gsea_scoring_scheme: NULL
+    gsea_metric: NULL
+    gsea_sort: NULL
+    gsea_order: NULL
+    gsea_set_max: NULL
+    gsea_set_min: NULL
+    gsea_norm: NULL
+    gsea_rnd_type: NULL
+    gsea_make_sets: NULL
+    gsea_median: NULL
+    gsea_num: NULL
+    gsea_plot_top_x: NULL
+    gsea_rnd_seed: NULL
+    gsea_save_rnd_lists: NULL
+    gsea_zip_report: NULL
+    gsea_chip_file: NULL
+    gprofiler2_organism: NULL
+    gprofiler2_significant: NULL
+    gprofiler2_measure_underrepresentation: NULL
+    gprofiler2_correction_method: NULL
+    gprofiler2_sources: NULL
+    gprofiler2_evcodes: NULL
+    gprofiler2_max_qval: NULL
+    gprofiler2_token: NULL
+    gprofiler2_background_file: NULL
+    gprofiler2_background_column: NULL
+    gprofiler2_domain_scope: NULL
+    gprofiler2_min_diff: NULL
+    gprofiler2_palette_name: NULL
+    gene_sets_files: NULL
+    # Missing Nextflow params
+    paramset_name: null
+    contrasts: null
+    contrasts_yml: null
+    querygse: null
+    matrix: null
+    transcript_length_matrix: null
+    control_features: null
+    sizefactors_from_controls: null
+    outdir: "results"
+    paramsheet: null
+    gtf: null
+    filtering_min_proportion_not_na: 0.5
+    filtering_min_samples_not_na: 2
+    deseq2_seed: 1
+    limma_use_voom: false
+    immunedeconv_run: false
+    immunedeconv_method: "xcell"
+    immunedeconv_function: "deconvolute"
+    shinyngs_build_app: false
+    skip_reports: false
+    shinyngs_deploy_to_shinyapps_io: false
+    shinyngs_shinyapps_account: null
+    shinyngs_shinyapps_app_name: null
+    logo_file: null
+    css_file: null
+    citations_file: null
+    genome: null
+    igenomes_base: null
+    igenomes_ignore: false
+    publish_dir_mode: "copy"
+    email: null
+    email_on_fail: null
+    plaintext_email: false
+    monochrome_logs: false
+    hook_url: null
+    version: null
+    pipelines_testdata_base_path: null
+    modules_testdata_base_path: null
+    config_profile_name: null
+    config_profile_description: null
+    custom_config_version: null
+    custom_config_base: null
+    config_profile_contact: null
+    config_profile_url: null
+    validate_params: true
+    globalConfig: null
+    outputDir: null
+    aws_batch_account_id: null
+    aws_batch_ecr: null
+    pipelines_ecr: null
+    pipelines_manual_ecr: null
+    docker_env: null
+    godm_dev_account_id: null
+    godm_prod_account_id: null
+    godm_dev: null
+    input: null
+    godm_dev_ecr: null
+    godm_prod_ecr: null
+    godm_docker_env: null
+    godm_ecr: null
+    awsAccountId: null
+    registry: null
+    schema_ignore_params: null
+    validationSchemaIgnoreParams: null
+    maxMemory: "128.GB"
+    maxCpus: 16
+    maxTime: "240.h"
+    executionEnv: null
+    profileList: null
+    profileDescription: null
+    clusterQueue: null
+    max_memory: "128.GB"
+    max_cpus: 16
+    max_time: "240.h"
+    referenceEnv: null
+    referenceDataDir: null
+    reportsDir: "reports"
+    logDir: "logs"
+    maxRetries: 3
+    errorStrategy: "terminate"
+    notification_url_dev: null
+    notification_url_prod: null
+    notification_url: null
+    execParameterDescription: null
+
+---
+
+<!-- Load libraries -->
+
+```{r}
+#| include: false
+library(knitr)
+library(yaml)
+library(shinyngs)
+library(plotly)
+library(DT)
+```
+
+<!-- Define some functions -->
+
+```{r}
+#| include: false
+round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
+    if (digits == -1) {
+        return(df)                              # if -1, return df without rounding
+    }
+
+    df <- data.frame(df, check.names = FALSE)   # make data.frame from vector as otherwise, the format will get messed up
+    if (is.null(columns)) {
+        columns <- colnames(df)[(unlist(lapply(df, is.numeric), use.names=F))]    # extract only numeric columns for rounding
+    }
+    df[,columns] <- format(data.frame(df[, columns], check.names = FALSE), scientific=T, digits=params$round_digits)
+    # Convert columns back to numeric
+
+    for (c in columns) {
+        df[[c]][grep("^ *NA$", df[[c]])] <- NA
+        df[[c]] <- as.numeric(df[[c]])
+    }
+    df
+}
+```
+
+```{r, warning=FALSE}
+#| include: false
+# Load the datatables js
+datatable(NULL)
+```
+
+```{r, warning=FALSE}
+#| include: false
+#| warning: false
+cat("input_dir:", params$input_dir, "\n")
+cat("versions_file:", params$versions_file, "\n")
+
+file_path <- file.path(params$input_dir, params$versions_file)
+cat("Full path:", file_path, "\n")
+
+if (!file.exists(file_path)) {
+  stop("Versions file does not exist at: ", file_path)
+}
+versions <- unlist(yaml.load_file(file.path(params$input_dir, params$versions_file)), recursive = FALSE)
+params_table <- data.frame(Parameter = names(unlist(params)), Value = unlist(params), row.names = NULL)
+
+# We'll subset the params table for different report sections
+make_params_table <- function(name, pattern = NULL, remove_pattern = FALSE){
+    subparams <- params_table
+    if (! is.null(pattern)){
+        subparams <- subparams[grep(pattern, subparams$Parameter),]
+    }
+    if (remove_pattern){
+        subparams$Parameter <- sub(pattern, '', subparams$Parameter)
+    }
+
+    if (nrow(subparams) > 10){
+        dom <- 'tp'
+    }else{
+        dom <- 't'
+    }
+
+    print( htmltools::tagList(datatable(subparams, caption = paste("Parameters used for", name), rownames = FALSE, options = list(dom = dom)) ))
+}
+
+report_title <- paste0('Differential ',  params$features_type, ' abundance report', ifelse(is.null(params$report_title), '', paste0(': ', params$report_title)))
+report_subtitle <- paste0(ifelse(is.null(params$report_author), '', paste0('By ', params$report_author, ', ')), '<br>differentialabundance workflow version', versions[["Workflow.nf-core/differentialabundance"]])
+
+```
