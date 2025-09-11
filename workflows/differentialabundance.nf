@@ -763,7 +763,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_report_files = ch_paramsets
         .map { meta ->
             [ meta, [
-                file(meta.params.report_file, checkIfExists: true),
+                file(meta.params.report_file),
                 file(meta.params.logo_file, checkIfExists: true),
                 file(meta.params.css_file, checkIfExists: true),
                 file(meta.params.citations_file, checkIfExists: true)
@@ -794,6 +794,13 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
         .map { [it[0], it.tail().flatten().grep()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
+        .flatMap { meta, report_file, files ->
+            // Split comma-separated report files and create separate entries for each
+            meta.params.report_file.split(',').collect { report_path ->
+                def report_file_obj = file(report_path.trim(), checkIfExists: true)
+                [meta, report_file_obj, files]
+            }
+        }
         .multiMap { meta, report_file, files ->
             report_file:
             [meta, report_file]
@@ -822,8 +829,9 @@ workflow DIFFERENTIALABUNDANCE {
         // input files
 
         ch_bundle_input = QUARTONOTEBOOK.out.notebook
-                .combine(ch_report_input.input_files, by:0)
-                .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
+            .groupTuple()  // Group all notebooks by meta (same paramset)
+            .join(ch_report_input.input_files.groupTuple().map { meta, files_list -> [meta, files_list[0]] })  // Take input files once per paramset
+            .map { meta, notebooks, input_files -> [meta, notebooks + input_files] }  // [meta, [all notebooks + input files]]
 
         MAKE_REPORT_BUNDLE( ch_bundle_input )
     }
