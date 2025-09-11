@@ -188,9 +188,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-23T09:03:01.551039804"
+        "timestamp": "2025-09-11T15:27:19.683945507"
     },
     "Test profile - with toolsheet": {
         "content": [
@@ -381,9 +381,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-23T09:01:41.694097903"
+        "timestamp": "2025-09-11T15:24:59.548857806"
     },
     "Test profile - with toolsheet and formula": {
         "content": [
@@ -729,8 +729,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-23T09:04:21.203865649"
+        "timestamp": "2025-09-11T15:29:34.861423879"
     }
 }

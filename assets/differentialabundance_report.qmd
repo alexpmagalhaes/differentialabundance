@@ -190,6 +190,7 @@ params:
     hook_url: null
     version: null
     pipelines_testdata_base_path: null
+    modules_testdata_base_path: null
     config_profile_name: null
     config_profile_description: null
     custom_config_version: null
@@ -656,7 +657,7 @@ print( htmltools::tagList(datatable(observations_to_print, caption = paste(ucfir
 
 ## Contrasts
 
-Comparisons were made between `{r} params$observations_type` groups defined using 
+Comparisons were made between `{r} params$observations_type` groups defined using
 `{r} params$observations_type` metadata columns, as described in the following table of contrasts:
 
 ```{r, echo=FALSE}
@@ -737,7 +738,7 @@ p
 cat(paste0("\n### ", ucfirst(params$observations_type), " relationships\n"))
 ```
 
-#### Principal components plots 
+#### Principal components plots
 ::: {.panel-tabset}
 
 Principal components analysis was conducted based on the `{r} params$exploratory_n_features` most variable `{r} params$features_type`s. Each component was annotated with its percent contribution to variance.
