@@ -811,7 +811,7 @@ for (assay_type in rev(names(assay_data))){
             "s\n(", params$exploratory_clustering_method, " clustering, ", params$exploratory_cor_method, " correlation)"),
         cluster_method = params$exploratory_clustering_method,
         palette = dendroColorScale,
-        labelspace = 0.25
+        labelspace = 0.55
         )
         # Defaults in shinyngs make the text in this plot a bit big for the report, so
         # scale it down a bit
@@ -916,7 +916,7 @@ if (length(warnings_list) > 0) {
 }
 
 for (i in 1:nrow(contrasts)){
-    cat("\n#### ", contrast_descriptions[i], "  {.tabset}\n")
+    cat("\n#### ", contrast_descriptions[i], "  {.tabset}\n\n")
 
     ## Make a volcano plot for the contrast first
 
@@ -937,9 +937,8 @@ for (i in 1:nrow(contrasts)){
 
     p_value_types <- list(Adjusted = params$differential_qval_column, Unadjusted = params$differential_pval_column)
     p_value_thresholds <- list(Adjusted = params$differential_max_qval, Unadjusted = params$differential_max_pval)
-
     for (pvt in names(p_value_types)){
-        cat("\n##### ", pvt, " p values\n")
+        cat("\n##### ", pvt, " p values\n\n")
         pval_column <- p_value_types[[pvt]]
 
         de_fc <- abs(full_de[[params$differential_fc_column]]) >= abs(log2(params$differential_min_fold_change))
@@ -1022,6 +1021,7 @@ for (i in 1:nrow(contrasts)){
                 theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
             print(gene_biotype_plot)
+            cat("\n")
         } else {
             cat("Column 'Gene biotype' does not exist. Skipping plot.\n")
         }
