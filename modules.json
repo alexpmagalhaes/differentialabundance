@@ -95,11 +95,6 @@
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
                     },
-                    "rmarkdownnotebook": {
-                        "branch": "master",
-                        "git_sha": "ba9efe74bd993e9ce77441104e48120834d5886e",
-                        "installed_by": ["modules"]
-                    },
                     "shinyngs/app": {
                         "branch": "master",
                         "git_sha": "d959d6328d104f5afea99b276f109ff5a3819e65",
