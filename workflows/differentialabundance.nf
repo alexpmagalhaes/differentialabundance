@@ -806,7 +806,18 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, report_file]
 
             report_params:
-            def paramset = [paramset_name: meta.paramset_name] + meta.params  // flat the map
+            def params_to_keep = ['id', 'study_type', 'study_name', 'study_abundance_type', 'report_title', 'report_contributors',
+                'report_author', 'report_scree', 'round_digits', 'observations_type', 'observations_type', 'observations', 'observations_id_col',
+                'observations_name_col', 'features', 'features_type', 'features_id_col', 'features_metadata_cols', 'exploratory_log2_assays',
+                'contrasts_file', 'differential_table', 'exploratory_n_features', 'exploratory_clustering_method', 'exploratory_cor_method',
+                'exploratory_whisker_distance', 'exploratory_mad_threshold', 'exploratory_main_variable', 'exploratory_assay_names', 'exploratory_final_assay',
+                'exploratory_palette_name', 'versions_file', 'logo', 'css', 'citations', 'filtering_min_samples', 'filtering_min_abundance',
+                'filtering_min_proportion', 'filtering_grouping_var', 'differential_method', 'differential_file_suffix', 'differential_feature_id_column',
+                'differential_feature_name_column', 'differential_fc_column', 'differential_pval_column', 'differential_qval_column',
+                'differential_min_fold_change', 'differential_foldchanges_logged', 'differential_max_pval', 'differential_max_qval', 'differential_palette_name',
+                'deseq2_lfc_threshold', 'deseq2_p_adjust_method', 'deseq2_alpha', 'functional_method', 'gprofiler2_significant', 'gprofiler2_max_qval',
+                'gene_sets_files', 'contrasts']
+            def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap(params_to_keep.findAll { meta.params.containsKey(it) }) // flat the map
             def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
                 paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
                 [ 'contrasts_file' ]
@@ -820,7 +831,11 @@ workflow DIFFERENTIALABUNDANCE {
     if (!params.skip_reports) {
         QUARTONOTEBOOK(
             ch_report_input.report_file.map { meta, report_file ->
-                [meta + [report_file_name: report_file.baseName], report_file]
+                def filtered_meta = [
+                    id: meta.id,
+                    report_file_name: report_file.baseName
+                ]
+                [filtered_meta, report_file]
             },
             ch_report_input.report_params.first(),
             ch_report_input.input_files.map{ meta, files -> files }.first(),

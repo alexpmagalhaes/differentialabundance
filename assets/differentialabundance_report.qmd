@@ -17,14 +17,13 @@ params:
     input_dir: ./
     artifact_dir: NULL
     cpus: 1
+    paramset_name: NULL
     study_type: NULL
     study_name: NULL
     study_abundance_type: NULL
-    report_file: NULL,
-    report_title: NULL,
+    report_title: NULL
     report_contributors: NULL
-    report_author: NULL,
-    report_description: NULL,
+    report_author: NULL
     report_scree: NULL
     round_digits: NULL
     observations_type: NULL
@@ -34,45 +33,13 @@ params:
     features: NULL
     features_type: NULL
     features_id_col: NULL
-    features_name_col: NULL
     features_metadata_cols: NULL
-    features_gtf_feature_type: NULL
-    features_gtf_table_first_field: NULL
     exploratory_log2_assays: NULL
-    raw_matrix: null                                            # e.g. 0_salmon.merged.gene_counts_length_scaled.tsv
-    normalised_matrix: null
-    variance_stabilised_matrix: null                            # e.g. test_files/3_treatment-WT-P23H.vst.tsv
+    raw_matrix: NULL                                    # e.g. 0_salmon.merged.gene_counts_length_scaled.tsv
+    normalised_matrix: NULL
+    variance_stabilised_matrix: NULL
     contrasts_file: null                                        # e.g. GSE156533.contrasts.yaml
     differential_table: file.csv
-    proteus_measurecol_prefix: NULL
-    proteus_norm_function: NULL
-    proteus_plotsd_method: NULL
-    proteus_plotmv_loess: NULL
-    proteus_palette_name: NULL
-    affy_cel_files_archive: NULL
-    affy_file_name_col: NULL
-    affy_background: NULL
-    affy_bgversion: NULL
-    affy_destructive: NULL
-    affy_cdfname: NULL
-    affy_rm_mask: NULL
-    affy_rm_outliers: NULL
-    affy_rm_extra: NULL
-    affy_build_annotation: NULL
-    limma_ndups: NULL
-    limma_spacing: NULL
-    limma_block: NULL
-    limma_correlation: NULL
-    limma_method: NULL
-    limma_proportion: NULL
-    limma_stdev_coef_lim: NULL
-    limma_trend: NULL
-    limma_robust: NULL
-    limma_winsor_tail_p: NULL
-    limma_adjust_method: NULL
-    limma_p_value: NULL
-    limma_lfc: NULL
-    limma_confint: NULL
     exploratory_n_features: null
     exploratory_clustering_method: null
     exploratory_cor_method: null
@@ -102,102 +69,14 @@ params:
     differential_max_pval: NULL
     differential_max_qval: NULL
     differential_palette_name: NULL
-    differential_subset_to_contrast_samples: NULL
-    deseq2_test: NULL
-    deseq2_fit_type: NULL
-    deseq2_sf_type: NULL
-    deseq2_min_replicates_for_replace: NULL
-    deseq2_use_t: NULL
     deseq2_lfc_threshold: NULL
-    deseq2_alt_hypothesis: NULL
-    deseq2_independent_filtering: NULL
     deseq2_p_adjust_method: NULL
     deseq2_alpha: NULL
-    deseq2_minmu: NULL
-    deseq2_vs_method: NULL
-    deseq2_shrink_lfc: NULL
-    deseq2_cores: NULL
-    deseq2_vs_blind: NULL
-    deseq2_vst_nsub: NULL
     functional_method: NULL
-    gsea_nperm: NULL
-    gsea_permute: NULL
-    gsea_scoring_scheme: NULL
-    gsea_metric: NULL
-    gsea_sort: NULL
-    gsea_order: NULL
-    gsea_set_max: NULL
-    gsea_set_min: NULL
-    gsea_norm: NULL
-    gsea_rnd_type: NULL
-    gsea_make_sets: NULL
-    gsea_median: NULL
-    gsea_num: NULL
-    gsea_plot_top_x: NULL
-    gsea_rnd_seed: NULL
-    gsea_save_rnd_lists: NULL
-    gsea_zip_report: NULL
-    gsea_chip_file: NULL
-    gprofiler2_organism: NULL
     gprofiler2_significant: NULL
-    gprofiler2_measure_underrepresentation: NULL
-    gprofiler2_correction_method: NULL
-    gprofiler2_sources: NULL
-    gprofiler2_evcodes: NULL
     gprofiler2_max_qval: NULL
-    gprofiler2_token: NULL
-    gprofiler2_background_file: NULL
-    gprofiler2_background_column: NULL
-    gprofiler2_domain_scope: NULL
-    gprofiler2_min_diff: NULL
-    gprofiler2_palette_name: NULL
     gene_sets_files: NULL
-    paramset_name: NULL
     contrasts: NULL
-    contrasts_yml: NULL
-    querygse: NULL
-    matrix: NULL
-    transcript_length_matrix: NULL
-    control_features: NULL
-    sizefactors_from_controls: NULL
-    outdir: NULL
-    paramsheet: NULL
-    gtf: NULL
-    filtering_min_proportion_not_na: NULL
-    filtering_min_samples_not_na: NULL
-    deseq2_seed: NULL
-    limma_use_voom: NULL
-    immunedeconv_run: NULL
-    immunedeconv_method: NULL
-    immunedeconv_function: NULL
-    shinyngs_build_app: NULL
-    skip_reports: NULL
-    shinyngs_deploy_to_shinyapps_io: NULL
-    shinyngs_shinyapps_account: NULL
-    shinyngs_shinyapps_app_name: NULL
-    logo_file: NULL
-    css_file: NULL
-    citations_file: NULL
-    genome: NULL
-    igenomes_base: NULL
-    igenomes_ignore: NULL
-    publish_dir_mode: NULL
-    email: NULL
-    email_on_fail: NULL
-    plaintext_email: NULL
-    monochrome_logs: NULL
-    hook_url: NULL
-    version: NULL
-    pipelines_testdata_base_path: NULL
-    modules_testdata_base_path: NULL
-    config_profile_name: NULL
-    config_profile_description: NULL
-    custom_config_version: NULL
-    custom_config_base: NULL
-    config_profile_contact: NULL
-    config_profile_url: NULL
-    validate_params: NULL
-    input: NULL
 
 ---
 
