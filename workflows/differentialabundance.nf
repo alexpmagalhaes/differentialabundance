@@ -846,12 +846,14 @@ workflow DIFFERENTIALABUNDANCE {
         // input files
 
         ch_bundle_input = QUARTONOTEBOOK.out.notebook
-            .map { _meta, notebook -> notebook }
-            .combine(ch_report_input.input_files.map { meta, _file -> meta }.first())
-            .map { notebook, meta -> [meta, notebook] }
-            .groupTuple()  // Group all notebooks by meta (same paramset)
-            .join(ch_report_input.input_files.groupTuple().map { meta, files_list -> [meta, files_list[0]] })  // Take input files once per paramset
-            .map { meta, notebooks, input_files -> [meta, notebooks + input_files] }  // [meta, [all notebooks + input files]]
+            .map { meta, notebook -> notebook }.collect()
+            .combine(ch_report_input.input_files.groupTuple().map { meta, files_list -> [meta, files_list[0]] })  // Take input files once per paramset
+            .map {
+                def notebooks = it[0..-3]       // All elements except the last two (meta and input_files)
+                def meta = it[-2]               // Second to last element is meta
+                def input_files = it[-1]        // Last element is input files
+                [meta, notebooks + input_files] // [meta, [notebooks + input_files]]
+            }
 
         MAKE_REPORT_BUNDLE( ch_bundle_input )
     }
