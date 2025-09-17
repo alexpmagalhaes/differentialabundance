@@ -22,7 +22,7 @@
   gsea_rnd_seed: "10"
 
 - paramset_name: deseq2_rnaseq_gsea_complex
-  include: paramsheet/deseq2_rnaseq_gsea,testdata/rnaseq_testdata_complex  
+  include: paramsheet/deseq2_rnaseq_gsea,testdata/rnaseq_testdata_complex
 
   # Exploratory plots
   exploratory_main_variable: contrasts
