@@ -8,6 +8,7 @@ include { CUSTOM_TABULARTOGSEACLS  } from '../../../modules/nf-core/custom/tabul
 include { CUSTOM_TABULARTOGSEACHIP } from '../../../modules/nf-core/custom/tabulartogseachip/main.nf'
 include { GSEA_GSEA                } from '../../../modules/nf-core/gsea/gsea/main.nf'
 include { PROPR_GREA               } from "../../../modules/nf-core/propr/grea/main.nf"
+include { DECOUPLER                } from '../../../modules/nf-core/decoupler/decoupler/main.nf'
 
 // Combine meta maps, including merging non-identical values of shared keys (e.g. 'id')
 def mergeMaps(meta, meta2){
@@ -37,10 +38,9 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // Add method information into meta map of ch_input
     // This information is used later to determine which method to run for each input
     // Also, reorganize the structure to match them with the modules' input organization
-
     ch_input_for_other = ch_input
-        .multiMap {
-            meta, file, genesets, background, method ->
+        .join(ch_featuresheet)
+        .multiMap { meta, file, genesets, background, method, features_sheet, features_id, features_symbol ->
             def meta_with_method = meta + [ 'functional_method': method ]
             input:
                 [ meta_with_method, file ]
@@ -48,8 +48,10 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
                 [ meta_with_method, genesets ]
             background:
                 [ meta_with_method, background ]
+            features:
+                [ meta_with_method, features_sheet, features_id, features_symbol]
         }
-
+    
     // In the case of GSEA, it needs additional files coming from other channels that other methods don't use
     // here we define the input channel for the GSEA section
 
@@ -58,16 +60,14 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         def meta_with_contrast = mergeMaps(meta_contrast, meta_with_method)
         input:
             [ meta_with_contrast, input ]
-        input_without_contrast:
-            [ meta_with_method, input ]
         genesets:
             [ meta_with_contrast, genesets ]
         contrasts_and_samples:
             [ meta_with_contrast, samplesheet ]
         features:
-            [ [meta_with_method, featuresheet], [features_id, features_symbol] ]
-        meta_key:
-            [ meta_with_method, meta_with_contrast ]
+            [ meta_with_method, featuresheet ]
+        features_cols:
+            [ features_id, features_symbol ]
     }
 
     // GSEA uses meta.variable, so only keep contrasts where meta.variable is present
@@ -81,6 +81,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         .combine(ch_samplesheet.join(ch_featuresheet), by:0)
         .combine(ch_contrasts_transposed, by:0)
         .multiMap(criteria)
+
 
     // ----------------------------------------------------
     // Perform enrichment analysis with gprofiler2
@@ -96,43 +97,37 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
     // Perform enrichment analysis with GSEA
     // ----------------------------------------------------
 
+    // NOTE that GCT input can be more than 1, if they come from different tools (eg. limma, deseq2).
     // CLS input can be as many as combinations of input x contrasts
-    // But not for GCT and CHIP
+    // Whereas features can be only one file.
 
-    CUSTOM_TABULARTOGSEACLS( ch_input_for_gsea.contrasts_and_samples )
+    CUSTOM_TABULARTOGSEAGCT(ch_input_for_gsea.input)
+
+    CUSTOM_TABULARTOGSEACLS(ch_input_for_gsea.contrasts_and_samples)
 
     CUSTOM_TABULARTOGSEACHIP(
-        ch_input_for_gsea.features.unique().map{it[0]},
-        ch_input_for_gsea.features.unique().map{it[1]}
+        ch_input_for_gsea.features.first(),
+        ch_input_for_gsea.features_cols.first()
     )
 
-    CUSTOM_TABULARTOGSEAGCT( ch_input_for_gsea.input_without_contrast.unique() )
-
-    // switch the meta by the one with contrast
-    ch_chip_gct = CUSTOM_TABULARTOGSEACHIP.out.chip
-        .join( CUSTOM_TABULARTOGSEAGCT.out.gct )
-        .combine( ch_input_for_gsea.meta_key, by:0 )
-        .map { meta, chip, gct, meta_with_contrast ->
-            return [ meta_with_contrast, chip, gct ]
-        }
-
-    // prepare the input for GSEA
-    ch_input_for_gsea = ch_chip_gct
-        .join( CUSTOM_TABULARTOGSEACLS.out.cls )
+    ch_input_for_gsea = CUSTOM_TABULARTOGSEAGCT.out.gct
+        .join(CUSTOM_TABULARTOGSEACLS.out.cls)
         .join( ch_input_for_gsea.genesets )
-        .multiMap { meta, chip, gct, cls, genesets ->
-            input:
-                [ meta, gct, cls, genesets ]
-            contrast:
-                [ meta.reference, meta.target ]
-            chip:
-                [ meta, chip ]
-        }
 
     GSEA_GSEA(
-        ch_input_for_gsea.input,
-        ch_input_for_gsea.contrast,
-        ch_input_for_gsea.chip
+        ch_input_for_gsea,
+        ch_input_for_gsea.map{ tuple(it[0].reference, it[0].target) },
+        CUSTOM_TABULARTOGSEACHIP.out.chip.first()
+    )
+    // ----------------------------------------------------
+    // Perform enrichment analysis with DECOUPLER
+    // ----------------------------------------------------
+
+    DECOUPLER(
+        ch_input_for_other.input.filter{ it[0].functional_method == 'decoupler' },
+        ch_input_for_other.genesets.filter{ it[0].functional_method == 'decoupler'},
+        ch_input_for_other.features.filter{ it[0].functional_method == 'decoupler'}
+            .map{ meta, features_sheet, features_id, features_symbol -> [meta, features_sheet] }
     )
 
     // ----------------------------------------------------
@@ -151,6 +146,7 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
         .mix(CUSTOM_TABULARTOGSEACLS.out.versions)
         .mix(CUSTOM_TABULARTOGSEACHIP.out.versions)
         .mix(GSEA_GSEA.out.versions)
+        .mix(DECOUPLER.out.versions)
         .mix(PROPR_GREA.out.versions)
 
     emit:
@@ -164,6 +160,11 @@ workflow DIFFERENTIAL_FUNCTIONAL_ENRICHMENT {
 
     // gsea-specific outputs
     gsea_report           = GSEA_GSEA.out.report_tsvs_ref.join(GSEA_GSEA.out.report_tsvs_target)
+
+    // decoupler-specific outputs
+    decoupler_dc_estimate = DECOUPLER.out.dc_estimate
+    decoupler_dc_pvals = DECOUPLER.out.dc_pvals
+    decoupler_png = DECOUPLER.out.png
 
     // grea-specific outputs
     grea_results          = PROPR_GREA.out.results
