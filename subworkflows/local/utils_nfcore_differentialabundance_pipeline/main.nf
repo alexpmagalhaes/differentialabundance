@@ -149,29 +149,29 @@ def validateInputParameters(paramsets) {
         // Validate study type spepecific parameters
         if (row.study_type == 'affy_array') {
             if (!row.affy_cel_files_archive) {
-                error("CEL files archive not specified!")
+                error("CEL files archive not specified for paramset={${row.paramset_name}}!")
             }
         } else if (row.study_type == 'maxquant') {
             if (row.functional_method) {
                 error("Functional analysis is not yet possible with maxquant input data; please set --functional_method to null and rerun pipeline!")
             }
             if (!row.matrix) {
-                error("Input matrix not specified!")
+                error("Input matrix not specified for paramset={${row.paramset_name}}!")
             }
         } else if (row.study_type == 'geo_soft_file') {
             if (!row.querygse || !row.features_metadata_cols) {
-                error("Query GSE not specified or features metadata columns not specified")
+                error("Query GSE not specified or features metadata columns not specified for paramset={${row.paramset_name}}")
             }
         } else if (row.study_type == "rnaseq") {
             if (!row.matrix) {
-                error("Input matrix not specified!")
+                error("Input matrix not specified for paramset={${row.paramset_name}}!")
             }
         }
 
         // Validate functional analysis parameters
         if (row.functional_method) {
             if (row.functional_method == 'gsea' && !row.gene_sets_files) {
-                error("GSEA activated but gene set file not specified!")
+                error("GSEA activated but gene set file not specified for paramset={${row.paramset_name}}!")
             } else if (row.functional_method == 'gprofiler2') {
                 if (row.gene_sets_files) {
                     if (row.gene_sets_files.split(",").size() > 1) {
@@ -394,30 +394,33 @@ def resolveIncludes(config) {
     def yaml_parser = new org.yaml.snakeyaml.Yaml()
 
     if (config.containsKey('include')) {
-        def includePath = config.include.split('/')
-        def includeFile = includePath[0]
-        def paramsetName = includePath[1]
+        def includePaths = config.include.split(',') // Split by comma to handle multiple includes
+        includePaths.each { includePath ->
+            def includeParts = includePath.split('/')
+            def includeFile = includeParts[0]
+            def paramsetName = includeParts[1]
 
-        // Load the included YAML file
-        def includeFilePath = file("${projectDir}/conf/${includeFile}.yaml")
-        if (!includeFilePath.exists()) {
-            error("Included file '${includeFilePath}' not found.")
+            // Load the included YAML file
+            def includeFilePath = file("${projectDir}/conf/${includeFile}.yaml")
+            if (!includeFilePath.exists()) {
+                error("Included file '${includeFilePath}' not found.")
+            }
+            def includeContent = yaml_parser.load(includeFilePath.text)
+            def includeConfigs = (includeContent instanceof List) ? includeContent : [includeContent]
+
+            // Find the paramset with the given name
+            def includedConfig = includeConfigs.find { it.paramset_name == paramsetName }
+            if (!includedConfig) {
+                error("Paramset '${paramsetName}' not found in included file '${includeFilePath}'.")
+            }
+
+            // Recursively resolve includes in the included config
+            includedConfig = resolveIncludes(includedConfig)
+
+            // Merge configs
+            includedConfig.putAll(config)
+            config = includedConfig
         }
-        def includeContent = yaml_parser.load(includeFilePath.text)
-        def includeConfigs = (includeContent instanceof List) ? includeContent : [includeContent]
-
-        // Find the paramset with the given name
-        def includedConfig = includeConfigs.find { it.paramset_name == paramsetName }
-        if (!includedConfig) {
-            error("Paramset '${paramsetName}' not found in included file '${includeFilePath}'.")
-        }
-
-        // Recursively resolve includes in the included config
-        includedConfig = resolveIncludes(includedConfig)
-
-        // Merge configs
-        includedConfig.putAll(config)
-        config =  includedConfig
     }
     return config
 }

@@ -98,24 +98,14 @@ nextflow_pipeline {
         }
     }
 
-    test("Test profile - with toolsheet and formula") {
+    test("Test profile - deseq2_rnaseq_gsea - with formula") {
+        tag "deseq2_rnaseq_gsea_complex"
 
         when {
             params {
-                outdir              = "$outputDir"
-                differential_method = 'deseq2'
-                functional_method   = 'gprofiler2'
-                input               = 'https://github.com/nf-core/test-datasets/raw/differentialabundance/modules_testdata/variancepartition_dream/metadata.tsv'
-                matrix              = 'https://github.com/nf-core/test-datasets/raw/differentialabundance/modules_testdata/variancepartition_dream/counts.tsv'
-                contrasts_yml       = 'https://github.com/nf-core/test-datasets/raw/differentialabundance/testdata/formula_contrasts/rnaseq_complex_contrast.yaml'
-                immunedeconv_run    = false
-                exploratory_log2_assays = "raw"
-                skip_reports        = true
-                transcript_length_matrix = null
-                deseq2_seed         = 1
-                round_digits        = 2
-                deseq2_vs_method    = 'rlog'
-                deseq2_shrink_lfc   = false
+                outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "deseq2_rnaseq_gsea_complex"
             }
         }
 
@@ -130,7 +120,7 @@ nextflow_pipeline {
                     // Number of successful tasks
                     workflow.trace.succeeded().size(),
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
-                    removeNextflowVersion("$outputDir/pipeline_info/collated_versions.yml"),
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_differentialabundance_software_versions.yml"),
                     // All stable path name, with a relative path
                     stable_name,
                     // All files with stable contents
@@ -161,7 +151,7 @@ nextflow_pipeline {
                     // Number of successful tasks
                     workflow.trace.succeeded().size(),
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we tests pipelines on multiple Nextflow versions
-                    removeNextflowVersion("$outputDir/pipeline_info/collated_versions.yml"),
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_differentialabundance_software_versions.yml"),
                     // All stable path name, with a relative path
                     stable_name,
                     // All files with stable contents
