@@ -4,7 +4,6 @@ nextflow_pipeline {
     script "../main.nf"
     tag "rnaseq_dream"
     tag "pipeline"
-    profile "test_rnaseq_dream"
 
     test("Test rnaseq dream profile - dream_rnaseq") {
 

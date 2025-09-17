@@ -4,7 +4,6 @@ nextflow_pipeline {
     script "../main.nf"
     tag "nogtf"
     tag "pipeline"
-    profile "test_nogtf"
 
     test("Test no gtf profile - rnaseq_nogtf") {
 

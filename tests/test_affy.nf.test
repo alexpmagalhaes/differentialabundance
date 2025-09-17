@@ -4,7 +4,6 @@ nextflow_pipeline {
     script "../main.nf"
     tag "affy"
     tag "pipeline"
-    profile "test_affy"
 
     test("Test affy profile - limma_affy_gsea") {
 

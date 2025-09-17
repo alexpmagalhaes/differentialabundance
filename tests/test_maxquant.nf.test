@@ -4,7 +4,6 @@ nextflow_pipeline {
     script "../main.nf"
     tag "maxquant"
     tag "pipeline"
-    profile "test_maxquant"
 
 
     test("Test maxquant profile - limma_maxquant") {

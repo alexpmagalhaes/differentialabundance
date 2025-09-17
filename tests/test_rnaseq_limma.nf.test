@@ -4,7 +4,6 @@ nextflow_pipeline {
     script "../main.nf"
     tag "rnaseq_limma"
     tag "pipeline"
-    profile "test_rnaseq_limma"
 
     test("Test rnaseq limma profile - limma_rnaseq_gsea") {
 
