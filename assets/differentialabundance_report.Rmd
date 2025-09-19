@@ -938,7 +938,7 @@ for (i in 1:nrow(contrasts)){
     p_value_types <- list(Adjusted = params$differential_qval_column, Unadjusted = params$differential_pval_column)
     p_value_thresholds <- list(Adjusted = params$differential_max_qval, Unadjusted = params$differential_max_pval)
     for (pvt in names(p_value_types)){
-        cat("\n##### ", pvt, " p values\n\n")
+        cat("\n##### ", pvt, " p values", "  {.tabset}\n\n")
         pval_column <- p_value_types[[pvt]]
 
         de_fc <- abs(full_de[[params$differential_fc_column]]) >= abs(log2(params$differential_min_fold_change))
@@ -1003,32 +1003,44 @@ for (i in 1:nrow(contrasts)){
             contrast_de <- round_dataframe_columns(contrast_de, digits=params$round_digits)
             print( htmltools::tagList(datatable(contrast_de, caption = paste('Differential genes', dir, 'in', contrast_descriptions[i], " (check", differential_files[[i]], "for more detail)"), rownames = FALSE) ))
 
-        expr_mat <- assay_data[["variance_stabilised"]]
-        top_genes <- head(contrast_de[order(contrast_de$Padj), 1], 10)
-        top_genes <- as.character(top_genes)
+        # Boxplots for Deseq2
+        if (params$differential_method == "deseq2") {
+            for (assay_type in rev(names(assay_data))){
+                cat(paste0("\n###### ", prettifyVariablename(assay_type), "\n"))
+                expr_mat <- assay_data[[assay_type]]
+                top_genes <- head(contrast_de[order(contrast_de$Padj), 1], 10)
+                top_genes <- as.character(top_genes)
 
-        # Subset observations to only samples in expr_mat
-        obs_sub <- observations[colnames(expr_mat), , drop = FALSE]
+                # Subset observations to only samples in expr_mat
+                obs_sub <- observations[colnames(expr_mat), , drop = FALSE]
 
-        library(reshape2)
-        plot_df <- reshape2::melt(expr_mat[top_genes, ])
-        colnames(plot_df) <- c("Gene", "Sample", "Expression")
-        print(all(rownames(obs_sub) == colnames(expr_mat)))
+                library(reshape2)
+                plot_df <- reshape2::melt(expr_mat[top_genes, ])
+                colnames(plot_df) <- c("Gene", "Sample", "Expression")
 
-        plot_df$Condition <- obs_sub[plot_df$Sample, "treatment"]
-        gene_names <- contrast_de$`Gene name`
-        names(gene_names) <- contrast_de$`Gene id`  # named vector for lookup
+                plot_df$Condition <- obs_sub[plot_df$Sample, "treatment"]
+                gene_names <- contrast_de$`Gene name`
+                names(gene_names) <- contrast_de$`Gene id`  # named vector for lookup
+                plot_df$GeneName <- gene_names[plot_df$Gene]
 
-        plot_df$GeneName <- gene_names[plot_df$Gene]
+                pvals <- contrast_de$Padj
+                names(pvals) <- contrast_de$`Gene id`
+                plot_df$pval <- pvals[plot_df$Gene]
 
-        # Boxplot for each gene
-        p <- ggplot(plot_df, aes(x = Condition, y = Expression, fill = Condition)) +
-                geom_boxplot() +
-                facet_wrap(~ GeneName, scales = "free_y") +
-                scale_fill_manual(values = groupColorScale) +
-                theme_light() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
-        print(p)
+                # Boxplot for each gene
+                p <- ggplot(plot_df, aes(x = Condition, y = Expression, fill = Condition)) +
+                        geom_boxplot() +
+                        facet_wrap(~ GeneName, scales = "free_y") +
+                        scale_fill_manual(values = groupColorScale) +
+                        theme_light() +
+                        theme(
+                            axis.text.x = element_text(angle = 45, hjust = 1),
+                            legend.position = "none",
+                            strip.text = element_text(color = "black"))
+                print(p)
+                cat("\n")
+            }
+        }
 
         if ("Gene biotype" %in% colnames(contrast_de)) {
             # Plot Differentially Expressed Genes by Gene Biotype
