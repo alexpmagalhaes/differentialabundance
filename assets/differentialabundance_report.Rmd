@@ -1027,6 +1027,11 @@ for (i in 1:nrow(contrasts)){
                 names(pvals) <- contrast_de$`Gene id`
                 plot_df$pval <- pvals[plot_df$Gene]
 
+                # Group p-values to add to plot
+                pvals_grouped <- plot_df %>%
+                    group_by(GeneName) %>%       # replace with your facetting/grouping var
+                    summarise(pval = unique(pval))
+
                 # Boxplot for each gene
                 p <- ggplot(plot_df, aes(x = Condition, y = Expression, fill = Condition)) +
                         geom_boxplot() +
@@ -1036,7 +1041,16 @@ for (i in 1:nrow(contrasts)){
                         theme(
                             axis.text.x = element_text(angle = 45, hjust = 1),
                             legend.position = "none",
-                            strip.text = element_text(color = "black"))
+                            strip.text = element_text(color = "black")
+                        ) +
+                        geom_text(data = pvals_grouped,
+                            aes(x = 1.75, y = max(plot_df$Expression) * 1.01,  # position above boxes
+                            label = paste0("Padj = ", signif(pval, 3))),
+                            inherit.aes = FALSE,
+                            size = 3.25,              # text size
+                            color = "grey37",         # text color
+                            fontface = "italic"
+                            )
                 print(p)
                 cat("\n")
             }
