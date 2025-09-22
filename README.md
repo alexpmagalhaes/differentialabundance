@@ -121,9 +121,7 @@ The pipeline reports its outcomes in two forms.
 
 The primary workflow output is an HTML-format report produced from an [Quarto notebook template](assets/differentialabundance_report.qmd) (you can also supply your own). This leverages helper functions from [shinyngs](https://github.com/pinin4fjords/shinyngs) to produce rich plots and tables, but does not provide significant interactivity.
 
-![screenshot of the markdown report](docs/images/markdown_report.png "Markdown report")
-
-# TODO: does it also work if passing the quarto notebook to Rstudio?
+![screenshot of the Quarto report](docs/images/markdown_report.png "Quarto report")
 
 Additionally, a zip file is produced by the pipeline, containing a Quarto notebook file and all necessary file inputs for reporting. The notebook file is the same as the input template, but with the parameters set appropriately, so that you can run the reporting yourself in RStudio, and add any customisations you need.
 
