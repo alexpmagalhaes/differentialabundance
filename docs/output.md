@@ -80,7 +80,7 @@ Most plots are included in the HTML report (see above), but are also included in
     - `[contrast]/[contrast].gprofiler2.[source].sub_enriched_pathways.tsv`: A gprofiler2 report table of enriched pathways from one specific source/database, e.g. REAC
   - `decoupler/`: Directory containing tables of decoupler results
     - `[differential_method]_[contrast_name]_[decoupler_method]_estimate_decoupler.tsv`: contains the estimated activity scores for each regulator (rows) across all samples (columns).
-    - `[differential_method]_[contrast_name]_[decoupler_method]_pvals_decoupler.{tsv}.tsv`: contains the associated p-values for those activity scores, when the method supports statistical significance estimation.
+    - `[differential_method]_[contrast_name]_[decoupler_method]_pvals_decoupler.tsv`: contains the associated p-values for those activity scores, when the method supports statistical significance estimation.
   - `proteus/`: If `--study_type maxquant`: Directory containing abundance values produced by the proteus module which is used for processing MaxQuant input. Files are prefixed with the associated contrast and chosen normalization function (if any).
     - `[contrast]/[norm_function].normalized_proteingroups_tab.tsv`: Abundance table after normalization.
     - `[contrast]/raw_proteingroups_tab.tsv`: Abundance table without normalization.
