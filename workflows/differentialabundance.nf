@@ -31,6 +31,7 @@ include { PROTEUS_READPROTEINGROUPS as PROTEUS              } from '../modules/n
 include { GEOQUERY_GETGEO                                   } from '../modules/nf-core/geoquery/getgeo/main'
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { IMMUNEDECONV                                      } from '../modules/nf-core/immunedeconv/main'
+include { CSVTK_JOIN                                        } from '../modules/nf-core/csvtk/join/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 //
@@ -505,6 +506,28 @@ workflow DIFFERENTIALABUNDANCE {
     ch_versions = ch_versions
         .mix(ABUNDANCE_DIFFERENTIAL_FILTER.out.versions)
 
+    // ========================================================================
+    // Annotate differential results with feature metadata using csvtk_join
+    // ========================================================================
+
+    // Prepare input for annotation - combine differential results with feature metadata
+    ch_annotation_input = ch_differential_results
+        .combine(ch_validated_featuremeta, by: 0) // Join by meta_key (first element)
+        .map { meta_key, meta_with_contrast, results_file, features_file ->
+            // Return: [meta_with_contrast, [results_file, features_file]]
+            // This structure matches your module input: meta, [matrix, features]
+            [meta_with_contrast, [results_file, features_file]]
+        }
+
+
+    // Run csvtk_join to annotate results
+    CSVTK_JOIN(
+        ch_annotation_input
+    )
+
+    ch_versions = ch_versions
+        .mix(CSVTK_JOIN.out.versions)
+
     // Derive a channel of normalised matrices
     // - from differential analysis for RNASeq
     // - from normalisedvalidated assays for Affy and MaxQuant
@@ -779,6 +802,11 @@ workflow DIFFERENTIALABUNDANCE {
         .groupTuple()                                 // [ meta, [meta with contrast], [differential results], [differential model] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [differential results and models] ]
 
+    // Create a separate channel for annotated results grouped by paramset
+ //   ch_differential_annotated_grouped = ch_differential_results_annotated.transpose()
+   //     .groupTuple()                                 // [ meta, [meta with contrast], [annotated results] ]
+     //   .map { [it[0], it.tail().flatten()] }         // [ meta, [annotated results] ]
+
     ch_functional_grouped = ch_functional_results
         .groupTuple()                                 // [ meta, [meta with contrast], [functional results] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [functional results] ]
@@ -791,6 +819,7 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_all_matrices)           // [meta, samplesheet, features, [matrices]]
         .join(ch_contrasts_sorted)       // [meta, contrast file]
         .join(ch_differential_grouped)   // [meta, [differential results and models]]
+        //.join(ch_differential_annotated_grouped) // [meta, [annotated differential results]]
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
         .map { [it[0], it.tail().flatten().grep()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
