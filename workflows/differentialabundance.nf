@@ -763,7 +763,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_report_files = ch_paramsets
         .map { meta ->
             [ meta, [
-                file(meta.params.report_file),
+                meta.params.report_file,  // can be a string of multiple files, gets split later
                 file(meta.params.logo_file, checkIfExists: true),
                 file(meta.params.css_file, checkIfExists: true),
                 file(meta.params.citations_file, checkIfExists: true)
