@@ -15,7 +15,7 @@
                     },
                     "formula": {
                         "type": "string",
-                        "pattern": "^~\\s*[a-zA-Z_][a-zA-Z0-9_]*(\\s*([:+*])\\s*[a-zA-Z_][a-zA-Z0-9_]*)*$"
+                        "pattern": "^~\\s*[a-zA-Z0-9_]*(\\s*([:+*])\\s*[a-zA-Z0-9_]*)*$"
                     },
                     "comparison": {
                         "type": "array",
@@ -36,12 +36,16 @@
                         "type": "string"
                     }
                 },
-                "required": ["id"],
+                "required": [
+                    "id"
+                ],
                 "additionalProperties": false
             },
             "minItems": 1
         }
     },
-    "required": ["contrasts"],
+    "required": [
+        "contrasts"
+    ],
     "additionalProperties": false
 }
