@@ -819,7 +819,10 @@ workflow DIFFERENTIALABUNDANCE {
     // Render the final report
     if (!params.skip_reports) {
         QUARTONOTEBOOK(
-            ch_report_input.report_file,
+            ch_report_input.report_file.map { meta, report_file ->
+                def new_meta = meta + [ report_file_name: report_file.baseName ]
+                [new_meta, report_file]
+            },
             ch_report_input.report_params.first(),
             ch_report_input.input_files.map{ meta, files -> files }.first(),
             Channel.value([])
