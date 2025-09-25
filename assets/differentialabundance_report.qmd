@@ -180,13 +180,6 @@ HTML(paste0('
 '))
 ```
 
-<!-- ---
-
-title:  "<img src=\"`{r} file.path(params$input_dir, params$logo)`\" style=\"float: left;\"/>`{r} I(report_title)`"
-subtitle: "`{r} I(report_subtitle)`"
-date: "`{r} Sys.Date()`"
---- -->
-
 <!-- set notebook defaults -->
 
 ```{r}
