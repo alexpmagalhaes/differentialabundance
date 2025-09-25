@@ -17,66 +17,16 @@ params:
     input_dir: ./
     artifact_dir: NULL
     cpus: 1
-    paramset_name: NULL
-    study_type: NULL
-    study_name: NULL
-    study_abundance_type: NULL
-    report_title: NULL
-    report_contributors: NULL
-    report_author: NULL
-    report_scree: NULL
-    round_digits: NULL
-    observations_type: NULL
-    observations: NULL                                          # GSE156533.samplesheet.csv
-    observations_id_col: NULL
-    observations_name_col: NULL
+    logo: NULL
+    css: NULL
+    citations: NULL
+    versions_file: NULL
+    observations: NULL
     features: NULL
-    features_type: NULL
-    features_id_col: NULL
-    features_metadata_cols: NULL
-    exploratory_log2_assays: NULL
-    raw_matrix: NULL                                    # e.g. 0_salmon.merged.gene_counts_length_scaled.tsv
+    raw_matrix: NULL
     normalised_matrix: NULL
     variance_stabilised_matrix: NULL
-    contrasts_file: null                                        # e.g. GSE156533.contrasts.yaml
-    differential_table: file.csv
-    exploratory_n_features: null
-    exploratory_clustering_method: null
-    exploratory_cor_method: null
-    exploratory_whisker_distance: null
-    exploratory_mad_threshold: null
-    exploratory_main_variable: null
-    exploratory_assay_names: NULL
-    exploratory_final_assay: NULL
-    exploratory_palette_name: NULL
-    versions_file: null                                         # e.g 17_software_versions.yml
-    logo: null
-    css: null
-    citations: null
-    filtering_min_samples: 1
-    filtering_min_abundance: 1
-    filtering_min_proportion: NULL
-    filtering_grouping_var: NULL
-    differential_method: NULL
-    differential_file_suffix: NULL
-    differential_feature_id_column: NULL
-    differential_feature_name_column: NULL
-    differential_fc_column: NULL
-    differential_pval_column: NULL
-    differential_qval_column: NULL
-    differential_min_fold_change: NULL
-    differential_foldchanges_logged: NULL
-    differential_max_pval: NULL
-    differential_max_qval: NULL
-    differential_palette_name: NULL
-    deseq2_lfc_threshold: NULL
-    deseq2_p_adjust_method: NULL
-    deseq2_alpha: NULL
-    functional_method: NULL
-    gprofiler2_significant: NULL
-    gprofiler2_max_qval: NULL
-    gene_sets_files: NULL
-    contrasts: NULL
+    contrasts_file: NULL
 
 ---
 
@@ -104,7 +54,7 @@ round_dataframe_columns <- function(df, columns = NULL, digits = -1) {
     if (is.null(columns)) {
         columns <- colnames(df)[(unlist(lapply(df, is.numeric), use.names=F))]    # extract only numeric columns for rounding
     }
-    df[,columns] <- format(data.frame(df[, columns], check.names = FALSE), scientific=T, digits=params$round_digits)
+    df[,columns] <- format(data.frame(df[, columns], check.names = FALSE), scientific=T, digits=params$meta$params$round_digits)
     # Convert columns back to numeric
 
     for (c in columns) {
@@ -155,7 +105,7 @@ make_params_table <- function(name, pattern = NULL, remove_pattern = FALSE){
     print( htmltools::tagList(datatable(subparams, caption = paste("Parameters used for", name), rownames = FALSE, options = list(dom = dom)) ))
 }
 
-report_title <- paste0('Differential ',  params$features_type, ' abundance report', ifelse(is.null(params$report_title), '', paste0(': ', params$report_title)))
-report_subtitle <- paste0(ifelse(is.null(params$report_author), '', paste0('By ', params$report_author, ', ')), '<br>differentialabundance workflow version', versions[["Workflow.nf-core/differentialabundance"]])
+report_title <- paste0('Differential ',  params$meta$params$features_type, ' abundance report', ifelse(is.null(params$meta$params$report_title), '', paste0(': ', params$meta$params$report_title)))
+report_subtitle <- paste0(ifelse(is.null(params$meta$params$report_author), '', paste0('By ', params$meta$params$report_author, ', ')), '<br>differentialabundance workflow version', versions[["Workflow.nf-core/differentialabundance"]])
 
 ```
