@@ -519,7 +519,6 @@ workflow DIFFERENTIALABUNDANCE {
             [meta_with_contrast, [results_file, features_file]]
         }
 
-
     // Run csvtk_join to annotate results
     CSVTK_JOIN(
         ch_annotation_input
