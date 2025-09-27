@@ -615,8 +615,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/SRP254919",
                 "shinyngs_app/SRP254919/app.R",
@@ -666,6 +666,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-09-23T15:09:25.370491719"
+        "timestamp": "2025-09-27T19:53:31.954041802"
     }
 }

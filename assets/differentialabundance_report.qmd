@@ -1004,7 +1004,6 @@ for (i in 1:nrow(contrasts)){
 if (!is.null(params$meta$params$functional_method)){
     cat("\n### Gene set analysis\n")
     cat("\n#### ", toupper(params$meta$params$functional_method) ,"\n", "\n")
-    cat("::: {.panel-tabset}\n")
 
     if (params$meta$params$functional_method == 'gsea') {
 
@@ -1017,7 +1016,7 @@ if (!is.null(params$meta$params$functional_method)){
     if (nrow(gsea_contrasts) == 0) {
         warning("No contrasts with reference and target defined. Skipping GSEA report section.")
     } else {
-
+        cat("::: {.panel-tabset}\n")
         for (gmt_file in simpleSplit(params$meta$params$gene_sets_files)) {
             gmt_name <- basename(tools::file_path_sans_ext(gmt_file))
             cat("\n##### ", gmt_name ,"\n")
@@ -1055,9 +1054,10 @@ if (!is.null(params$meta$params$functional_method)){
             }
             cat(":::\n")
         }
+        cat(":::\n")
     }
     }  else if (params$meta$params$functional_method == 'gprofiler2') {
-
+        cat("::: {.panel-tabset}\n")
         cat(paste0("\nThis section contains the results tables of the pathway analysis which was done with the R package gprofiler2. The differential fraction is the number of differential genes in a pathway divided by that pathway's size, i.e. the number of genes annotated for the pathway.",
         ifelse(params$meta$params$gprofiler2_significant, paste0(" Enrichment was only considered if significant, i.e. adjusted p-value <= ", params$meta$params$gprofiler2_max_qval, "."), "Enrichment was also considered if not significant."), "\n"))
 
@@ -1081,9 +1081,8 @@ if (!is.null(params$meta$params$functional_method)){
             }
             cat("\n")
         }
+        cat(":::\n")
     }
-
-    cat(":::", "\n")
 }
 ```
 
