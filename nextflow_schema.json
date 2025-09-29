@@ -1225,6 +1225,7 @@
                 },
                 "skip_reports": {
                     "type": "boolean",
+                    "default": false,
                     "description": "Skip generation of reports"
                 }
             },
