@@ -80,3 +80,7 @@ a {
   display: inline-block;
   box-sizing: border-box;
 }
+
+.nav-tabs > li > a {
+  color: #24b064 !important;
+}

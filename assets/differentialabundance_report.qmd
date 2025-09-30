@@ -84,7 +84,7 @@ if (!file.exists(file_path)) {
   stop("Versions file does not exist at: ", file_path)
 }
 versions <- unlist(yaml.load_file(file.path(params$input_dir, params$versions_file)), recursive = FALSE)
-params_table <- data.frame(Parameter = names(unlist(params)), Value = unlist(params), row.names = NULL)
+params_table <- data.frame(Parameter = sub("^meta\\.params\\.", "", names(unlist(params))), Value = unlist(params), row.names = NULL)
 
 # We'll subset the params table for different report sections
 make_params_table <- function(name, pattern = NULL, remove_pattern = FALSE){
@@ -114,11 +114,9 @@ report_subtitle <- paste0(ifelse(is.null(params$meta$params$report_author), '', 
 library(htmltools)
 
 HTML(paste0('
-<div style="display:flex; align-items:center; margin-bottom:10px;">
-  <img src="', file.path(params$input_dir, params$logo), '" style="height:120px;"/>
-  <div>
-    <h1 style="margin:0;">', report_title, '</h1>
-  </div>
+<div style="align-items:left; margin-bottom:10px;">
+  <img src="', file.path(params$input_dir, params$logo), '" style="height:120px; display:block; margin:0; padding:0;"/>
+  <h1 style="margin:0;">', report_title, '</h1>
 </div>
 <div>
   <h3 style="margin:0; font-weight:bold; font-size:110%; color:black;">', report_subtitle, '</h3>
@@ -725,10 +723,10 @@ for (variable in rownames(pca_vs_meta)){
 ```
 
 #### Clustering dendrograms
-::: {.panel-tabset}
 
 A hierarchical clustering of `{r} params$meta$params$features_type`s was undertaken based on `{r} ifelse(params$meta$params$exploratory_n_features == -1, paste0("all ", params$meta$params$features_type), paste0("the ", params$meta$params$exploratory_n_features, " most variable ", params$meta$params$features_type))`s. Distances between `r params$meta$params$features_type`s were estimated based on `{r} params$meta$params$exploratory_cor_method` correlation, which were then used to produce a clustering via the `{r} params$meta$params$exploratory_clustering_method` method with `hclust()` in R.
 
+::: {.panel-tabset}
 ```{r, echo=FALSE, results='asis'}
 #| echo: false
 #| results: asis
@@ -1034,7 +1032,11 @@ if (!is.null(params$meta$params$functional_method)){
                     print( htmltools::tagList(
                         datatable(target_gsea_results,
                             caption = paste0("\nTarget (", gsea_contrasts$target[i], ")\n"),
-                            rownames = FALSE)
+                            rownames = FALSE,
+                            options = list(
+                                scrollX = TRUE   # enables horizontal scrolling
+                            )
+                        )
                     ))
                 } else {
                     cat("\n*Target GSEA file missing: ", target_gsea_tables[i], "*\n")
@@ -1046,7 +1048,11 @@ if (!is.null(params$meta$params$functional_method)){
                     print( htmltools::tagList(
                         datatable(ref_gsea_results,
                             caption = paste0("\nReference (", gsea_contrasts$reference[i], ")\n"),
-                            rownames = FALSE)
+                            rownames = FALSE,
+                            options = list(
+                                scrollX = TRUE   # enables horizontal scrolling
+                            )
+                        )
                     ))
                 } else {
                     cat("\n*Reference GSEA file missing: ", reference_gsea_tables[i], "*\n")
