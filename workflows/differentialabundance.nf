@@ -105,7 +105,11 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_gene_sets = ch_paramsets
         .map { meta ->
-            [ meta, meta.params.gene_sets_files ? meta.params.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ]
+            if (meta.params.functional_method == 'decoupler') {
+                [ meta, [file(meta.params.decoupler_network, checkIfExists: true)] ]
+            } else {
+                [ meta, meta.params.gene_sets_files ? meta.params.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ]
+            }
         }
 
     // ========================================================================
@@ -567,11 +571,11 @@ workflow DIFFERENTIALABUNDANCE {
                 .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
                 .map{meta -> [meta, []]}
         )
-
     // Prepare input for functional analysis
 
     // - use normalized matrix, if method is gsea
     // - use filtered differential results, if method is gprofiler2
+    // - use unfiltered differential results, if method is decoupler
     ch_functional_analysis_matrices = ch_norm
         .filter{meta, matrix -> meta.params.functional_method == 'gsea'}
         .map{ meta, matrix -> [meta, meta, matrix]}
@@ -581,6 +585,11 @@ workflow DIFFERENTIALABUNDANCE {
                 // Here the key is the meta without contrast info (same as the meta in other channels)
                 // So we can use this key to combine channels
                 .filter{meta, meta_with_contrast, results -> meta.params.functional_method == 'gprofiler2'}
+        )
+        .mix(
+            ch_differential_results
+                // For decoupler, use unfiltered differential results
+                .filter{meta, meta_with_contrast, results -> meta.params.functional_method == 'decoupler'}
         )
 
     ch_functional_input = ch_functional_analysis_matrices  // meta, meta with contrast, file
@@ -626,6 +635,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
+
 
     // ========================================================================
     // Plot figures
@@ -715,7 +725,7 @@ workflow DIFFERENTIALABUNDANCE {
             .filter { meta, contrast, results -> contrast.variable?.trim() }
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
-        .join( ch_contrasts )                           // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
+        .join( ch_contrasts )   // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
         .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
             // extract the contrast entries from the meta dynamically
             // in this way we don't need to harcode the contrast keys
@@ -733,7 +743,7 @@ workflow DIFFERENTIALABUNDANCE {
         .collectFile { meta, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
             def content = contrast_map.collect { it.values().join(',') }
-            def lines = header + '\n' + content.join('\n')
+            def lines = header + '\n' + content.join('\n') + '\n'
             ["${meta.paramset_name}.csv", lines]
         }
         // parse the channel to have the contrast file with the corresponding meta
