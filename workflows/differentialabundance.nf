@@ -842,15 +842,16 @@ workflow DIFFERENTIALABUNDANCE {
 
         // Make a report bundle comprising the markdown document and all necessary
         // input files
-
-        ch_bundle_input = QUARTONOTEBOOK.out.notebook
-            .map { meta, notebook -> notebook }.collect()
-            .combine(ch_report_input.input_files.groupTuple().map { meta, files_list -> [meta, files_list[0]] })  // Take input files once per paramset
-            .map {
-                def notebooks = it[0..-3]       // All elements except the last two (meta and input_files)
-                def meta = it[-2]               // Second to last element is meta
-                def input_files = it[-1]        // Last element is input files
-                [meta, notebooks + input_files] // [meta, [notebooks + input_files]]
+        ch_bundle_input = ch_bundle_input = ch_report_input.input_files
+            .first()  // Take only the first meta/input_files pair
+            .combine(
+                QUARTONOTEBOOK.out.notebook
+                    .map { meta, notebook -> notebook }
+                    .collect()
+                    .map { notebooks -> [notebooks] }   // Wrap all notebooks in list to prevent flattening during combine
+            )
+            .map { meta, input_files, all_notebooks ->
+                [meta, input_files + all_notebooks]
             }
 
         MAKE_REPORT_BUNDLE( ch_bundle_input )
