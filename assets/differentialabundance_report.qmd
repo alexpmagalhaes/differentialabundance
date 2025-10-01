@@ -949,8 +949,8 @@ for (i in 1:nrow(contrasts)){
         p <- do.call(plotly_scatterplot, plot_args) %>%
         layout(xaxis = list(range=list(-max_fc, max_fc)))
 
-        p
-
+        print(htmltools::tagList(p))
+        cat("\n\n")
         # ... then show tables of the up/ down genes
 
         for (dir in c('up', 'down')){
