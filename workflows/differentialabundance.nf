@@ -720,7 +720,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_contrasts_sorted = differential_with_contrast.contrast_maps
         .collectFile { meta, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
-            def content = contrast_map.collect { it.values().join(',') }
+            def content = contrast_map.collect { it.values().join(',') }.sort().reverse()
             def lines = header + '\n' + content.join('\n') + '\n'
             ["${meta.paramset_name}.csv", lines]
         }
@@ -816,10 +816,12 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, report_file]
 
             report_params:
-            def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap('exploratory_assay_names') // flat the map
+            def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap('exploratory_assay_names') // flatten the map
             def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
                 paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
                 [ 'contrasts_file' ]
+            // Create a map from expected report file names to actual file names.
+            // This is used to parameterize the report generation, ensuring each logical input (e.g. 'logo', 'css', assay matrices) is mapped to its corresponding file.
             [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:

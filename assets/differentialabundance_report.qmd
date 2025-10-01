@@ -463,7 +463,10 @@ datatable(
   contrasts_to_print,
   caption = "Table of contrasts",
   rownames = FALSE,
-  options = list(dom = ifelse(nrow(contrasts_to_print) > 10, 'tp', 't'))
+  options = list(
+    dom = ifelse(nrow(contrasts_to_print) > 10, 'tp', 't'),
+    ordering = FALSE
+    )
 )
 ```
 
