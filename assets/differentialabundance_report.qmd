@@ -626,6 +626,7 @@ for (assay_type in rev(names(assay_data))){
             fig <- fig %>%
                 layout(
                     updatemenus = updatemenus,
+                    margin = list(t = 100),
                     xaxis = list(title = labels[1]),
                     yaxis = list(title = labels[2]),
                     title = paste("Color by", prettifyVariablename(informative_variables[1])),
@@ -635,6 +636,7 @@ for (assay_type in rev(names(assay_data))){
             fig <- fig %>%
                 layout(
                     updatemenus = updatemenus,
+                    margin = list(t = 100),
                     scene = list(
                         xaxis = list(title = labels[1]),
                         yaxis = list(title = labels[2]),
