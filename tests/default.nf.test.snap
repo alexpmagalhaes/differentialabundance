@@ -192,9 +192,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T18:40:29.784023396"
+        "timestamp": "2025-09-19T08:59:25.110233661"
     },
     "Test profile - with toolsheet": {
         "content": [
@@ -389,9 +389,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T18:37:13.12643178"
+        "timestamp": "2025-09-19T08:58:04.654957304"
     },
     "Test profile - with toolsheet and formula": {
         "content": [
@@ -578,7 +578,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-09-30T18:55:28.241340153"
+        "timestamp": "2025-09-04T13:41:25.55678279"
     },
     "Test profile - yml no formula": {
         "content": [
@@ -773,8 +773,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T18:43:23.265064917"
+        "timestamp": "2025-09-19T09:00:45.008596168"
     }
 }

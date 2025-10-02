@@ -120,7 +120,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-09-30T19:59:31.893696289"
+        "timestamp": "2025-09-30T17:39:09.114945147"
     },
     "Test rnaseq limma profile": {
         "content": [
@@ -298,9 +298,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T19:46:40.895636068"
+        "timestamp": "2025-09-19T09:16:03.890601885"
     },
     "Test rnaseq limma profile - with formula and complex contrasts": {
         "content": [
@@ -686,9 +686,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T19:53:34.40727534"
+        "timestamp": "2025-09-19T09:18:50.230685526"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
@@ -866,8 +866,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T19:49:36.01201098"
+        "timestamp": "2025-09-19T09:17:12.884294381"
     }
 }

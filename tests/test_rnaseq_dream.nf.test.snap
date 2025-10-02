@@ -65,9 +65,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T19:15:48.220711554"
+        "timestamp": "2025-07-30T16:32:03.68477426"
     },
     "Test rnaseq dream profile - complex contrast": {
         "content": [
@@ -135,9 +135,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2025-09-30T19:17:14.318653021"
+        "timestamp": "2025-07-30T16:32:49.712383975"
     },
     "Test rnaseq dream profile - with decoupler": {
         "content": [
@@ -230,6 +230,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-09-30T19:22:44.48383384"
+        "timestamp": "2025-09-30T17:49:03.239521912"
     }
 }
