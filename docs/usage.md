@@ -269,11 +269,11 @@ To run a given combination of tools, you can use the `--paramset_name` parameter
 Optionally, one can also provide their own paramsheet CSV file using the `--paramsheet` flag.
 You will be also able to run a specific config row from this custom file using `--paramset_name`.
 
-## Working with the output R markdown file
+## Working with the output Quarto notebook file
 
-The pipeline produces an R markdown file which, if you're proficient in R, you can use to tweak the report after it's generated (**note**- if you need the same customisations repeatedly we would recommend you supply your own template using the `report_file` parameter).
+The pipeline produces an Quarto notebook file which, if you're proficient in R, you can use to tweak the report after it's generated (**note**- if you need the same customisations repeatedly we would recommend you supply your own templates using the `report_file` parameter. Multiple templates can be supplied as a comma separated list).
 
-To work with R markdown files you will need Rstudio. You will also need to have the ShinyNGS R module [installed](https://github.com/pinin4fjords/shinyngs#installation), since it supplies a lot of the accessory plotting functions etc that you will need. The exact way you will do this may depend on your exact systems, but for example
+To work with Quarto notebook files you will need Rstudio/Posit Studio or an equivalent R environment. You will also need to have the ShinyNGS R module [installed](https://github.com/pinin4fjords/shinyngs#installation), since it supplies a lot of the accessory plotting functions etc that you will need. The exact way you will do this may depend on your exact systems, but for example
 
 ### 1. Create a conda environment with Shinyngs and activate it
 
@@ -296,7 +296,7 @@ Now, unzip the report archive, and in RStudio change directory to that location:
 setwd("/path/to/unzipped/directory")
 ```
 
-Now open the R Markdown file from the RStudio UI, and you should have everything you need to run the various code segments and render the whole document to HTML again if you wish.
+Now open the Quarto notebook file from the RStudio UI, and you should have everything you need to run the various code segments and render the whole document to HTML again if you wish.
 
 ## Shiny app generation
 
@@ -409,6 +409,53 @@ If gene sets have been specified to the workflow via `--gene_sets_files` these a
 By default the analysis will be run with a background list of genes that passed the abundance filter (i.e. those genes that actually had some expression); see for example https://doi.org/10.1186/s13059-015-0761-7 for why this is advisable. You can provide your own background list with `--gprofiler2_background_file background.txt`or if you want to not use any background, set `--gprofiler2_background_file false`.
 
 Check the [pipeline webpage](https://nf-co.re/differentialabundance/parameters#gprofiler2) for a full listing of the relevant parameters.
+
+### Decoupler
+
+[Decoupler](https://decoupler-py.readthedocs.io/en/latest/index.html) `decoupler.decouple` is a Python function that infers biological regulator activities—such as transcription factor or pathway activity—from omics data using multiple statistical enrichment methods. It takes as input a gene expression matrix and a prior knowledge network linking regulators to target genes, and applies one or more methods (e.g., ULM, MLM, wsum) to estimate regulator activity scores across samples. The function supports optional consensus scoring and outputs method-specific activity estimates and p-values, making it a versatile tool for activity inference in both bulk and single-cell datasets. If you want to see the full list of available methods and functions, refer to the functions's [official guide]("https://decoupler-py.readthedocs.io/en/latest/generated/decoupler.decouple.html#decoupler.decouple").
+
+This tool is turned off by default, to turn it on set the parameter `functional_method` to `decoupler`.
+
+#### Input Files
+
+Decoupler needs a matrix (mat) of molecular readouts (gene expression, logFC, p-values, etc.) and a network (net) that relates target features (genes, proteins, etc.) to “source” biological entities (pathways, transcription factors, molecular processes, etc.).
+
+- The matrix will be taken from the results of the differential expression analysis performed by DESeq2, limma, propr, or variancePartition.
+
+- The network file must be provided explicitly via the '--decoupler_network' parameter. This file should be in long format and contain at least the source and target columns, with optional weight and sign columns describing the strength and direction of each interaction.
+
+#### Parameters
+
+The Decoupler module includes a min_n parameter to fine-tune its behavior.
+
+- `--decoupler_min_n`: This parameter controls the minimum number of targets a regulator (source) must have in the network to be included in the analysis. Any regulator with fewer than min_n targets will be removed from the network before activity inference is performed.
+
+By default, `--decoupler_min_n` is set to 5, meaning all sources with at least one target will be evaluated. You can increase this value to filter out poorly supported regulators and reduce noise.
+
+Example: setting `--decoupler_min_n 5` will ensure that only regulators with at least 5 target genes are considered.
+
+- `--decoupler_methods`: This parameter lets you specify which statistical methods decoupler will use to estimate regulator activities. Decoupler supports multiple methods, each using a different algorithm or statistical approach. You can specify one or more methods by passing them as a comma-separated list.
+
+Example: `--decoupler_methods` mlm,ulsm
+
+##### Network Sources
+
+You can obtain regulatory networks from well-established databases and tools. Common examples include:
+
+- DoRothEA – transcription factor-target interactions (TFs) [DoRothEA](https://www.bioconductor.org/packages/release/data/experiment/html/dorothea.html)
+
+- CollecTRI – curated transcriptional regulatory interactions (TFs) [CollectTRI] (https://github.com/saezlab/CollecTRI)
+
+- PROGENy – pathway-responsive gene signatures (pathways) [PROGENy] (https://saezlab.github.io/progeny/)
+
+If you want to see the full list of available methods and functions, refer to the functions's [official guide] (https://decoupler-py.readthedocs.io/en/latest/notebooks/benchmark.html#Multiple-networks).
+
+**Note**: Then resources mentioned above are provided only for human or mouse datasets. Please ensure your organism is compatible before enabling this module or provide a custom, species-specific dataset.
+
+```bash
+--functional_method decoupler \
+--decoupler_network network.tsv
+```
 
 ## Running the pipeline
 

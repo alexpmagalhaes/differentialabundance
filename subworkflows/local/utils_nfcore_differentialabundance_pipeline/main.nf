@@ -196,6 +196,10 @@ def validateInputParameters(paramsets) {
                 if (row.gprofiler2_background_file && row.gprofiler2_background_file != 'auto') {
                     file(row.gprofiler2_background_file, checkIfExists: true)
                 }
+            } else if (row.functional_method == 'decoupler') {
+                if (!row.decoupler_network) {
+                        error("To run decoupler, please provide a network file!")
+                    }
             }
         }
 

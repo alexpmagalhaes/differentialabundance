@@ -67,11 +67,13 @@ nextflow_pipeline {
         }
     }
 
-    test("Test rnaseq dream profile - complex contrast - with zero intercept") {
+    test("Test rnaseq dream profile - with decoupler") {
+
         when {
             params {
-                outdir        = "$outputDir"
-                contrasts_yml = "$projectDir/tests/assets/zero_intercept_contrasts.yml"
+                outdir              = "$outputDir"
+                functional_method   = "decoupler"
+                decoupler_min_n     = 1
             }
         }
 
@@ -95,5 +97,4 @@ nextflow_pipeline {
                 )
         }
     }
-
 }

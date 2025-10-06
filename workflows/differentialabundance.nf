@@ -24,7 +24,7 @@ include { SHINYNGS_STATICDIFFERENTIAL as PLOT_DIFFERENTIAL  } from '../modules/n
 include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/nf-core/shinyngs/validatefomcomponents/main'
 include { CUSTOM_MATRIXFILTER                               } from '../modules/nf-core/custom/matrixfilter/main'
 include { ATLASGENEANNOTATIONMANIPULATION_GTF2FEATUREANNOTATION as GTF_TO_TABLE } from '../modules/nf-core/atlasgeneannotationmanipulation/gtf2featureannotation/main'
-include { RMARKDOWNNOTEBOOK                                 } from '../modules/nf-core/rmarkdownnotebook/main'
+include { QUARTONOTEBOOK                                    } from '../modules/nf-core/quartonotebook/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_RAW                  } from '../modules/nf-core/affy/justrma/main'
 include { AFFY_JUSTRMA as AFFY_JUSTRMA_NORM                 } from '../modules/nf-core/affy/justrma/main'
 include { PROTEUS_READPROTEINGROUPS as PROTEUS              } from '../modules/nf-core/proteus/readproteingroups/main'
@@ -104,7 +104,11 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_gene_sets = ch_paramsets
         .map { meta ->
-            [ meta, meta.params.gene_sets_files ? meta.params.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ]
+            if (meta.params.functional_method == 'decoupler') {
+                [ meta, [file(meta.params.decoupler_network, checkIfExists: true)] ]
+            } else {
+                [ meta, meta.params.gene_sets_files ? meta.params.gene_sets_files.split(",").collect { file(it, checkIfExists: true) } : [] ]
+            }
         }
 
     // ========================================================================
@@ -545,11 +549,11 @@ workflow DIFFERENTIALABUNDANCE {
                 .filter{ meta -> meta.params.functional_method != 'gprofiler2'}
                 .map{meta -> [meta, []]}
         )
-
     // Prepare input for functional analysis
 
     // - use normalized matrix, if method is gsea
     // - use filtered differential results, if method is gprofiler2
+    // - use unfiltered differential results, if method is decoupler
     ch_functional_analysis_matrices = ch_norm
         .filter{meta, matrix -> meta.params.functional_method == 'gsea'}
         .map{ meta, matrix -> [meta, meta, matrix]}
@@ -559,6 +563,11 @@ workflow DIFFERENTIALABUNDANCE {
                 // Here the key is the meta without contrast info (same as the meta in other channels)
                 // So we can use this key to combine channels
                 .filter{meta, meta_with_contrast, results -> meta.params.functional_method == 'gprofiler2'}
+        )
+        .mix(
+            ch_differential_results
+                // For decoupler, use unfiltered differential results
+                .filter{meta, meta_with_contrast, results -> meta.params.functional_method == 'decoupler'}
         )
 
     ch_functional_input = ch_functional_analysis_matrices  // meta, meta with contrast, file
@@ -604,6 +613,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     ch_versions = ch_versions
         .mix(DIFFERENTIAL_FUNCTIONAL_ENRICHMENT.out.versions)
+
 
     // ========================================================================
     // Plot figures
@@ -710,7 +720,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_contrasts_sorted = differential_with_contrast.contrast_maps
         .collectFile { meta, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
-            def content = contrast_map.collect { it.values().join(',') }
+            def content = contrast_map.collect { it.values().join(',') }.sort().reverse()
             def lines = header + '\n' + content.join('\n') + '\n'
             ["${meta.paramset_name}.csv", lines]
         }
@@ -763,7 +773,7 @@ workflow DIFFERENTIALABUNDANCE {
     ch_report_files = ch_paramsets
         .map { meta ->
             [ meta, [
-                file(meta.params.report_file, checkIfExists: true),
+                meta.params.report_file,  // can be a string of multiple files, gets split later
                 file(meta.params.logo_file, checkIfExists: true),
                 file(meta.params.css_file, checkIfExists: true),
                 file(meta.params.citations_file, checkIfExists: true)
@@ -794,16 +804,25 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
         .map { [it[0], it.tail().flatten().grep()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
+        .flatMap { meta, report_file, files ->
+            // Split comma-separated report files and create separate entries for each
+            meta.params.report_file.split(',').collect { report_path ->
+                def report_file_obj = file(report_path.trim(), checkIfExists: true)
+                [meta, report_file_obj, files]
+            }
+        }
         .multiMap { meta, report_file, files ->
             report_file:
             [meta, report_file]
 
             report_params:
-            def paramset = [paramset_name: meta.paramset_name] + meta.params  // flat the map
+            def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap('exploratory_assay_names') // flatten the map
             def report_file_names = ['logo','css','citations','versions_file','observations','features'] +
                 paramset.exploratory_assay_names.split(',').collect { "${it}_matrix".toString() } +
                 [ 'contrasts_file' ]
-            paramset + [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
+            // Create a map from expected report file names to actual file names.
+            // This is used to parameterize the report generation, ensuring each logical input (e.g. 'logo', 'css', assay matrices) is mapped to its corresponding file.
+            [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:
             [meta, files]
@@ -811,18 +830,29 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Render the final report
     if (!params.skip_reports) {
-        RMARKDOWNNOTEBOOK(
-            ch_report_input.report_file,
-            ch_report_input.report_params,
-            ch_report_input.input_files.map{ meta, files -> files }
+        QUARTONOTEBOOK(
+            ch_report_input.report_file.map { meta, report_file ->
+                def new_meta = meta + [ report_file_name: report_file.baseName ]
+                [new_meta, report_file]
+            },
+            ch_report_input.report_params.first(),
+            ch_report_input.input_files.map{ meta, files -> files }.first(),
+            Channel.value([])
         )
 
         // Make a report bundle comprising the markdown document and all necessary
         // input files
-
-        ch_bundle_input = RMARKDOWNNOTEBOOK.out.parameterised_notebook
-                .combine(ch_report_input.input_files, by:0)
-                .map{[it[0], it.tail().flatten()]}   // [meta, [files]]
+        ch_bundle_input = ch_bundle_input = ch_report_input.input_files
+            .first()  // Take only the first meta/input_files pair
+            .combine(
+                QUARTONOTEBOOK.out.notebook
+                    .map { meta, notebook -> notebook }
+                    .collect()
+                    .map { notebooks -> [notebooks] }   // Wrap all notebooks in list to prevent flattening during combine
+            )
+            .map { meta, input_files, all_notebooks ->
+                [meta, input_files + all_notebooks]
+            }
 
         MAKE_REPORT_BUNDLE( ch_bundle_input )
     }
