@@ -513,20 +513,23 @@ workflow DIFFERENTIALABUNDANCE {
     // ========================================================================
     // Annotate differential results with feature metadata using csvtk_join
     // ========================================================================
-
     // Prepare input for annotation - combine differential results with feature metadata
     ch_annotation_input = ch_differential_results
+        .filter { tuple ->
+            def meta = tuple[0]
+            def study_type = meta?.params?.study_type
+            return study_type == 'rnaseq' || study_type == 'affy_array'
+        }
+
+    ch_annotation_input
         .combine(ch_validated_featuremeta, by: 0) // Join by meta_key (first element)
         .map { meta_key, meta_with_contrast, results_file, features_file ->
             // Return: [meta_with_contrast, [results_file, features_file]]
-            // This structure matches your module input: meta, [matrix, features]
             [meta_with_contrast, [results_file, features_file]]
         }
+        .set { ch_final_annotation_input }
 
-    // Run csvtk_join to annotate results
-    CSVTK_JOIN(
-        ch_annotation_input
-    )
+    CSVTK_JOIN(ch_final_annotation_input)
 
     ch_versions = ch_versions
         .mix(CSVTK_JOIN.out.versions)
@@ -810,11 +813,6 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_differential_model, by:[0,1])
         .groupTuple()                                 // [ meta, [meta with contrast], [differential results], [differential model] ]
         .map { [it[0], it.tail().tail().flatten()] }  // [ meta, [differential results and models] ]
-
-    // Create a separate channel for annotated results grouped by paramset
- //   ch_differential_annotated_grouped = ch_differential_results_annotated.transpose()
-   //     .groupTuple()                                 // [ meta, [meta with contrast], [annotated results] ]
-     //   .map { [it[0], it.tail().flatten()] }         // [ meta, [annotated results] ]
 
     ch_functional_grouped = ch_functional_results
         .groupTuple()                                 // [ meta, [meta with contrast], [functional results] ]
