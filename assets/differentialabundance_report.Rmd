@@ -162,6 +162,7 @@ library(yaml)
 library(shinyngs)
 library(plotly)
 library(DT)
+library(ggplot2)
 ```
 
 <!-- Define some functions -->
@@ -962,32 +963,32 @@ for (i in 1:nrow(contrasts)) {
         full_de$differential_status[de_pval] <- de_pval_label
         full_de$differential_status[de_fc & de_pval] <- de_pval_fc_label
         full_de$differential_status <- factor(
-          full_de$differential_status,
-          levels = c("Not significant", de_fc_label, de_pval_label, de_pval_fc_label),
-          ordered = TRUE
+        full_de$differential_status,
+        levels = c("Not significant", de_fc_label, de_pval_label, de_pval_fc_label),
+        ordered = TRUE
         )
 
         hline_thresholds <- list(
-          setNames(-log10(p_value_thresholds[[pvt]]), paste(pval_column, "=", p_value_thresholds[[pvt]]))
+        setNames(-log10(p_value_thresholds[[pvt]]), paste(pval_column, "=", p_value_thresholds[[pvt]]))
         )
         vline_thresholds <- list(
-          setNames(-log2(params$differential_min_fold_change), paste(params$differential_fc_column, "<=", log2(params$differential_min_fold_change))),
-          setNames( log2(params$differential_min_fold_change),  paste(params$differential_fc_column, ">=", log2(params$differential_min_fold_change)))
+        setNames(-log2(params$differential_min_fold_change), paste(params$differential_fc_column, "<=", log2(params$differential_min_fold_change))),
+        setNames( log2(params$differential_min_fold_change), paste(params$differential_fc_column, ">=", log2(params$differential_min_fold_change)))
         )
 
         palette_volcano <- append("#999999", makeColorScale(3, params$differential_palette_name))
         plot_args <- list(
-            x = full_de[[params$differential_fc_column]],
-            y = -log10(full_de[[pval_column]]),
-            colorby = full_de$differential_status,
-            ylab = paste("-log(10)", pval_column),
-            xlab = paste("higher in", contrasts$reference[i], "<<", params$differential_fc_column, ">>", "higher in", contrasts$target[i]),
-            labels = full_de[[label_col]],
-            hline_thresholds = hline_thresholds,
-            vline_thresholds = vline_thresholds,
-            show_labels = FALSE,
-            legend_title = "Differential status",
-            palette = palette_volcano
+        x = full_de[[params$differential_fc_column]],
+        y = -log10(full_de[[pval_column]]),
+        colorby = full_de$differential_status,
+        ylab = paste("-log(10)", pval_column),
+        xlab = paste("higher in", contrasts$reference[i], "<<", params$differential_fc_column, ">>", "higher in", contrasts$target[i]),
+        labels = full_de[[label_col]],
+        hline_thresholds = hline_thresholds,
+        vline_thresholds = vline_thresholds,
+        show_labels = FALSE,
+        legend_title = "Differential status",
+        palette = palette_volcano
         )
 
         max_fc <- max(abs(full_de[[params$differential_fc_column]])) * 1.1
@@ -1151,7 +1152,7 @@ for (i in 1:nrow(contrasts)) {
                 cat("Column 'Gene biotype' does not exist. Skipping plot.\n")
             }
         } else {
-        cat("No significantly differential genes in either direction.\n\n")
+            cat("No significantly differential genes in either direction.\n\n")
         }
     }
 }
