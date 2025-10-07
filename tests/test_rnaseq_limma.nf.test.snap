@@ -112,16 +112,14 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6__SRP254919_limma.annotated.tsv:md5,ab158de12550bd58da81a904edb5481c",
-                "treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv:md5,fe2c755adeba7f49f226e0f6d3e47d28",
                 "all.normalised_counts.tsv:md5,534f0f37e10325163656cad95418f34a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T14:19:02.418566284"
+        "timestamp": "2025-10-07T11:47:32.359742751"
     },
     "Test rnaseq limma profile": {
         "content": [
@@ -293,16 +291,14 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6__SRP254919_limma.annotated.tsv:md5,ab158de12550bd58da81a904edb5481c",
-                "treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv:md5,fe2c755adeba7f49f226e0f6d3e47d28",
                 "all.normalised_counts.tsv:md5,534f0f37e10325163656cad95418f34a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T14:07:06.924758331"
+        "timestamp": "2025-10-07T11:29:37.28069351"
     },
     "Test rnaseq limma profile - with formula and complex contrasts": {
         "content": [
@@ -682,18 +678,14 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "full_model_with_interactions_SRP254919_limma.annotated.tsv:md5,16c9850d362d222dee43c71a965ec44b",
-                "interaction_genotype_treatment_SRP254919_limma.annotated.tsv:md5,87a4d0fcf9133300b22528a4a9694be2",
-                "treatment_effect_classic_comparison_SRP254919_limma.annotated.tsv:md5,6a8a0bd35c6c7202ed1d57e0dfa27fa8",
-                "treatment_plus_genotype_SRP254919_limma.annotated.tsv:md5,922b6a9697adefbb61b909c58de30f72",
                 "all.normalised_counts.tsv:md5,ebe30cc05e93aea1f04ee8598ec62c94"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T14:13:25.270079912"
+        "timestamp": "2025-10-07T11:42:49.759344229"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
@@ -865,15 +857,13 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "treatment_mCherry_hND6__SRP254919_limma.annotated.tsv:md5,ab158de12550bd58da81a904edb5481c",
-                "treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv:md5,fe2c755adeba7f49f226e0f6d3e47d28",
                 "all.normalised_counts.tsv:md5,534f0f37e10325163656cad95418f34a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T14:09:29.088613962"
+        "timestamp": "2025-10-07T11:39:28.037405895"
     }
 }
