@@ -39,7 +39,6 @@ library(yaml)
 library(shinyngs)
 library(plotly)
 library(DT)
-library(ggplot2)
 ```
 
 <!-- Define some functions -->
@@ -875,7 +874,7 @@ cat(differential_summary_string)
 
 # Display all warnings related to number of rows
 if (length(warnings_list) > 0) {
-  for (warning in warnings_list) cat(warning)
+    for (warning in warnings_list) { cat(warning) }
 }
 
 for (i in 1:nrow(contrasts)){
@@ -895,11 +894,7 @@ for (i in 1:nrow(contrasts)){
     full_de <- differential_results[[i]]
     full_de <- subset(full_de, (! is.na(full_de[[params$meta$params$differential_fc_column]])) & (! is.na(full_de[[params$meta$params$differential_qval_colum]])) )
 
-    up_tbl <- sig_differential[[pvt]][[i]][["up"]]
-    if (!is.null(up_tbl) && nrow(up_tbl) > 0) {
-    up_tbl$Direction <- "Up"
-    parts[["Up"]] <- up_tbl
-    }
+    # We'll color by whether features are differential according to supplied thresholds
 
     p_value_types <- list(Adjusted = params$meta$params$differential_qval_column, Unadjusted = params$meta$params$differential_pval_column)
     p_value_thresholds <- list(Adjusted = params$meta$params$differential_max_qval, Unadjusted = params$meta$params$differential_max_pval)
@@ -953,11 +948,8 @@ for (i in 1:nrow(contrasts)){
             cat(paste0("<i>", zero_p, " feature", ifelse(zero_p>1, "s are", " is"), " not shown because of p value = 0; please refer to the results tables.</i><br><br>"))
         }
 
-        # Put Direction first, prettify col names, then optional global rounding
-        first_cols <- c("Direction", setdiff(colnames(combined), "Direction"))
-        combined <- combined[, first_cols, drop = FALSE]
-        colnames(combined) <- prettifyVariablename(colnames(combined))
-        combined <- round_dataframe_columns(combined, digits = params$round_digits)
+        p <- do.call(plotly_scatterplot, plot_args) %>%
+        layout(xaxis = list(range=list(-max_fc, max_fc)))
 
         print(htmltools::tagList(p))
         cat("\n\n")
@@ -996,8 +988,10 @@ for (i in 1:nrow(contrasts)){
         } else {
             cat("Column 'Gene biotype' does not exist. Skipping plot.\n")
         }
-    } else {
-    cat("No significantly differential genes in either direction.\n\n")
+        }else{
+            cat(paste0("No significantly differential '", dir, "' genes.\n\n"))
+        }
+        }
     }
     cat(":::")
 }
