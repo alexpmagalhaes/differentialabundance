@@ -149,9 +149,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T15:36:52.688464765"
+        "timestamp": "2025-10-07T12:56:04.082863464"
     },
     "Test profile - deseq2": {
         "content": [
