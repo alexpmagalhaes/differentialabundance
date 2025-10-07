@@ -878,95 +878,6 @@ if (length(warnings_list) > 0) {
   for (warning in warnings_list) cat(warning)
 }
 
-<<<<<<< HEAD:assets/differentialabundance_report.Rmd
-for (i in 1:nrow(contrasts)) {
-  cat("\n#### ", contrast_descriptions[i], "  {.tabset}\n\n")
-
-  ## Volcano inputs
-  full_de <- differential_results[[i]]
-  # Filter rows with required numeric fields present
-  needed  <- c(params$differential_fc_column,
-               params$differential_qval_column,
-               params$differential_pval_column)
-  present <- intersect(needed, colnames(full_de))
-  if (length(present)) {
-    full_de <- full_de[stats::complete.cases(full_de[, present, drop = FALSE]), ]
-  }
-
-  # Labels: prefer feature name if present
-  if (!is.null(params$features) &&
-      !is.null(params$differential_feature_name_column) &&
-      (params$differential_feature_name_column %in% colnames(full_de))) {
-    label_col <- params$differential_feature_name_column
-  } else {
-    label_col <- params$differential_feature_id_column
-  }
-
-  p_value_types <- list(
-    Adjusted   = params$differential_qval_column,
-    Unadjusted = params$differential_pval_column
-  )
-  p_value_thresholds <- list(
-    Adjusted   = params$differential_max_qval,
-    Unadjusted = params$differential_max_pval
-  )
-
-  for (pvt in names(p_value_types)) {
-    cat("\n##### ", pvt, " p values\n\n")
-    pval_column <- p_value_types[[pvt]]
-
-    de_fc        <- abs(full_de[[params$differential_fc_column]]) >= abs(log2(params$differential_min_fold_change))
-    de_fc_label  <- paste("abs(logFC) >=", log2(params$differential_min_fold_change))
-    de_pval      <- full_de[[pval_column]] <= p_value_thresholds[[pvt]]
-    de_pval_label <- paste(pvt, "<=", p_value_thresholds[[pvt]])
-    de_pval_fc_label <- paste(de_fc_label, "&", de_pval_label)
-
-    full_de$differential_status <- "Not significant"
-    full_de$differential_status[de_fc] <- de_fc_label
-    full_de$differential_status[de_pval] <- de_pval_label
-    full_de$differential_status[de_fc & de_pval] <- de_pval_fc_label
-    full_de$differential_status <- factor(
-      full_de$differential_status,
-      levels = c("Not significant", de_fc_label, de_pval_label, de_pval_fc_label),
-      ordered = TRUE
-    )
-
-    hline_thresholds <- list(
-      setNames(-log10(p_value_thresholds[[pvt]]), paste(pval_column, "=", p_value_thresholds[[pvt]]))
-    )
-    vline_thresholds <- list(
-      setNames(-log2(params$differential_min_fold_change), paste(params$differential_fc_column, "<=", log2(params$differential_min_fold_change))),
-      setNames( log2(params$differential_min_fold_change),  paste(params$differential_fc_column, ">=", log2(params$differential_min_fold_change)))
-    )
-
-    palette_volcano <- append("#999999", makeColorScale(3, params$differential_palette_name))
-    plot_args <- list(
-      x = full_de[[params$differential_fc_column]],
-      y = -log10(full_de[[pval_column]]),
-      colorby = full_de$differential_status,
-      ylab = paste("-log(10)", pval_column),
-      xlab = paste("higher in", contrasts$reference[i], "<<", params$differential_fc_column, ">>", "higher in", contrasts$target[i]),
-      labels = full_de[[label_col]],
-      hline_thresholds = hline_thresholds,
-      vline_thresholds = vline_thresholds,
-      show_labels = FALSE,
-      legend_title = "Differential status",
-      palette = palette_volcano
-    )
-
-    max_fc <- max(abs(full_de[[params$differential_fc_column]])) * 1.1
-
-    zero_p <- sum(full_de[[pval_column]] == 0, na.rm = TRUE)
-    if (zero_p) {
-      cat(sprintf("<i>%d feature%s not shown because of p value = 0; please refer to the results tables.</i><br><br>",
-                  zero_p, ifelse(zero_p > 1, "s are", " is")))
-    }
-
-    p <- do.call(plotly_scatterplot, plot_args) %>%
-         layout(xaxis = list(range = list(-max_fc, max_fc)))
-    print(htmltools::tagList(p))
-    parts <- list()
-=======
 for (i in 1:nrow(contrasts)){
     cat("\n#### ", contrast_descriptions[i], "\n")
     cat("::: {.panel-tabset}", "\n\n")
@@ -983,7 +894,6 @@ for (i in 1:nrow(contrasts)){
     # NAs in the fields we need.
     full_de <- differential_results[[i]]
     full_de <- subset(full_de, (! is.na(full_de[[params$meta$params$differential_fc_column]])) & (! is.na(full_de[[params$meta$params$differential_qval_colum]])) )
->>>>>>> 942ab1534a52d1b4ce95f57b7f78a55d95696114:assets/differentialabundance_report.qmd
 
     up_tbl <- sig_differential[[pvt]][[i]][["up"]]
     if (!is.null(up_tbl) && nrow(up_tbl) > 0) {
@@ -991,27 +901,6 @@ for (i in 1:nrow(contrasts)){
     parts[["Up"]] <- up_tbl
     }
 
-<<<<<<< HEAD:assets/differentialabundance_report.Rmd
-    down_tbl <- sig_differential[[pvt]][[i]][["down"]]
-    if (!is.null(down_tbl) && nrow(down_tbl) > 0) {
-    down_tbl$Direction <- "Down"
-    parts[["Down"]] <- down_tbl
-    }
-
-    if (length(parts) > 0) {
-        # Bind rows even if columns differ slightly
-        combined <- do.call(rbind, parts)
-
-        # Round common numeric columns if present
-        cols_to_round <- c(
-            params$differential_fc_column,
-            params$differential_pval_column,
-            params$differential_qval_column
-        )
-        cols_present <- intersect(cols_to_round, colnames(combined))
-        if (length(cols_present)) {
-            combined[, cols_present] <- signif(combined[, cols_present, drop = FALSE], 8)
-=======
     p_value_types <- list(Adjusted = params$meta$params$differential_qval_column, Unadjusted = params$meta$params$differential_pval_column)
     p_value_thresholds <- list(Adjusted = params$meta$params$differential_max_qval, Unadjusted = params$meta$params$differential_max_pval)
 
@@ -1062,7 +951,6 @@ for (i in 1:nrow(contrasts)){
         zero_p <- length(which(full_de[[pval_column]]==0))
         if (zero_p) {
             cat(paste0("<i>", zero_p, " feature", ifelse(zero_p>1, "s are", " is"), " not shown because of p value = 0; please refer to the results tables.</i><br><br>"))
->>>>>>> 942ab1534a52d1b4ce95f57b7f78a55d95696114:assets/differentialabundance_report.qmd
         }
 
         # Put Direction first, prettify col names, then optional global rounding
@@ -1071,47 +959,6 @@ for (i in 1:nrow(contrasts)){
         colnames(combined) <- prettifyVariablename(colnames(combined))
         combined <- round_dataframe_columns(combined, digits = params$round_digits)
 
-<<<<<<< HEAD:assets/differentialabundance_report.Rmd
-        # Show the single DT
-        print(htmltools::tagList(
-            datatable(
-            combined,
-            caption = paste(
-                "Differential genes (Up + Down) in",
-                contrast_descriptions[i],
-                "(check", differential_files[[i]], "for more detail)"
-            ),
-            rownames = FALSE
-            )
-        ))
-
-        # Optional biotype plot, now grouped by Direction
-        if ("Gene biotype" %in% colnames(combined)) {
-            # Count by biotype and direction without adding new deps
-            bt <- as.data.frame(table(
-            combined[["Gene biotype"]],
-            combined[["Direction"]]
-            ))
-            colnames(bt) <- c("Gene biotype", "Direction", "count")
-            bt <- bt[bt$count > 0, , drop = FALSE]
-
-            biotype_plot <-
-            ggplot2::ggplot(bt, ggplot2::aes(
-                x = stats::reorder(`Gene biotype`, -count),
-                y = count,
-                fill = Direction
-            )) +
-            ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
-            ggplot2::labs(
-                title = "Differentially Expressed Genes by Gene Biotype and Direction",
-                x = "Gene Biotype",
-                y = "Number of Differentially Expressed Genes"
-            ) +
-            ggplot2::theme_minimal() +
-            ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-
-            print(biotype_plot)
-=======
         print(htmltools::tagList(p))
         cat("\n\n")
         # ... then show tables of the up/ down genes
@@ -1145,7 +992,6 @@ for (i in 1:nrow(contrasts)){
                 theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
             print(gene_biotype_plot)
->>>>>>> 942ab1534a52d1b4ce95f57b7f78a55d95696114:assets/differentialabundance_report.qmd
             cat("\n")
         } else {
             cat("Column 'Gene biotype' does not exist. Skipping plot.\n")
@@ -1153,11 +999,7 @@ for (i in 1:nrow(contrasts)){
     } else {
     cat("No significantly differential genes in either direction.\n\n")
     }
-<<<<<<< HEAD:assets/differentialabundance_report.Rmd
-  }
-=======
     cat(":::")
->>>>>>> 942ab1534a52d1b4ce95f57b7f78a55d95696114:assets/differentialabundance_report.qmd
 }
 ```
 
