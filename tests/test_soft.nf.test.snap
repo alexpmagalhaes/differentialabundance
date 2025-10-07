@@ -58,8 +58,8 @@
                 "plots/qc",
                 "plots/qc/phenotype_uninvolved_lesional_study.limma.mean_difference.png",
                 "report",
-                "report/study.html",
                 "report/study.zip",
+                "report/study_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/study",
                 "shinyngs_app/study/app.R",
@@ -86,9 +86,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-17T15:33:55.744272934"
+        "timestamp": "2025-09-15T19:32:07.483062304"
     },
     "Test soft profile - with toolsheet": {
         "content": [
@@ -149,8 +149,8 @@
                 "plots/qc",
                 "plots/qc/phenotype_uninvolved_lesional_study.limma.mean_difference.png",
                 "report",
-                "report/study.html",
                 "report/study.zip",
+                "report/study_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/study",
                 "shinyngs_app/study/app.R",
@@ -177,8 +177,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.7"
         },
-        "timestamp": "2025-06-17T15:35:15.411673157"
+        "timestamp": "2025-09-15T19:35:48.771685281"
     }
 }

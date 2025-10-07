@@ -94,8 +94,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/SRP254919",
                 "shinyngs_app/SRP254919/app.R",
@@ -244,8 +244,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -349,7 +349,7 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.7"
         },
         "timestamp": "2025-10-03T15:31:05.158851778"
     },
@@ -444,8 +444,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "report/gsea",
                 "report/gsea/treatment_mCherry_hND6__SRP254919",
                 "report/gsea/treatment_mCherry_hND6__SRP254919/mh.all.v2022.1.Mm.symbols",
@@ -549,7 +549,7 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nextflow": "25.04.7"
         },
         "timestamp": "2025-10-03T15:33:58.213882645"
     },
@@ -639,8 +639,8 @@
                 "plots/qc/treatment_mCherry_hND6__SRP254919.deseq2.dispersion.png",
                 "plots/qc/treatment_mCherry_hND6_sample_number_SRP254919.deseq2.dispersion.png",
                 "report",
-                "report/SRP254919.html",
                 "report/SRP254919.zip",
+                "report/SRP254919_differentialabundance_report.html",
                 "shinyngs_app",
                 "shinyngs_app/SRP254919",
                 "shinyngs_app/SRP254919/app.R",
