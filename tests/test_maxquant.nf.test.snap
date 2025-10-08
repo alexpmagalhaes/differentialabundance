@@ -133,9 +133,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T11:22:52.89133229"
+        "timestamp": "2025-10-08T01:20:52.9034011"
     },
     "Test maxquant profile - with toolsheet": {
         "content": [
@@ -271,8 +271,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-10-03T11:26:23.319716354"
+        "timestamp": "2025-10-08T01:25:25.512147655"
     }
 }
