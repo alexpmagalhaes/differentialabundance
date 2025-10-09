@@ -171,5 +171,59 @@
             "nextflow": "25.04.7"
         },
         "timestamp": "2025-09-23T15:46:34.43412188"
+    },
+    "Test rnaseq dream profile - complex contrast - with zero intercept": {
+        "content": [
+            14,
+            {
+                "CUSTOM_FILTERDIFFERENTIALTABLE": {
+                    "pandas": "1.5.2"
+                },
+                "GTF_TO_TABLE": {
+                    "atlas-gene-annotation-manipulation": "1.1.1"
+                },
+                "GUNZIP_GTF": {
+                    "gunzip": 1.1
+                },
+                "VALIDATOR": {
+                    "r-shinyngs": "2.2.4"
+                },
+                "VARIANCEPARTITION_DREAM": {
+                    "r-base": "4.3.3",
+                    "bioconductor-edger": "4.0.16",
+                    "variancePartition": "1.32.2"
+                },
+                "Workflow": {
+                    "nf-core/differentialabundance": "v1.6.0dev"
+                }
+            },
+            [
+                "pipeline_info",
+                "pipeline_info/collated_versions.yml",
+                "pipeline_info/nf_core_differentialabundance_software_versions.yml",
+                "tables",
+                "tables/annotation",
+                "tables/annotation/SRP254919.anno.tsv",
+                "tables/differential",
+                "tables/differential/full_model_with_interactions_SRP254919.dream.results.tsv",
+                "tables/differential/full_model_with_interactions_SRP254919.dream.results_filtered.tsv",
+                "tables/differential/interaction_genotype_treatment_SRP254919.dream.results.tsv",
+                "tables/differential/interaction_genotype_treatment_SRP254919.dream.results_filtered.tsv",
+                "tables/differential/treatment_plus_genotype_SRP254919.dream.results.tsv",
+                "tables/differential/treatment_plus_genotype_SRP254919.dream.results_filtered.tsv",
+                "tables/differential/zero_intercept_model_1_SRP254919.dream.results.tsv",
+                "tables/differential/zero_intercept_model_1_SRP254919.dream.results_filtered.tsv",
+                "tables/differential/zero_intercept_model_2_SRP254919.dream.results.tsv",
+                "tables/differential/zero_intercept_model_2_SRP254919.dream.results_filtered.tsv"
+            ],
+            [
+                "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb"
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.8"
+        },
+        "timestamp": "2025-10-07T12:38:36.288584939"
     }
 }

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [[#513](https://github.com/nf-core/differentialabundance/pull/513)] - Fix contrast schema to allow for zero-intercept models. ([@grst](https://github.com/grst), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#476](https://github.com/nf-core/differentialabundance/pull/476)] - Fixed null.csv and warning at top of report ([@SusiJo](https://github.com/SusiJo), reviewed by [@pinin4fjords](https://github.com/pinin4fjords), [@atrigila](https://github.com/atrigila), [@maxulysse](https://github.com/maxulysse))
 - [[#358](https://github.com/nf-core/differentialabundance/pull/358)] - Fixed nf-tests not running due to `--changed-since HEAD^`([@atrigila](https://github.com/atrigila), review by [@pinin4fjords](https://github.com/pinin4fjords))
 - [[#344](https://github.com/nf-core/differentialabundance/pull/344)] - Fixed replacement of NA sub-strings
