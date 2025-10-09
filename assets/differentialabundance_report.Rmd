@@ -1112,8 +1112,8 @@ for (i in 1:nrow(contrasts)) {
                             legend.position = "none",
                             strip.text = element_text(color = "black", size = 8),
                             strip.background = element_rect(size = 0.1),
-                            panel.spacing.y = unit(3, "lines"),
-                            panel.spacing.x = unit(1, "lines"),
+                            panel.spacing.y = unit(1.5, "lines"),
+                            panel.spacing.x = unit(1.5, "lines"),
                             plot.margin = margin(t = 15, b = 20)
                         ) +
                         geom_text(data = pvals_grouped,
@@ -1128,7 +1128,7 @@ for (i in 1:nrow(contrasts)) {
                 print(htmltools::tagList(p))
 
                 cat("\n")
-                cat("<br><br><br>\n")
+                cat("<br><br><br><br><br>\n\n")
             }
 
             # Optional biotype plot, now grouped by Direction
