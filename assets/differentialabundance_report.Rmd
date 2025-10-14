@@ -1050,6 +1050,8 @@ for (i in 1:nrow(contrasts)) {
                 )
             ))
 
+            cat("\n**Box plots**\n\n")
+            cat("The following box plots show the distribution of expression levels for the top 10 genes ranked by significance.\n\n")
             # Make boxplots for top genes
             for (assay_type in rev(names(assay_data))){
                 cat(paste0("\n###### ", prettifyVariablename(assay_type), "\n"))
@@ -1079,12 +1081,12 @@ for (i in 1:nrow(contrasts)) {
                 # Add condition column
                 plot_df$Condition <- obs_sub[plot_df$Sample, unique(contrasts$variable)]
 
-                # Get gene names and add them as a new "GeneName" column to plot_df
+                # Get feature names and add them as a new "FeatureName" column to plot_df
                 label_col <- prettifyVariablename(label_col)
-                gene_names <- combined[, label_col]
+                feature_names <- combined[, label_col]
                 features_id_col <- prettifyVariablename(params$features_id_col)
-                names(gene_names) <- combined[, features_id_col]  # named vector for lookup
-                plot_df$GeneName <- gene_names[plot_df[[1]]]
+                names(feature_names) <- combined[, features_id_col]  # named vector for lookup
+                plot_df$FeatureName <- feature_names[plot_df[[1]]]
 
                 # Extract the p-values and add them as a new "pval" column to plot_df
                 pvals <- combined[, qval_column]
@@ -1093,7 +1095,7 @@ for (i in 1:nrow(contrasts)) {
 
                 # Group p-values to add to boxplot
                 pvals_grouped <- plot_df %>%
-                    group_by(GeneName) %>%
+                    group_by(FeatureName) %>%
                     summarise(pval = unique(pval))
 
                 # Boxplot for each gene
@@ -1104,7 +1106,7 @@ for (i in 1:nrow(contrasts)) {
                             text = paste0(
                                 "Sample: ", Sample, "<br>"
                         ))) +
-                        facet_wrap(~ GeneName, scales = "free_y") +
+                        facet_wrap(~ FeatureName, scales = "free_y") +
                         scale_color_manual(values = groupColorScale) +
                         theme_light() +
                         theme(
@@ -1128,7 +1130,7 @@ for (i in 1:nrow(contrasts)) {
                 print(htmltools::tagList(p))
 
                 cat("\n")
-                cat("<br><br><br><br><br>\n\n")
+                cat("<br><br><br><br><br><br><br><br><br>\n\n")
             }
 
             # Optional biotype plot, now grouped by Direction
