@@ -826,7 +826,6 @@ workflow DIFFERENTIALABUNDANCE {
         .join(ch_all_matrices)           // [meta, samplesheet, features, [matrices]]
         .join(ch_contrasts_sorted)       // [meta, contrast file]
         .join(ch_differential_grouped)   // [meta, [differential results and models]]
-        //.join(ch_differential_annotated_grouped) // [meta, [annotated differential results]]
         .join(ch_functional_grouped, remainder: true) // [meta, [functional results]]
         .map { [it[0], it.tail().flatten().grep()] }  // [meta, [files]]   // note that grep() would remove null files from join with remainder true
         .map { meta, files -> [meta, files[0], files.tail()] }   // [meta, report_file, [files]]
