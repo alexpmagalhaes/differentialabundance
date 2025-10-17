@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#534]](https://github.com/nf-core/differentialabundance/pull/509) - Add Gene name to DE table in HTML report ([@antoniasaracco] (https://github.com/antoniasaracco), review by [@atrigila](https://github.com/atrigila) and [@grst](https://github.com/grst))
 - [[#491]](https://github.com/nf-core/differentialabundance/pull/509) - Do not split results table into up- and downregulated. ([@antoniasaracco] (https://github.com/antoniasaracco), review by [@atrigila](https://github.com/atrigila) and [@grst](https://github.com/grst))
 - [[#492](https://github.com/nf-core/differentialabundance/pull/492)] - Fixed volcano plot tooltips by adding column existence check for gene name labels. ([@antoniasaracco] (https://github.com/antoniasaracco), review by [@atrigila](https://github.com/atrigila) and [@grst](https://github.com/grst))
 - [[#478](https://github.com/nf-core/differentialabundance/pull/489)] - Fixed R Markdown report failure with NA values in sample metadata by converting NAs to FALSE in logical operations. ([@antoniasaracco] (https://github.com/antoniasaracco), review by [@atrigila](https://github.com/atrigila) and [@grst](https://github.com/grst))
