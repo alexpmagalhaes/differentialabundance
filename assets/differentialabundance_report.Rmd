@@ -1086,7 +1086,11 @@ for (i in 1:nrow(contrasts)) {
                 plot_df$Condition <- obs_sub[plot_df$Sample, unique(contrasts$variable)]
 
                 # Get feature names and add them as a new "FeatureName" column to plot_df
+                if (params$features_name_col %in% colnames(combined)) {
+                    label_col <- prettifyVariablename(params$features_name_col)
+                } else {
                 label_col <- prettifyVariablename(label_col)
+                }
                 feature_names <- combined[, label_col]
                 features_id_col <- prettifyVariablename(params$features_id_col)
                 names(feature_names) <- combined[, features_id_col]  # named vector for lookup
