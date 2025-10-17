@@ -1089,7 +1089,7 @@ for (i in 1:nrow(contrasts)) {
                 if (params$features_name_col %in% colnames(combined)) {
                     label_col <- prettifyVariablename(params$features_name_col)
                 } else {
-                label_col <- prettifyVariablename(label_col)
+                    label_col <- prettifyVariablename(label_col)
                 }
                 feature_names <- combined[, label_col]
                 features_id_col <- prettifyVariablename(params$features_id_col)
