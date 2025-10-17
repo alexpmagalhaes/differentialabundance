@@ -36,16 +36,12 @@
                         "type": "string"
                     }
                 },
-                "required": [
-                    "id"
-                ],
+                "required": ["id"],
                 "additionalProperties": false
             },
             "minItems": 1
         }
     },
-    "required": [
-        "contrasts"
-    ],
+    "required": ["contrasts"],
     "additionalProperties": false
 }
