@@ -1,8 +1,11 @@
 {
     "Test rnaseq limma profile - with decoupler": {
         "content": [
-            17,
+            19,
             {
+                "CSVTK_JOIN": {
+                    "csvtk": "0.31.0"
+                },
                 "CUSTOM_FILTERDIFFERENTIALTABLE": {
                     "pandas": "1.5.2"
                 },
@@ -96,8 +99,10 @@
                 "tables/differential",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6__SRP254919_limma.annotated.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv"
             ],
@@ -112,14 +117,17 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-09-27T19:23:26.816199065"
+        "timestamp": "2025-10-07T11:47:32.359742751"
     },
     "Test rnaseq limma profile": {
         "content": [
-            22,
+            24,
             {
+                "CSVTK_JOIN": {
+                    "csvtk": "0.31.0"
+                },
                 "CUSTOM_FILTERDIFFERENTIALTABLE": {
                     "pandas": "1.5.2"
                 },
@@ -258,8 +266,10 @@
                 "tables/differential",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6__SRP254919_limma.annotated.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv"
             ],
@@ -286,14 +296,17 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-09-15T19:19:57.070272644"
+        "timestamp": "2025-10-07T11:29:37.28069351"
     },
     "Test rnaseq limma profile - with formula and complex contrasts": {
         "content": [
-            25,
+            29,
             {
+                "CSVTK_JOIN": {
+                    "csvtk": "0.31.0"
+                },
                 "CUSTOM_FILTERDIFFERENTIALTABLE": {
                     "pandas": "1.5.2"
                 },
@@ -603,12 +616,16 @@
                 "tables/differential",
                 "tables/differential/full_model_with_interactions_SRP254919.limma.results.tsv",
                 "tables/differential/full_model_with_interactions_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/full_model_with_interactions_SRP254919_limma.annotated.tsv",
                 "tables/differential/interaction_genotype_treatment_SRP254919.limma.results.tsv",
                 "tables/differential/interaction_genotype_treatment_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/interaction_genotype_treatment_SRP254919_limma.annotated.tsv",
                 "tables/differential/treatment_effect_classic_comparison_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_effect_classic_comparison_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_effect_classic_comparison_SRP254919_limma.annotated.tsv",
                 "tables/differential/treatment_plus_genotype_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_plus_genotype_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_plus_genotype_SRP254919_limma.annotated.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv"
             ],
@@ -666,14 +683,17 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-09-15T19:27:59.703430393"
+        "timestamp": "2025-10-07T11:42:49.759344229"
     },
     "Test rnaseq limma profile - with toolsheet": {
         "content": [
-            22,
+            24,
             {
+                "CSVTK_JOIN": {
+                    "csvtk": "0.31.0"
+                },
                 "CUSTOM_FILTERDIFFERENTIALTABLE": {
                     "pandas": "1.5.2"
                 },
@@ -812,8 +832,10 @@
                 "tables/differential",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6__SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6__SRP254919_limma.annotated.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results.tsv",
                 "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919.limma.results_filtered.tsv",
+                "tables/differential/treatment_mCherry_hND6_sample_number_SRP254919_limma.annotated.tsv",
                 "tables/processed_abundance",
                 "tables/processed_abundance/all.normalised_counts.tsv"
             ],
@@ -840,8 +862,8 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.7"
+            "nextflow": "25.04.8"
         },
-        "timestamp": "2025-09-15T19:23:31.858632588"
+        "timestamp": "2025-10-07T11:39:28.037405895"
     }
 }
