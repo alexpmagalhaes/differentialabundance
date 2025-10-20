@@ -1284,4 +1284,3 @@ print( htmltools::tagList(datatable(versions_table, caption = "Software versions
 ```{r, echo=FALSE, results='asis'}
 htmltools::includeMarkdown(params$citations)
 ```
-
