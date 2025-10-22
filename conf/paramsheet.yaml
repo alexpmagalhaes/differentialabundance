@@ -2,6 +2,7 @@
   study_type: rnaseq
   study_abundance_type: counts
 
+  features_type: gene
   features_id_col: gene_id
   features_name_col: gene_name
   features_metadata_cols: gene_id,gene_name,gene_biotype
@@ -54,6 +55,10 @@
 - paramset_name: limma_rnaseq_gprofiler2
   include: paramsheet/limma_rnaseq
   functional_method: gprofiler2
+
+- paramset_name: limma_rnaseq_decoupler
+  include: paramsheet/limma_rnaseq
+  functional_method: decoupler
 
 - paramset_name: dream_rnaseq
   include: paramsheet/rnaseq

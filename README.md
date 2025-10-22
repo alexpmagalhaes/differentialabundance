@@ -37,7 +37,7 @@ On release, automated continuous integration tests run the pipeline on a full-si
 5. Generate exploratory and differential analysis plots for interpretation.
 6. Run immunedeconv to estimate immune cell fractions using established deconvolution methods.
 7. Optionally build and (if specified) deploy a Shiny app for fully interactive mining of results.
-8. Build an HTML report based on R markdown, with interactive plots (where possible) and tables.
+8. Build an HTML report based on Quarto markdown, with interactive plots (where possible) and tables.
 
 > [!NOTE]
 > Each of these steps can be looped over multiple parameter sets, through paramsheet files and the `--paramset_name` parameter. See the [usage documentation](https://nf-co.re/differentialabundance/usage) for more information.
@@ -125,13 +125,13 @@ For more details and further functionality, please refer to the [usage documenta
 
 The pipeline reports its outcomes in two forms.
 
-#### R markdown and HTML
+#### Quarto notebook and HTML
 
-The primary workflow output is an HTML-format report produced from an [R markdown template](assets/differentialabundance_report.Rmd) (you can also supply your own). This leverages helper functions from [shinyngs](https://github.com/pinin4fjords/shinyngs) to produce rich plots and tables, but does not provide significant interactivity.
+The primary workflow output is an HTML-format report produced from an [Quarto notebook template](assets/differentialabundance_report.qmd) (you can also supply your own). This leverages helper functions from [shinyngs](https://github.com/pinin4fjords/shinyngs) to produce rich plots and tables, but does not provide significant interactivity.
 
-![screenshot of the markdown report](docs/images/markdown_report.png "Markdown report")
+![screenshot of the Quarto report](docs/images/markdown_report.png "Quarto report")
 
-Additionally, a zip file is produced by the pipeline, containing an R markdown file and all necessary file inputs for reporting. The markdown file is the same as the input template, but with the parameters set appropriately, so that you can run the reporting yourself in RStudio, and add any customisations you need.
+Additionally, a zip file is produced by the pipeline, containing a Quarto notebook file and all necessary file inputs for reporting. The notebook file is the same as the input template, but with the parameters set appropriately, so that you can run the reporting yourself in RStudio, and add any customisations you need.
 
 #### Shiny-based data mining app
 
