@@ -380,10 +380,8 @@ def getDefaultConfigurations() {
 
 // Load configurations from yaml file
 def loadYamlConfigs(yaml_path) {
-    def yaml_content = yaml_path.text
-    def yaml_parser = new org.yaml.snakeyaml.Yaml()
-    def loaded = yaml_parser.load(yaml_content)
-    def configs = (loaded instanceof List) ? loaded : [loaded]
+    // Load yaml content
+    def configs = loadYaml(yaml_path)
 
     // Resolve includes for each config
     configs = configs.collect { config ->
@@ -391,6 +389,22 @@ def loadYamlConfigs(yaml_path) {
         config.remove('include')
         return config
     }
+
+    return configs
+}
+def loadYaml(yaml_path) {
+    // Load yaml content
+    def yaml_content = yaml_path.text
+
+    // Substitute ${projectDir} with actual value
+    // alternative ways? This can be fragile
+    yaml_content = yaml_content.replaceAll(/\$\{projectDir\}/, projectDir.toString())
+    yaml_content = yaml_content.replaceAll(/\$projectDir/, projectDir.toString())
+
+    // Parse yaml content
+    def yaml_parser = new org.yaml.snakeyaml.Yaml()
+    def loaded = yaml_parser.load(yaml_content)
+    def configs = (loaded instanceof List) ? loaded : [loaded]
 
     return configs
 }
@@ -410,8 +424,7 @@ def resolveIncludes(config) {
             if (!includeFilePath.exists()) {
                 error("Included file '${includeFilePath}' not found.")
             }
-            def includeContent = yaml_parser.load(includeFilePath.text)
-            def includeConfigs = (includeContent instanceof List) ? includeContent : [includeContent]
+            def includeConfigs = loadYaml(includeFilePath)
 
             // Find the paramset with the given name
             def includedConfig = includeConfigs.find { it.paramset_name == paramsetName }

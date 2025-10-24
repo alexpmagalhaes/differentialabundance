@@ -61,6 +61,9 @@
   # Filtering
   filtering_min_abundance: 10
 
+  # gprofiler2 options
+  gprofiler2_organism: "mmusculus"
+
   # Report options
   report_contributors: |-
     Jane Doe
@@ -72,6 +75,38 @@
 
   # Other
   round_digits: 3
+
+- paramset_name: deseq2_rnaseq_gprofiler2_complex
+  include: paramsheet/deseq2_rnaseq_gprofiler2,testdata/rnaseq_testdata_complex
+
+  # Exploratory plots
+  exploratory_main_variable: contrasts
+  exploratory_log2_assays: raw
+
+  # DESeq2
+  deseq2_vst_nsub: 500
+  deseq2_seed: 1
+  deseq2_vs_method: rlog
+  deseq2_shrink_lfc: false
+
+  # gprofiler2 options
+  gprofiler2_organism: "mmusculus"
+
+  # Filtering
+  filtering_min_abundance: 10
+
+  # Report options
+  report_contributors: |-
+    Jane Doe
+    Director of Institute of Microbiology
+    University of Smallville;John Smith
+    PhD student
+    Institute of Microbiology
+    University of Smallville
+
+  # Other
+  round_digits: 2
+  skip_reports: true
 
 - paramset_name: limma_rnaseq_gsea
   include: paramsheet/limma_rnaseq_gsea,testdata/rnaseq_testdata
@@ -129,6 +164,9 @@
   # Filtering
   filtering_min_abundance: 10
 
+  # gprofiler2 options
+  gprofiler2_organism: "mmusculus"
+
   # Report options
   report_contributors: |-
     Jane Doe
@@ -180,6 +218,27 @@
   # Other
   round_digits: 3
 
+- paramset_name: dream_rnaseq2
+  include: paramsheet/dream_rnaseq,testdata/rnaseq_testdata_complex2
+
+  # Filtering
+  filtering_min_abundance: 10
+
+  # Exploratory
+  exploratory_main_variable: contrasts
+
+  # Report options
+  report_contributors: |-
+    Jane Doe
+    Director of Institute of Microbiology
+    University of Smallville;John Smith
+    PhD student
+    Institute of Microbiology
+    University of Smallville
+
+  # Other
+  round_digits: 3
+
 - paramset_name: limma_affy_gsea
   include: paramsheet/limma_affy_gsea,testdata/affy_testdata
 
@@ -212,6 +271,9 @@
   differential_max_pval: 0.05
   differential_max_qval: 0.05
   differential_min_fold_change: 1.5
+
+  # gprofiler2 options
+  gprofiler2_organism: "mmusculus"
 
 - paramset_name: limma_soft
   include: paramsheet/limma_soft,testdata/soft_testdata

@@ -529,7 +529,9 @@ workflow DIFFERENTIALABUNDANCE {
         }
         .set { ch_final_annotation_input }
 
-    CSVTK_JOIN(ch_final_annotation_input)
+    CSVTK_JOIN(
+        prepareModuleInput(ch_final_annotation_input, 'differential')
+    )
 
     ch_versions = ch_versions
         .mix(CSVTK_JOIN.out.versions)
@@ -725,7 +727,7 @@ workflow DIFFERENTIALABUNDANCE {
     // the contrast entries
     differential_with_contrast = ch_paramsets
         .join( ch_differential_results
-            .filter { meta, contrast, results -> contrast.variable?.trim() }
+            .filter { meta, contrast, results -> contrast.variable?.trim() } // TODO check if this is correct. Probably there is a bug in the code to parse contrast channel? The contrasts from the complex contrasts file are empty.
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts )   // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
@@ -739,6 +741,12 @@ workflow DIFFERENTIALABUNDANCE {
         .multiMap { meta, meta_with_contrast, results, contrast_maps ->
             differential_results: [meta, meta_with_contrast, results]
             contrast_maps: [meta, contrast_maps]
+        }
+
+    ch_differential_results
+        .filter { meta, contrast, results -> contrast.variable?.trim() }
+        .map { meta, contrast, results ->
+            [meta.paramset_name, contrast, results]
         }
 
     // Save temporary contrast csv files with the entries ordered by the differential results
@@ -837,8 +845,11 @@ workflow DIFFERENTIALABUNDANCE {
             }
         }
         .multiMap { meta, report_file, files ->
+            // add report_file base name
+            def new_meta = meta + [ report_file_name: report_file.baseName ]
+
             report_file:
-            [meta, report_file]
+            [new_meta, report_file]
 
             report_params:
             def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap('exploratory_assay_names') // flatten the map
@@ -850,35 +861,28 @@ workflow DIFFERENTIALABUNDANCE {
             [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:
-            [meta, files]
+            [new_meta, files]
         }
 
-
     // Render the final report
+    // One report per paramset will be created
     QUARTONOTEBOOK(
-        ch_report_input.report_file.map { meta, report_file ->
-            def new_meta = meta + [ report_file_name: report_file.baseName ]
-            [new_meta, report_file]
-        },
-        ch_report_input.report_params.first(),
-        ch_report_input.input_files.map{ meta, files -> files }.first(),
+        ch_report_input.report_file,
+        ch_report_input.report_params,
+        ch_report_input.input_files.map{ meta, files -> files },
         Channel.value([])
     )
 
     // Make a report bundle comprising the markdown document and all necessary
     // input files
-    ch_bundle_input = ch_bundle_input = ch_report_input.input_files
-        .first()  // Take only the first meta/input_files pair
-        .combine(
+    ch_bundle_input = ch_report_input.input_files
+        .join(
             QUARTONOTEBOOK.out.notebook
-                .map { meta, notebook -> notebook }
-                .collect()
-                .map { notebooks -> [notebooks] }   // Wrap all notebooks in list to prevent flattening during combine
+                .groupTuple() // [ meta, [notebooks] ]
         )
         .map { meta, input_files, all_notebooks ->
             [meta, input_files + all_notebooks]
         }
-
     MAKE_REPORT_BUNDLE( ch_bundle_input )
 }
 
