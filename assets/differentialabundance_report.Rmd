@@ -801,29 +801,35 @@ for (assay_type in rev(names(assay_data))){
 
     variable_genes <- selectVariableGenes(matrix = assay_data[[assay_type]], ntop = ifelse(params$exploratory_n_features == -1, nrow(assay_data[[assay_type]]), params$exploratory_n_features))
     ann_colors <- list()
-
+    annotation_variables <- c()
+    
     for (iv in informative_variables) {
-        if (is.numeric(observations[[iv]])) {
-            ann_colors[[iv]] <- circlize::colorRamp2(
-                c(min(observations[[iv]], na.rm = TRUE), max(observations[[iv]], na.rm = TRUE)),
-                c("blue", "red")
-            )
-        } else {
-            vals <- unique(na.omit(as.character(observations[[iv]])))
-            dendroColorScale <- makeColorScale(length(vals), palette = params$exploratory_palette_name)
+        # Keep columns with no more than 10 levels
+        if (length(unique(observations[[iv]])) <= 10) {
+            annotation_variables <- c(annotation_variables, iv)
 
-            # ensure the length matches number of categories
-            dendroColorScale <- rep(dendroColorScale, length.out = length(vals))
+            if (is.numeric(observations[[iv]])) {
+                ann_colors[[iv]] <- circlize::colorRamp2(
+                    c(min(observations[[iv]], na.rm = TRUE), max(observations[[iv]], na.rm = TRUE)),
+                    c("blue", "red")
+                )
+            } else {
+                vals <- unique(na.omit(as.character(observations[[iv]])))
+                dendroColorScale <- makeColorScale(length(vals), palette = params$exploratory_palette_name)
 
-            # assign names matching the category labels
-            names(dendroColorScale) <- sort(vals)
-            ann_colors[[iv]] <- dendroColorScale
+                # ensure the length matches number of categories
+                dendroColorScale <- rep(dendroColorScale, length.out = length(vals))
+
+                # assign names matching the category labels
+                names(dendroColorScale) <- sort(vals)
+                ann_colors[[iv]] <- dendroColorScale
+            }
         }
     }
 
     # Construct HeatmapAnnotation
     ha <- HeatmapAnnotation(
-        df = observations[, informative_variables, drop = FALSE],
+        df = observations[, annotation_variables, drop = FALSE],
         annotation_name_side = "right",
         col = ann_colors
     )
