@@ -2,7 +2,7 @@ nextflow_pipeline {
 
     name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (test)"
     script "../main.nf"
-    tag "all"
+    tag "many"
     tag "pipeline"
 
     test("Test profile - many") {
