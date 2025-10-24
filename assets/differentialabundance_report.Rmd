@@ -802,7 +802,7 @@ for (assay_type in rev(names(assay_data))){
     variable_genes <- selectVariableGenes(matrix = assay_data[[assay_type]], ntop = ifelse(params$exploratory_n_features == -1, nrow(assay_data[[assay_type]]), params$exploratory_n_features))
     ann_colors <- list()
     annotation_variables <- c()
-    
+
     for (iv in informative_variables) {
         # Keep columns with no more than 10 levels
         if (length(unique(observations[[iv]])) <= 10) {
