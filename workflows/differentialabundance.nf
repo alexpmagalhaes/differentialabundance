@@ -727,7 +727,7 @@ workflow DIFFERENTIALABUNDANCE {
     // the contrast entries
     differential_with_contrast = ch_paramsets
         .join( ch_differential_results
-            .filter { meta, contrast, results -> contrast.variable?.trim() } // TODO check if this is correct. Probably there is a bug in the code to parse contrast channel? The contrasts from the complex contrasts file are empty.
+            .filter { meta, contrast, results -> contrast.variable?.trim() }
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts )   // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
@@ -741,12 +741,6 @@ workflow DIFFERENTIALABUNDANCE {
         .multiMap { meta, meta_with_contrast, results, contrast_maps ->
             differential_results: [meta, meta_with_contrast, results]
             contrast_maps: [meta, contrast_maps]
-        }
-
-    ch_differential_results
-        .filter { meta, contrast, results -> contrast.variable?.trim() }
-        .map { meta, contrast, results ->
-            [meta.paramset_name, contrast, results]
         }
 
     // Save temporary contrast csv files with the entries ordered by the differential results
