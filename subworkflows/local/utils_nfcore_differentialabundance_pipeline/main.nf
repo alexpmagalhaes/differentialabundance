@@ -312,29 +312,29 @@ def getParamsetConfigurations() {
     // Use paramsheet if paramset_name is provided, otherwise use default params
     def paramsets = (params.paramset_name) ? getParamsheetConfigurations() : getDefaultConfigurations()
     return paramsets.collect { paramset ->
-            // Some params are not useful through the pipeline run.
-            // Remove them for cleaner meta
-            def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
-            // Non static params would interfere with cache.
-            // Remove them from meta to avoid problems with resume
-            def nonstaticparams = ['trace_report_suffix']
-            def cleanparamset = paramset.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map
+        // Some params are not useful through the pipeline run.
+        // Remove them for cleaner meta
+        def ignore = ['help', 'help_full', 'show_hidden', 'genomes']
+        // Non static params would interfere with cache.
+        // Remove them from meta to avoid problems with resume
+        def nonstaticparams = ['trace_report_suffix']
+        def cleanparamset = paramset.findAll { k, v -> !(ignore + nonstaticparams).contains(k) } as Map
 
-            // Remove null to skip validation on them
-            // This is needed because validate() will fail otherwise
-            def notnullparams = cleanparamset.findAll { k, v -> v != null } as Map
+        // Remove null to skip validation on them
+        // This is needed because validate() will fail otherwise
+        def notnullparams = cleanparamset.findAll { k, v -> v != null } as Map
 
-            try {
-                // Validate against schema
-                validate(notnullparams, "${projectDir}/nextflow_schema.json")
-            } catch (e) {
-                // if validation fails, print error message and exit
-                println("Validation failed for paramsheet row: ${paramset.paramset_name}. Error: ${e.message}")
-                validate(notnullparams, "${projectDir}/nextflow_schema.json")
-            }
-
-            return cleanparamset
+        try {
+            // Validate against schema
+            validate(notnullparams, "${projectDir}/nextflow_schema.json")
+        } catch (e) {
+            // if validation fails, print error message and exit
+            println("Validation failed for paramsheet row: ${paramset.paramset_name}. Error: ${e.message}")
+            validate(notnullparams, "${projectDir}/nextflow_schema.json")
         }
+
+        return cleanparamset
+    }
 }
 
 // Get configurations from paramsheet
