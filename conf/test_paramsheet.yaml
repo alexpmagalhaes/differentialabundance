@@ -218,6 +218,27 @@
   # Other
   round_digits: 3
 
+- paramset_name: dream_rnaseq_decoupler
+  include: paramsheet/dream_rnaseq_decoupler,testdata/rnaseq_testdata_complex
+
+  # Filtering
+  filtering_min_abundance: 10
+
+  # Functional analysis with decoupler
+  decoupler_min_n: 1
+
+  # Report options
+  report_contributors: |-
+    Jane Doe
+    Director of Institute of Microbiology
+    University of Smallville;John Smith
+    PhD student
+    Institute of Microbiology
+    University of Smallville
+
+  # Other
+  round_digits: 3
+
 - paramset_name: dream_rnaseq2
   include: paramsheet/dream_rnaseq,testdata/rnaseq_testdata_complex2
 

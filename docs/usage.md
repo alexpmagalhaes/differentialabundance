@@ -258,7 +258,7 @@ You can also run multiple configs in parallel by providing a comma-separated lis
 
 We provide a `paramsheet.yaml` file in the `conf` directory that defines the parameter sets and tool parameters that make sense to run together, for specific study types.
 
-Each config defines a combination of differential analysis tool and functional analysis tool (optional), with the respective arguments.
+Each config defines a combination of differential analysis tools and functional analysis tools (optional), with the respective arguments.
 
 To run a given combination of tools, you can use the `--paramset_name` parameter.
 

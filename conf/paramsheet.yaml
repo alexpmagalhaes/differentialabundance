@@ -73,6 +73,10 @@
   differential_pval_column: P.Value
   differential_qval_column: adj.P.Val
 
+- paramset_name: dream_rnaseq_decoupler
+  include: paramsheet/dream_rnaseq
+  functional_method: decoupler
+
 - paramset_name: limma_affy
   differential_method: limma
 
