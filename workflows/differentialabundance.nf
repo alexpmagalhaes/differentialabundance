@@ -529,7 +529,9 @@ workflow DIFFERENTIALABUNDANCE {
         }
         .set { ch_final_annotation_input }
 
-    CSVTK_JOIN(ch_final_annotation_input)
+    CSVTK_JOIN(
+        prepareModuleInput(ch_final_annotation_input, 'differential')
+    )
 
     ch_versions = ch_versions
         .mix(CSVTK_JOIN.out.versions)
@@ -837,8 +839,11 @@ workflow DIFFERENTIALABUNDANCE {
             }
         }
         .multiMap { meta, report_file, files ->
+            // add report_file base name
+            def new_meta = meta + [ report_file_name: report_file.baseName ]
+
             report_file:
-            [meta, report_file]
+            [new_meta, report_file]
 
             report_params:
             def paramset = [paramset_name: meta.paramset_name] + meta.params.subMap('exploratory_assay_names') // flatten the map
@@ -850,37 +855,29 @@ workflow DIFFERENTIALABUNDANCE {
             [report_file_names, files.collect{ f -> f.name}].transpose().collectEntries()
 
             input_files:
-            [meta, files]
+            [new_meta, files]
         }
 
     // Render the final report
-    if (!params.skip_reports) {
-        QUARTONOTEBOOK(
-            ch_report_input.report_file.map { meta, report_file ->
-                def new_meta = meta + [ report_file_name: report_file.baseName ]
-                [new_meta, report_file]
-            },
-            ch_report_input.report_params.first(),
-            ch_report_input.input_files.map{ meta, files -> files }.first(),
-            Channel.value([])
+    // One report per paramset will be created
+    QUARTONOTEBOOK(
+        ch_report_input.report_file,
+        ch_report_input.report_params,
+        ch_report_input.input_files.map{ meta, files -> files },
+        Channel.value([])
+    )
+
+    // Make a report bundle comprising the markdown document and all necessary
+    // input files
+    ch_bundle_input = ch_report_input.input_files
+        .join(
+            QUARTONOTEBOOK.out.notebook
+                .groupTuple() // [ meta, [notebooks] ]
         )
-
-        // Make a report bundle comprising the markdown document and all necessary
-        // input files
-        ch_bundle_input = ch_bundle_input = ch_report_input.input_files
-            .first()  // Take only the first meta/input_files pair
-            .combine(
-                QUARTONOTEBOOK.out.notebook
-                    .map { meta, notebook -> notebook }
-                    .collect()
-                    .map { notebooks -> [notebooks] }   // Wrap all notebooks in list to prevent flattening during combine
-            )
-            .map { meta, input_files, all_notebooks ->
-                [meta, input_files + all_notebooks]
-            }
-
-        MAKE_REPORT_BUNDLE( ch_bundle_input )
-    }
+        .map { meta, input_files, all_notebooks ->
+            [meta, input_files + all_notebooks]
+        }
+    MAKE_REPORT_BUNDLE( ch_bundle_input )
 }
 
 /*

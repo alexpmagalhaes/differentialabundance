@@ -1,20 +1,18 @@
 nextflow_pipeline {
 
-    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (maxquant)"
+    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (test)"
     script "../main.nf"
-    tag "maxquant"
+    tag "many"
     tag "pipeline"
 
-
-    test("Test maxquant profile - limma_maxquant") {
+    test("Test profile - many") {
 
         when {
             params {
-                outdir              = "$outputDir"
-                paramsheet          = "${projectDir}/conf/test_paramsheet.yaml"
-                paramset_name       = "limma_maxquant"
+                outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "deseq2_rnaseq_gsea,limma_rnaseq_decoupler,dream_rnaseq,limma_affy_gprofiler2"
             }
-
         }
 
         then {

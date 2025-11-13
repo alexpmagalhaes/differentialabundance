@@ -247,27 +247,25 @@ By default, if you don't provide features, for non-array data the workflow will 
 
 ## Paramsheet
 
-In essence, the paramsheet is a compact file with multiple nextflow configs, being each row one config.
-To run the pipeline with a specific config row, you can use the `--paramset_name` parameter.
+In essence, the paramsheet is a YAML file with multiple nextflow configs.
+To run the pipeline with a specific config, you can use the `--paramset_name` parameter.
+You can also run multiple configs in parallel by providing a comma-separated list of config names. For example, `--paramset_name deseq2_rnaseq_gprofiler2,deseq2_rnaseq_gsea`.
 
 > [!WARNING]
 > Note that the arguments defined in the paramsheet have highest priority, meaning that they will overwrite any other arguments defined in the command line or in the configuration files. In other words, the priority of the parameters will follow this order: paramsheet > command line flags > nextflow configuration file
 
-> [!WARNING]
-> For the moment, the pipeline only allows to run one config at a time through `--paramset_name`, but soon iterating multi configs through one pipeline run would be possible.
-
 ### 1. Default paramsheet
 
-We provide a `paramsheet.csv` file in the `assets` directory that defines the parameter sets and tool parameters that make sense to run together, for specific study types.
+We provide a `paramsheet.yaml` file in the `conf` directory that defines the parameter sets and tool parameters that make sense to run together, for specific study types.
 
-Each row defines a combination of a differential analysis tool and a functional analysis tool (optional), with the respective arguments.
+Each config defines a combination of differential analysis tools and functional analysis tools (optional), with the respective arguments.
 
 To run a given combination of tools, you can use the `--paramset_name` parameter.
 
 ### 2. Custom paramsheet
 
-Optionally, one can also provide their own paramsheet CSV file using the `--paramsheet` flag.
-You will be also able to run a specific config row from this custom file using `--paramset_name`.
+Optionally, one can also provide their own paramsheet YAML file using the `--paramsheet` flag.
+You will be also able to run a specific config from this custom file using `--paramset_name`.
 
 ## Working with the output Quarto notebook file
 
@@ -463,7 +461,6 @@ The typical command for running the pipeline is as follows:
 
 ```bash
 nextflow run nf-core/differentialabundance \
-    [-profile rnaseq OR -profile rnaseq_limma OR -profile affy] \
     --input samplesheet.csv \
     --contrasts contrasts.yaml \
     [--matrix assay_matrix.tsv OR --affy_cel_files_archive cel_files.tar] \

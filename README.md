@@ -39,10 +39,15 @@ On release, automated continuous integration tests run the pipeline on a full-si
 7. Optionally build and (if specified) deploy a Shiny app for fully interactive mining of results.
 8. Build an HTML report based on Quarto markdown, with interactive plots (where possible) and tables.
 
+> [!NOTE]
+> Each of these steps can be looped over multiple parameter sets, through paramsheet files and the `--paramset_name` parameter. See the [usage documentation](https://nf-co.re/differentialabundance/usage) for more information.
+
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
+
+The paramsheet file (ie. `paramsheet.yaml`) stored in the `conf` directory defines the combination of tools and parameters that make sense to run for a given study type. You can use the flag `--paramset_name` to specify which set of tools to run. For example:
 
 RNA-seq with deseq2:
 
@@ -53,7 +58,8 @@ RNA-seq with deseq2:
      --matrix assay_matrix.tsv \
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
-     -profile rnaseq,<docker/singularity/podman/shifter/charliecloud/conda/institute>
+     -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> \
+     --paramset_name deseq2_rnaseq
 ```
 
 :::note
@@ -71,7 +77,8 @@ RNA-seq limma+voom:
      --matrix assay_matrix.tsv \
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
-     -profile rnaseq_limma,<docker/singularity/podman/shifter/charliecloud/conda/institute>
+     -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> \
+     --paramset_name limma_rnaseq
 ```
 
 :::note
@@ -90,13 +97,14 @@ Affymetrix microarray:
      --contrasts contrasts.yaml \
      --affy_cel_files_archive cel_files.tar \
      --outdir <OUTDIR>  \
-     -profile affy,<docker/singularity/podman/shifter/charliecloud/conda/institute>
+     -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> \
+     --paramset_name limma_affy
 ```
 
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
 
-The paramsheet file (ie. `paramsheet.csv`) stored in the `assets` directory defines the combination of tools and parameters that make sense to run for a given study type. You can use the flag `--paramset_name` to specify which set of tools to run. For example:
+RNA-seq with deseq2 and GSEA:
 
 ```bash
  nextflow run nf-core/differentialabundance \
@@ -105,8 +113,8 @@ The paramsheet file (ie. `paramsheet.csv`) stored in the `assets` directory defi
      --matrix assay_matrix.tsv \
      --gtf mouse.gtf \
      --outdir <OUTDIR>  \
-     -profile rnaseq,<docker/singularity/podman/shifter/charliecloud/conda/institute> \
-     --paramset_name deseq2_rnaseq_gprofiler2
+     -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> \
+     --paramset_name deseq2_rnaseq_gsea
 ```
 
 You could also provide your own paramsheet through the `--paramsheet` parameter.

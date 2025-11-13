@@ -1,26 +1,23 @@
 nextflow_pipeline {
 
-    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (affy)"
+    name "Test Workflow main.nf - DIFFERENTIALABUNDANCE (test)"
     script "../main.nf"
-    tag "affy"
+    tag "test_rnaseq_deseq2"
     tag "pipeline"
 
-    test("Test affy profile - limma_affy_gsea") {
-
+    test("Test profile - deseq2_rnaseq_gsea") {
 
         when {
             params {
-                outdir              = "$outputDir"
-                paramsheet          = "${projectDir}/conf/test_paramsheet.yaml"
-                paramset_name       = "limma_affy_gsea"
+                outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "deseq2_rnaseq_gsea"
             }
         }
 
         then {
             // stable_name: All files + folders in ${params.outdir}/ with a stable name
-            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}',
-                    'report/gsea/*/phenotype_uninvolved_lesional*/**/*.png'
-            ])
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             // stable_path: All files in ${params.outdir}/ with stable content
             def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
             assertAll(
@@ -39,21 +36,19 @@ nextflow_pipeline {
         }
     }
 
-    test("Test affy profile - limma_affy_gsea,limma_affy_gprofiler2") {
+    test("Test profile - deseq2_rnaseq_gsea,deseq2_rnaseq_gprofiler2") {
 
         when {
             params {
-                outdir              = "$outputDir"
-                paramsheet          = "${projectDir}/conf/test_paramsheet.yaml"
-                paramset_name       = "limma_affy_gsea,limma_affy_gprofiler2"
+                outdir        = "$outputDir"
+                paramsheet    = "${projectDir}/conf/test_paramsheet.yaml"
+                paramset_name = "deseq2_rnaseq_gsea,deseq2_rnaseq_gprofiler2"
             }
         }
 
         then {
             // stable_name: All files + folders in ${params.outdir}/ with a stable name
-            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}',
-                    'report/gsea/*/phenotype_uninvolved_lesional*/**/*.png'
-            ])
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             // stable_path: All files in ${params.outdir}/ with stable content
             def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
             assertAll(
