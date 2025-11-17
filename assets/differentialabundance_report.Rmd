@@ -163,6 +163,7 @@ library(shinyngs)
 library(plotly)
 library(DT)
 library(ggplot2)
+library(UpSetR)
 ```
 
 <!-- Define some functions -->
@@ -886,12 +887,29 @@ cat(paste0(
 
 ### Differential `r params$features_type` `r params$study_abundance_type` {.tabset}
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE, results='asis', warning=FALSE}
+
 foo <- lapply(names(p_value_types), function(pvt){
     cat("\n#### ", pvt, "\n")
     print( htmltools::tagList(datatable(differential_tables[[pvt]], caption = paste0('Differential ',  params$features_type, " ", params$abundance_type, ' (target relative to reference)'), options = list(dom = 't'), rownames = TRUE) ))
     cat("\n")
 })
+
+if (nrow(contrasts) > 1) {
+    cat("\n### Upset plot\n")
+    de_genes <- lapply(differential_results, function(de){
+        sig <- de[!is.na(de$gene_name) &
+            !is.na(de$padj) &
+            de$padj < 0.05, ]
+        return(sig$gene_name)
+    })
+    names(de_genes) <- names(differential_results)
+    cat("\n\n")
+    p <- upset(fromList(de_genes))
+    print(p)
+    cat("\n\n")
+}
+
 ```
 
 ```{r, echo=FALSE, results='asis', eval = FALSE}
