@@ -725,7 +725,7 @@ workflow DIFFERENTIALABUNDANCE {
 
     // Create a channel with the differential results and the corresponding map with
     // the contrast entries
-    differential_with_contrast = ch_paramsets
+       differential_with_contrast = ch_paramsets
         .join( ch_differential_results
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
@@ -788,8 +788,8 @@ workflow DIFFERENTIALABUNDANCE {
         }
 
     // Parse input for shinyngs app
-    ch_shinyngs_input = differential_with_contrast.differential_results
-        .join(ch_contrasts_sorted)
+    ch_shinyngs_input = differential_with_contrast_shinyngs.differential_results
+        .join(ch_contrasts_sorted_shinyngs)
         .join(ch_all_matrices)
         .filter { row ->
             row[0].params.shinyngs_build_app
@@ -799,6 +799,7 @@ workflow DIFFERENTIALABUNDANCE {
             contrasts_and_differential: [meta, contrast_file, differential_results]
             contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
         }
+        
     SHINYNGS_APP(
         ch_shinyngs_input.matrices,    // meta, samples, features, [  matrices ]
         ch_shinyngs_input.contrasts_and_differential,   // meta, contrast file, [ differential results ]
