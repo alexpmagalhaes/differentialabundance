@@ -902,15 +902,17 @@ foo <- lapply(names(p_value_types), function(pvt) {
             return(sig[[label_col]])
         })
 
-        
         names(de_genes) <- names(differential_results)
-        
-        suppressWarnings(suppressMessages({
-            p <- upset(fromList(de_genes))
-            print(p)
-        }))
-        
-        
+
+        # Only plot if there are at least two contrasts with DE genes
+        de_con <- sum(!is.na(sapply(de_genes, function(x) x[2])))
+        if (de_con > 1) {
+            suppressWarnings(suppressMessages({
+                p <- upset(fromList(de_genes))
+                print(p)
+            }))
+        }
+    
         cat("\n\n")
     }
 })
