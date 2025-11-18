@@ -893,22 +893,35 @@ foo <- lapply(names(p_value_types), function(pvt){
     cat("\n#### ", pvt, "\n")
     print( htmltools::tagList(datatable(differential_tables[[pvt]], caption = paste0('Differential ',  params$features_type, " ", params$abundance_type, ' (target relative to reference)'), options = list(dom = 't'), rownames = TRUE) ))
     cat("\n")
-})
 
-if (nrow(contrasts) > 1) {
-    cat("\n### Upset plot\n")
-    de_genes <- lapply(differential_results, function(de){
-        sig <- de[!is.na(de$gene_name) &
-            !is.na(de$padj) &
-            de$padj < 0.05, ]
-        return(sig$gene_name)
-    })
-    names(de_genes) <- names(differential_results)
-    cat("\n\n")
-    p <- upset(fromList(de_genes))
-    print(p)
-    cat("\n\n")
-}
+    if (nrow(contrasts) > 1) {
+        cat("\n##### Upset plot\n")
+
+        de_genes <- lapply(differential_results, function(de){
+
+            if (!is.null(params$features) &&
+                !is.null(params$differential_feature_name_column) &&
+                (params$differential_feature_name_column %in% colnames(de))) {
+                label_col <- params$differential_feature_name_column
+            } else {
+                label_col <- params$differential_feature_id_column
+            }
+
+            sig <- de[!is.na(de[[label_col]]) &
+                !is.na(de[[p_value_types[[pvt]]]]) &
+                (log2(1/params$differential_min_fold_change) > de[[params$differential_fc_column]] | de[[params$differential_fc_column]] > log2(params$differential_min_fold_change)) &
+                de[[p_value_types[[pvt]]]] < p_value_thresholds[[pvt]], ]
+
+            return(sig[[label_col]])
+        })
+
+        names(de_genes) <- names(differential_results)
+        cat("\n\n")
+        p <- upset(fromList(de_genes))
+        print(p)
+        cat("\n\n")
+    }
+})
 
 ```
 
