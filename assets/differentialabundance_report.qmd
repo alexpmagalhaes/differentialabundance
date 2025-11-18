@@ -196,7 +196,9 @@ if (! 'id' %in% colnames(contrasts)){
 # but less than N, with N being the number of observations. Make sure contrast
 # variables are first in the list
 
-informative_variables <- unique(c(contrasts$variable, chooseGroupingVariables(observations)))
+# Filter out empty/NA values from contrasts$variable before using them
+contrast_variables <- contrasts$variable[!is.na(contrasts$variable) & contrasts$variable != "" & !is.null(contrasts$variable)]
+informative_variables <- unique(c(contrast_variables, chooseGroupingVariables(observations)))
 
 # Remove any informative variables that group observations the same way
 informative_variables <- informative_variables[ ! duplicated(lapply(structure(informative_variables, names= informative_variables), function(x) as.numeric(factor(observations[[x]], levels=unique(observations[[x]])))))]
@@ -240,7 +242,13 @@ informative_variables <- rownames(pca_vs_meta)[order(pca_vs_meta[,1])]
 
 # Pick the variable used for coloring purposes etc
 if (params$meta$params$exploratory_main_variable == 'contrasts'){
-    main_grouping_variable <- contrasts$variable[1]
+    # If there are simple contrasts with variable fields, use those
+    # Otherwise fall back to auto_pca behavior for formula-based contrasts
+    if (length(contrast_variables) > 0) {
+        main_grouping_variable <- contrast_variables[1]
+    } else {
+        main_grouping_variable <- informative_variables[1]
+    }
 }else if (params$meta$params$exploratory_main_variable == 'auto_pca'){
     main_grouping_variable <- informative_variables[1]
 }else{
@@ -349,10 +357,24 @@ names(differential_results) <- differential_names
 # Function to make friendly contrast name from contrast components, including optional bits
 
 name_contrast <- function(i){
-    contrast_name <- paste(contrasts$target[i], 'versus', contrasts$reference[i], 'in', contrasts$variable[i])
+    # Handle formula-based contrasts (which have empty variable fields)
+    if (is.na(contrasts$variable[i]) || contrasts$variable[i] == "" || is.null(contrasts$variable[i])) {
+        # For formula-based contrasts, use the formula or make_contrasts_str for naming
+        if (!is.na(contrasts$formula[i]) && contrasts$formula[i] != "") {
+            contrast_name <- paste("Formula:", contrasts$formula[i])
+        } else if (!is.na(contrasts$make_contrasts_str[i]) && contrasts$make_contrasts_str[i] != "") {
+            contrast_name <- paste("Contrast:", contrasts$make_contrasts_str[i])
+        } else {
+            contrast_name <- paste("Contrast:", contrasts$id[i])
+        }
+    } else {
+        # For simple contrasts, use the traditional naming
+        contrast_name <- paste(contrasts$target[i], 'versus', contrasts$reference[i], 'in', contrasts$variable[i])
+    }
+    
     contrast_vals <- contrasts[i,]
     populated <- colnames(contrasts)[! (is.na(contrast_vals) | contrast_vals == '' | is.null(contrast_vals))]
-    optional <- setdiff(populated, c('id', 'target', 'reference', 'variable'))
+    optional <- setdiff(populated, c('id', 'target', 'reference', 'variable', 'formula', 'make_contrasts_str'))
 
     if (length(optional) > 0){
         optional_part <-  paste0('(', paste(paste(optional, contrasts[i,optional], sep=': '), collapse=', '), ')')
@@ -416,7 +438,7 @@ cat(paste0("\n## ", ucfirst(params$meta$params$observations_type), "s\n"))
 A summary of `{r} params$meta$params$observations_type` metadata is below:
 
 ```{r, echo=FALSE, results='asis'}
-display_columns <- union(c(params$meta$params$observations_id_col, unique(contrasts$variable)), informative_variables)
+display_columns <- union(c(params$meta$params$observations_id_col, unique(contrast_variables)), informative_variables)
 minimal_fetchngs_cols <- c('sample', 'sample_title', 'strandedness', 'library_strategy', 'scientific_name')
 
 # If the data came via fetchngs then we can infer a couple of things about the most useful columns
