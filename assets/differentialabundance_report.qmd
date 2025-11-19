@@ -371,7 +371,7 @@ name_contrast <- function(i){
         # For simple contrasts, use the traditional naming
         contrast_name <- paste(contrasts$target[i], 'versus', contrasts$reference[i], 'in', contrasts$variable[i])
     }
-    
+
     contrast_vals <- contrasts[i,]
     populated <- colnames(contrasts)[! (is.na(contrast_vals) | contrast_vals == '' | is.null(contrast_vals))]
     optional <- setdiff(populated, c('id', 'target', 'reference', 'variable', 'formula', 'make_contrasts_str'))
