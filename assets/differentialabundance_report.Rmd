@@ -375,7 +375,7 @@ if (is.null(differential_file_suffix)) {
 differential_files <- lapply(contrasts$id, function(d){
     file.path(params$input_dir, paste0(gsub(' |;', '_', d), differential_file_suffix))
 })
-differential_names <- paste0(contrasts$id, '_', params$study_name)
+differential_names <- paste0(contrasts$id)
 
 # Initialize vector to store warning messages before merging tables
 warnings_list <- c()
