@@ -15,7 +15,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { DIFFERENTIALABUNDANCE  } from './workflows/differentialabundance'
+include { DIFFERENTIALABUNDANCE   } from './workflows/differentialabundance'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
 include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
@@ -26,10 +26,7 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_diff
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
+params.gtf = getGenomeAttribute('gtf')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +40,7 @@ params.fasta = getGenomeAttribute('fasta')
 workflow NFCORE_DIFFERENTIALABUNDANCE {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
+    paramsets
 
     main:
 
@@ -51,7 +48,7 @@ workflow NFCORE_DIFFERENTIALABUNDANCE {
     // WORKFLOW: Run pipeline
     //
     DIFFERENTIALABUNDANCE (
-        samplesheet
+        paramsets
     )
 }
 /*
@@ -63,6 +60,7 @@ workflow NFCORE_DIFFERENTIALABUNDANCE {
 workflow {
 
     main:
+
     //
     // SUBWORKFLOW: Run initialisation tasks
     //
@@ -81,9 +79,11 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
+
     NFCORE_DIFFERENTIALABUNDANCE (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.paramsets
     )
+
     //
     // SUBWORKFLOW: Run completion tasks
     //
