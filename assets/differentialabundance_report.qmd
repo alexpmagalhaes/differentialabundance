@@ -362,6 +362,10 @@ name_contrast <- function(i){
         # For formula-based contrasts, use the formula or make_contrasts_str for naming
         if (!is.na(contrasts$formula[i]) && contrasts$formula[i] != "") {
             contrast_name <- paste("Formula:", contrasts$formula[i])
+            # Add make_contrasts_str if available
+            if (!is.na(contrasts$make_contrasts_str[i]) && contrasts$make_contrasts_str[i] != "") {
+                contrast_name <- paste0(contrast_name, " (", contrasts$make_contrasts_str[i], ")")
+            }
         } else if (!is.na(contrasts$make_contrasts_str[i]) && contrasts$make_contrasts_str[i] != "") {
             contrast_name <- paste("Contrast:", contrasts$make_contrasts_str[i])
         } else {
