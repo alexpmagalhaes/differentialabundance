@@ -727,7 +727,6 @@ workflow DIFFERENTIALABUNDANCE {
     // the contrast entries
     differential_with_contrast = ch_paramsets
         .join( ch_differential_results
-            .filter { meta, contrast, results -> contrast.variable?.trim() }
             .groupTuple()
         )   // [meta, [meta with contrast], [differential results]]
         .join( ch_contrasts )   // [meta, [contrast], [variable], [reference], [target], [formula], [comparison]]
@@ -758,9 +757,39 @@ workflow DIFFERENTIALABUNDANCE {
             [meta, contrast_file]
         }
 
+    // For shinyngs: filter to keep only simple contrasts (non-empty variable)
+    differential_with_contrast_shinyngs = differential_with_contrast.differential_results
+        .transpose()
+        .filter { meta, contrast, results -> contrast.variable?.trim() }
+        .groupTuple()
+        .join( ch_contrasts )
+        .map { meta, meta_with_contrast, results, contrast, variable, reference, target, formula, comparison ->
+            def paramset_contrast_keys = contrast[0].keySet()
+            def contrast_maps = meta_with_contrast.collect { it.subMap(paramset_contrast_keys) }
+            [meta, meta_with_contrast, results, contrast_maps]
+        }
+        .multiMap { meta, meta_with_contrast, results, contrast_maps ->
+            differential_results: [meta, meta_with_contrast, results]
+            contrast_maps: [meta, contrast_maps]
+        }
+
+    // Create filtered contrast file for shinyngs
+    ch_contrasts_sorted_shinyngs = differential_with_contrast_shinyngs.contrast_maps
+        .collectFile { meta, contrast_map ->
+            def header = contrast_map[0].keySet().join(',')
+            def content = contrast_map.collect { it.values().join(',') }.sort().reverse()
+            def lines = header + '\n' + content.join('\n') + '\n'
+            ["${meta.paramset_name}_shinyngs.csv", lines]
+        }
+        .map { [it.baseName.replaceAll('_shinyngs$', ''), it] }
+        .join( ch_paramsets.map { [it.paramset_name, it] } )
+        .map { paramset_name, contrast_file, meta ->
+            [meta, contrast_file]
+        }
+
     // Parse input for shinyngs app
-    ch_shinyngs_input = differential_with_contrast.differential_results
-        .join(ch_contrasts_sorted)
+    ch_shinyngs_input = differential_with_contrast_shinyngs.differential_results
+        .join(ch_contrasts_sorted_shinyngs)
         .join(ch_all_matrices)
         .filter { row ->
             row[0].params.shinyngs_build_app
@@ -770,6 +799,7 @@ workflow DIFFERENTIALABUNDANCE {
             contrasts_and_differential: [meta, contrast_file, differential_results]
             contrast_stats_assay: meta.params.exploratory_assay_names.split(',').findIndexOf { it == meta.params.exploratory_final_assay } + 1
         }
+
     SHINYNGS_APP(
         ch_shinyngs_input.matrices,    // meta, samples, features, [  matrices ]
         ch_shinyngs_input.contrasts_and_differential,   // meta, contrast file, [ differential results ]
