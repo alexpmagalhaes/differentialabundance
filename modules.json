@@ -107,22 +107,22 @@
                     },
                     "shinyngs/app": {
                         "branch": "master",
-                        "git_sha": "d959d6328d104f5afea99b276f109ff5a3819e65",
+                        "git_sha": "33cc5a3f833f8fd67e513ed18e045334dd5cc671",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticdifferential": {
                         "branch": "master",
-                        "git_sha": "d959d6328d104f5afea99b276f109ff5a3819e65",
+                        "git_sha": "33cc5a3f833f8fd67e513ed18e045334dd5cc671",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/staticexploratory": {
                         "branch": "master",
-                        "git_sha": "9428955348c35655670846f0b76cf3ff655919a5",
+                        "git_sha": "33cc5a3f833f8fd67e513ed18e045334dd5cc671",
                         "installed_by": ["modules"]
                     },
                     "shinyngs/validatefomcomponents": {
                         "branch": "master",
-                        "git_sha": "d959d6328d104f5afea99b276f109ff5a3819e65",
+                        "git_sha": "33cc5a3f833f8fd67e513ed18e045334dd5cc671",
                         "installed_by": ["modules"]
                     },
                     "untar": {
