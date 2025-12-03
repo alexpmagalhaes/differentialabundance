@@ -8,6 +8,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
 include { validate                  } from 'plugin/nf-schema'
 include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
@@ -31,13 +32,11 @@ workflow PIPELINE_INITIALISATION {
     nextflow_cli_args //   array: List of positional nextflow CLI args
     outdir            //  string: The output directory where the results will be saved
     input             //  string: Path to input samplesheet
+    help              // boolean: Display help message and exit
+    help_full         // boolean: Show the full help message
+    show_hidden       // boolean: Show hidden parameters in the help message
 
     main:
-
-    // Check that params is available
-    if (!params) {
-        error("Pipeline parameters not initialized. This is a critical error.")
-    }
 
     ch_versions = Channel.empty()
 
@@ -49,6 +48,39 @@ workflow PIPELINE_INITIALISATION {
         true,
         outdir,
         workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
+    )
+
+    //
+    // Validate parameters and generate parameter summary to stdout
+    //
+    before_text = """
+-\033[2m----------------------------------------------------\033[0m-
+                                        \033[0;32m,--.\033[0;30m/\033[0;32m,-.\033[0m
+\033[0;34m        ___     __   __   __   ___     \033[0;32m/,-._.--~\'\033[0m
+\033[0;34m  |\\ | |__  __ /  ` /  \\ |__) |__         \033[0;33m}  {\033[0m
+\033[0;34m  | \\| |       \\__, \\__/ |  \\ |___     \033[0;32m\\`-._,-`-,\033[0m
+                                        \033[0;32m`._,._,\'\033[0m
+\033[0;35m  nf-core/differentialabundance ${workflow.manifest.version}\033[0m
+-\033[2m----------------------------------------------------\033[0m-
+"""
+    after_text = """${workflow.manifest.doi ? "\n* The pipeline\n" : ""}${workflow.manifest.doi.tokenize(",").collect { doi -> "    https://doi.org/${doi.trim().replace('https://doi.org/','')}"}.join("\n")}${workflow.manifest.doi ? "\n" : ""}
+* The nf-core framework
+    https://doi.org/10.1038/s41587-020-0439-x
+* Software dependencies
+    https://github.com/nf-core/differentialabundance/blob/master/CITATIONS.md
+"""
+    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
+
+    UTILS_NFSCHEMA_PLUGIN (
+        workflow,
+        false,
+        null,
+        help,
+        help_full,
+        show_hidden,
+        before_text,
+        after_text,
+        command
     )
 
     //
@@ -68,7 +100,6 @@ workflow PIPELINE_INITIALISATION {
             paramset_name: paramset.paramset_name,
             params: paramset.findAll{ k,v -> k != 'paramset_name' }
         ]}
-
     //
     // Custom validate input parameters
     //
@@ -311,6 +342,7 @@ def methodsDescriptionText(mqc_methods_yaml) {
 def getParamsetConfigurations() {
     // Use paramsheet if paramset_name is provided, otherwise use default params
     def paramsets = (params.paramset_name) ? getParamsheetConfigurations() : getDefaultConfigurations()
+
     return paramsets.collect { paramset ->
         // Some params are not useful through the pipeline run.
         // Remove them for cleaner meta
