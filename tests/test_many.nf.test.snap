@@ -55,16 +55,16 @@
                     "bioconductor-limma": "3.58.1"
                 },
                 "PLOT_DIFFERENTIAL": {
-                    "r-shinyngs": "2.2.4"
+                    "r-shinyngs": "2.3.0"
                 },
                 "PLOT_EXPLORATORY": {
-                    "r-shinyngs": "2.2.4"
+                    "r-shinyngs": "2.3.0"
                 },
                 "SHINYNGS_APP": {
-                    "r-shinyngs": "2.2.4"
+                    "r-shinyngs": "2.3.0"
                 },
                 "VALIDATOR": {
-                    "r-shinyngs": "2.2.4"
+                    "r-shinyngs": "2.3.0"
                 },
                 "VARIANCEPARTITION_DREAM": {
                     "r-base": "4.3.3",
@@ -320,12 +320,12 @@
                 "raw._eset.rds:md5,8c6c7807ce6c5d8204bd681b941eeb0f",
                 "treatment_mCherry_hND6__SRP254919.deseq2.sizefactors.tsv:md5,0703c421c53b260f91568dfc0436c054",
                 "treatment_mCherry_hND6_sample_number_SRP254919.deseq2.sizefactors.tsv:md5,0703c421c53b260f91568dfc0436c054",
-                "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
-                "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
-                "versions.yml:md5,225ced8832439345efa781c726cf2e5c",
-                "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
-                "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
-                "versions.yml:md5,d5f6ad8fe6242dcd75bc62b654d1d211",
+                "versions.yml:md5,6f272b823a1be20b80a81cc01b70e1ed",
+                "versions.yml:md5,6f272b823a1be20b80a81cc01b70e1ed",
+                "versions.yml:md5,6f272b823a1be20b80a81cc01b70e1ed",
+                "versions.yml:md5,d5db8686bec50d4d783d486fc4c0899a",
+                "versions.yml:md5,d5db8686bec50d4d783d486fc4c0899a",
+                "versions.yml:md5,d5db8686bec50d4d783d486fc4c0899a",
                 "gene_sets_treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.HALLMARK_KRAS_SIGNALING_DN.tsv:md5,7d2a3a9dd7f39f93a091696c75e59c76",
                 "gene_sets_treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.Symbol_to_probe_set_mapping_details.tsv:md5,e000a1b93ebbb7eb347d9ce666fd5e26",
                 "treatment_mCherry_hND6__SRP254919.mh.all.v2022.1.Mm.symbols.gene_set_sizes.tsv:md5,e3049abd72c25ff6d7cd75b14135d245",
@@ -339,11 +339,11 @@
                 "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.gsea_report_for_mCherry.tsv:md5,ce8792382ae299749445767ff16aaecc",
                 "treatment_mCherry_hND6_sample_number_SRP254919.mh.all.v2022.1.Mm.symbols.ranked_gene_list_hND6_versus_mCherry.tsv:md5,d71f1db7288800d611fbd623d57c1765",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
+                "versions.yml:md5,ecfaf8bd98d719aecbb445e61e36c800",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
+                "versions.yml:md5,ecfaf8bd98d719aecbb445e61e36c800",
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
-                "versions.yml:md5,b3436c10ff83d0dab55060de3cae3ef2",
+                "versions.yml:md5,ecfaf8bd98d719aecbb445e61e36c800",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
                 "hgu133plus2.annotation.tsv:md5,f2b82ef12b2a2e8e575de06766583d96",
@@ -376,9 +376,9 @@
             ]
         ],
         "meta": {
-            "nf-test": "0.9.2",
-            "nextflow": "25.04.4"
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.2"
         },
-        "timestamp": "2025-10-27T11:00:54.680113277"
+        "timestamp": "2025-12-03T18:44:24.415653955"
     }
 }
