@@ -777,8 +777,8 @@ workflow DIFFERENTIALABUNDANCE {
     ch_contrasts_sorted_shinyngs = differential_with_contrast_shinyngs.contrast_maps
         .collectFile { meta, contrast_map ->
             def header = contrast_map[0].keySet().join(',')
-            def content = contrast_map.collect { it.values().collect { val -> 
-                    val == null ? '' : val.toString() 
+            def content = contrast_map.collect { it.values().collect { val ->
+                    val == null ? '' : val.toString()
                 }.join(',') }.sort().reverse()
             def lines = header + '\n' + content.join('\n') + '\n'
             ["${meta.paramset_name}_shinyngs.csv", lines]
