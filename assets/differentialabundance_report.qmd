@@ -916,21 +916,31 @@ if (length(warnings_list) > 0) {
 for (i in 1:nrow(contrasts)) {
     cat("\n#### ", contrast_descriptions[i], "\n")
     cat("::: {.panel-tabset}", "\n\n")
-    ## Make a volcano plot for the contrast first
-
-    # Label features with symbol as well as identifier
-    if (!is.null(params$features) && (!is.null(params$meta$params$differential_feature_name_column))) {
-        label_col <- params$meta$params$differential_feature_name_column
-    } else {
-        label_col <- params$meta$params$differential_feature_id_column
+    ## Volcano inputs
+    full_de <- differential_results[[i]]
+    # Filter rows with required numeric fields present
+    needed <- c(
+        params$meta$params$differential_fc_column,
+        params$meta$params$differential_qval_column,
+        params$meta$params$differential_pval_column
+    )
+    present <- intersect(needed, colnames(full_de))
+    if (length(present)) {
+        full_de <- full_de[
+            stats::complete.cases(full_de[, present, drop = FALSE]),
+        ]
     }
 
-    # Get the full set of differential stats for this contrast, removing rows with
-    # NAs in the fields we need.
-    full_de <- differential_results[[i]]
-    full_de <- subset(full_de, (!is.na(full_de[[params$meta$params$differential_fc_column]])) & (!is.na(full_de[[params$meta$params$differential_qval_colum]])))
-
-    # We'll color by whether features are differential according to supplied thresholds
+    # Labels: prefer feature name if present
+    if (
+        !is.null(params$features) &&
+            !is.null(params$differential_feature_name_column) &&
+            (params$differential_feature_name_column %in% colnames(full_de))
+    ) {
+        label_col <- params$differential_feature_name_column
+    } else {
+        label_col <- params$differential_feature_id_column
+    }
 
     p_value_types <- list(Adjusted = params$meta$params$differential_qval_column, Unadjusted = params$meta$params$differential_pval_column)
     p_value_thresholds <- list(Adjusted = params$meta$params$differential_max_qval, Unadjusted = params$meta$params$differential_max_pval)
