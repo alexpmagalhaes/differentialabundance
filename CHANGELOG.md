@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [[#576](https://github.com/nf-core/differentialabundance/pull/576)] - Autoformat differential abundance report ([@delfiterradas](https://github.com/delfiterradas), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@grst](https://github.com/grst)).
 - [[#569](https://github.com/nf-core/differentialabundance/pull/569)] - Update shinyngs modules with fix in validator to allow using only fomula contrasts ([@delfiterradas](https://github.com/delfiterradas), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@grst](https://github.com/grst)).
 - [[#476](https://github.com/nf-core/differentialabundance/pull/476)] - Update documentation & report fixes ([@SusiJo](https://github.com/SusiJo), reviewed by [@pinin4fjords](https://github.com/pinin4fjords), [@atrigila](https://github.com/atrigila), [@maxulysse](https://github.com/maxulysse))
 - [[#468](https://github.com/nf-core/differentialabundance/pull/468)] - Template update for nf-core/tools v3.3.1 ([@SusiJo](https://github.com/SusiJo), reviewed by [@famosab](https://github.com/famosab), [@mashehu](https://github.com/mashehu))
