@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [[#575](https://github.com/nf-core/differentialabundance/pull/575)] - Fix volcano plot tooltips by adding column existence check for gene name labels and add Gene name to DE table in HTML report ([@antoniasaracco](https://github.com/antoniasaracco), review by [@atrigila](https://github.com/atrigila), [@grst](https://github.com/grst) and [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#566](https://github.com/nf-core/differentialabundance/pull/566)] - Add handling for complex contrasts in `deseq2/differential` ([@delfiterradas](https://github.com/delfiterradas), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@grst](https://github.com/grst)).
 - [[#562](https://github.com/nf-core/differentialabundance/pull/562)] - Include contrast specified with formula in the HTML report ([@antoniasaracco](https://github.com/antoniasaracco), review by [@pinin4fjords](https://github.com/pinin4fjords) and [@grst](https://github.com/grst)).
 - [[#470](https://github.com/nf-core/differentialabundance/pull/470)] - Enable multi-config parallel running, shift paramsheet to yaml format, and merge profiles with paramsheet ([@suzannejin](https://github.com/suzannejin), review by [@pinin4fjords](https://github.com/pinin4fjords), [@grst](https://github.com/grst), [@SusiJo](https://github.com/SusiJo) and [@mirpedrol](https://github.com/mirpedrol)).
