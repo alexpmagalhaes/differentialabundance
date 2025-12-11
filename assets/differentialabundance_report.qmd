@@ -180,11 +180,14 @@ if (!observations_name_col %in% colnames(observations)) {
 }
 
 if (!is.null(params$features)) {
-    metadata_cols <- simpleSplit(params$features_metadata_cols)
-    if (!is.null(params$features_name_col) && !params$features_name_col %in% metadata_cols) {
-        metadata_cols <- c(metadata_cols, params$features_name_col)
+    features <- read_metadata(file.path(params$input_dir, params$features))
+    if (!is.null(params$meta$params$features_metadata_cols)) {
+        metadata_cols <- simpleSplit(params$meta$params$features_metadata_cols)
+        if (!is.null(params$meta$params$features_name_col) && !params$meta$params$features_name_col %in% metadata_cols) {
+            metadata_cols <- c(metadata_cols, params$meta$params$features_name_col)
+        }
+        features <- features[, colnames(features) %in% metadata_cols, drop = FALSE]
     }
-    features <- features[, colnames(features) %in% metadata_cols, drop = FALSE]
 }
 
 contrasts <- read_metadata(file.path(params$input_dir, params$contrasts_file))
@@ -926,11 +929,11 @@ for (i in 1:nrow(contrasts)) {
 
     # Label features with symbol as well as identifier
     if (!is.null(params$features) &&
-        (!is.null(params$differential_feature_name_column)) &&
-        (params$differential_feature_name_column %in% colnames(full_de))) {
-        label_col <- params$differential_feature_name_column
+        (!is.null(params$meta$params$differential_feature_name_column)) &&
+        (params$meta$params$differential_feature_name_column %in% colnames(full_de))) {
+        label_col <- params$meta$params$differential_feature_name_column
     } else {
-        label_col <- params$differential_feature_id_column
+        label_col <- params$meta$params$differential_feature_id_column
     }
     # We'll color by whether features are differential according to supplied thresholds
 
