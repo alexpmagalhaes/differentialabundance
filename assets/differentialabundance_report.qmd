@@ -182,7 +182,11 @@ if (!observations_name_col %in% colnames(observations)) {
 if (!is.null(params$features)) {
     features <- read_metadata(file.path(params$input_dir, params$features))
     if (!is.null(params$meta$params$features_metadata_cols)) {
-        features <- features[, colnames(features) %in% simpleSplit(params$meta$params$features_metadata_cols), drop = FALSE]
+        metadata_cols <- simpleSplit(params$meta$params$features_metadata_cols)
+        if (!is.null(params$meta$params$features_name_col) && !params$meta$params$features_name_col %in% metadata_cols) {
+            metadata_cols <- c(metadata_cols, params$meta$params$features_name_col)
+        }
+        features <- features[, colnames(features) %in% metadata_cols, drop = FALSE]
     }
 }
 
@@ -918,18 +922,19 @@ for (i in 1:nrow(contrasts)) {
     cat("::: {.panel-tabset}", "\n\n")
     ## Make a volcano plot for the contrast first
 
-    # Label features with symbol as well as identifier
-    if (!is.null(params$features) && (!is.null(params$meta$params$differential_feature_name_column))) {
-        label_col <- params$meta$params$differential_feature_name_column
-    } else {
-        label_col <- params$meta$params$differential_feature_id_column
-    }
-
     # Get the full set of differential stats for this contrast, removing rows with
     # NAs in the fields we need.
     full_de <- differential_results[[i]]
     full_de <- subset(full_de, (!is.na(full_de[[params$meta$params$differential_fc_column]])) & (!is.na(full_de[[params$meta$params$differential_qval_colum]])))
 
+    # Label features with symbol as well as identifier
+    if (!is.null(params$features) &&
+        (!is.null(params$meta$params$differential_feature_name_column)) &&
+        (params$meta$params$differential_feature_name_column %in% colnames(full_de))) {
+        label_col <- params$meta$params$differential_feature_name_column
+    } else {
+        label_col <- params$meta$params$differential_feature_id_column
+    }
     # We'll color by whether features are differential according to supplied thresholds
 
     p_value_types <- list(Adjusted = params$meta$params$differential_qval_column, Unadjusted = params$meta$params$differential_pval_column)
