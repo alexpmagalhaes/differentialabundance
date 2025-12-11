@@ -123,22 +123,14 @@
                 "app.R:md5,bedcfc45b6cdcc2b8fe3627987e2b17a",
                 "versions.yml:md5,ecfaf8bd98d719aecbb445e61e36c800",
                 "SRP254919.anno.tsv:md5,c1d7f21e64bd00f845ec6545c123a1fb",
-                "limma_treatment_mCherry_hND6__SRP254919_consensus_estimate_decoupler.tsv:md5,e5f54baf0bf13a46023de661d42e72ed",
-                "limma_treatment_mCherry_hND6__SRP254919_consensus_pvals_decoupler.tsv:md5,9a52557d04406474e7aaa16f3ec50910",
-                "limma_treatment_mCherry_hND6__SRP254919_ulm_estimate_decoupler.tsv:md5,63c92ca08c2c2d6b4638b098809aa028",
-                "limma_treatment_mCherry_hND6__SRP254919_ulm_pvals_decoupler.tsv:md5,daee3b5ff36942d68df9309bfd19839c",
-                "limma_treatment_mCherry_hND6_sample_number_SRP254919_consensus_estimate_decoupler.tsv:md5,921c51ef7155382adbd33abec35546c7",
-                "limma_treatment_mCherry_hND6_sample_number_SRP254919_consensus_pvals_decoupler.tsv:md5,22516c2c11c45cce2335630b11f44393",
-                "limma_treatment_mCherry_hND6_sample_number_SRP254919_ulm_estimate_decoupler.tsv:md5,221f76ba181c3e56f9ee42cab0dd08e6",
-                "limma_treatment_mCherry_hND6_sample_number_SRP254919_ulm_pvals_decoupler.tsv:md5,93b430e740a74794ac6a2b6533658a31",
                 "all.normalised_counts.tsv:md5,534f0f37e10325163656cad95418f34a"
             ]
         ],
         "meta": {
             "nf-test": "0.9.3",
-            "nextflow": "25.04.2"
+            "nextflow": "25.10.2"
         },
-        "timestamp": "2025-12-03T19:17:35.301162115"
+        "timestamp": "2025-12-10T15:38:56.633605671"
     },
     "Test rnaseq limma profile - limma_rnaseq_gsea": {
         "content": [
