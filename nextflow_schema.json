@@ -355,8 +355,7 @@
             "default": "",
             "properties": {
                 "filtering_min_abundance": {
-                    "type": "number",
-                    "default": 1,
+                "anyOf": [{ "type": "integer" }, { "type": "boolean" }],
                     "description": "Minimum abundance value",
                     "fa_icon": "fas fa-compress-alt"
                 },
