@@ -355,8 +355,11 @@
             "default": "",
             "properties": {
                 "filtering_min_abundance": {
-                "anyOf": [{ "type": "integer" }, { "type": "boolean" }],
-                    "description": "Minimum abundance value",
+                "anyOf": [
+                    { "type": "integer", "default": 1 },
+                    { "type": "boolean", "const": false }
+                ],
+                    "description": "Minimum abundance value. Set to false to disable abundance filtering.",
                     "fa_icon": "fas fa-compress-alt"
                 },
                 "filtering_min_samples": {
