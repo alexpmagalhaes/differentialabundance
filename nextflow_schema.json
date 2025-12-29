@@ -355,6 +355,7 @@
             "default": "",
             "properties": {
                 "filtering_min_abundance": {
+                "type": "integer",
                 "anyOf": [
                     { "type": "integer", "default": 1 },
                     { "type": "boolean", "const": false }
