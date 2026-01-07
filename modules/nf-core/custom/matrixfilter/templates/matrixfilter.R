@@ -199,7 +199,7 @@ tests <- list(
 
 # Only apply abundance filter if a threshold was provided
 if (!is.null(opt\$minimum_abundance)) {
-    tests[["abundance"]] = function(x) sum(x >= opt\$minimum_abundance, na.rm = TRUE) >= opt\$minimum_samples)
+    tests[["abundance"]] = function(x) sum(x >= opt\$minimum_abundance, na.rm = TRUE) >= opt\$minimum_samples
 }
 
 # Apply the functions row-wise on the abundance_matrix and store the result in a boolean matrix
