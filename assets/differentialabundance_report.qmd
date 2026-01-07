@@ -882,7 +882,7 @@ foo <- lapply(names(p_value_types), function(pvt) {
     cat("\n")
 
     if (nrow(contrasts) > 1) {
-        cat("\n### Upset plot\n\n")   
+        cat("\n### Upset plot\n\n")
 
         de_genes <- lapply(differential_results, function(de) {
 
@@ -912,7 +912,7 @@ foo <- lapply(names(p_value_types), function(pvt) {
                 print(p)
             }))
         }
-    
+
         cat("\n\n")
     }
 })
