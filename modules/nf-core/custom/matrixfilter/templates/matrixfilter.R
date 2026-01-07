@@ -69,7 +69,7 @@ read_delim_flexible <- function(file, header = TRUE, row.names = NULL, nrows = -
     )
 }
 
-as_null_if_requested <- function(v) {
+parse_null <- function(v) {
     if (is.null(v)) return(NULL)
     if (length(v) == 0) return(NULL)
     vv <- as.character(v)
