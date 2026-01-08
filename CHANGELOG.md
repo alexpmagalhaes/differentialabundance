@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [[#582](https://github.com/nf-core/differentialabundance/pull/582)] - Allow `lfc_threshold` to be a float ([@atrigila](https://github.com/atrigila), review by [@grst](https://github.com/grst))
 - [[#527](https://github.com/nf-core/differentialabundance/pull/513)] - Fix contrast schema to allow for random effects and other advanced formula features. ([@grst](https://github.com/grst), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#513](https://github.com/nf-core/differentialabundance/pull/513)] - Fix contrast schema to allow for zero-intercept models. ([@grst](https://github.com/grst), review by [@pinin4fjords](https://github.com/pinin4fjords)).
 - [[#476](https://github.com/nf-core/differentialabundance/pull/476)] - Fixed null.csv and warning at top of report ([@SusiJo](https://github.com/SusiJo), reviewed by [@pinin4fjords](https://github.com/pinin4fjords), [@atrigila](https://github.com/atrigila), [@maxulysse](https://github.com/maxulysse))
