@@ -897,7 +897,7 @@ foo <- lapply(names(p_value_types), function(pvt) {
 
             sig <- de[!is.na(de[[label_col]]) &
                 !is.na(de[[p_value_types[[pvt]]]]) &
-                (log2(1/params$meta$params$differential_min_fold_change) > de[[params$meta$params$differential_fc_column]] | de[[params$meta$params$differential_fc_column]] > log2(params$meta$params$differential_min_fold_change)) &
+                abs(de[[params$meta$params$differential_fc_column]]) > log2(params$meta$params$differential_min_fold_change) &
                 de[[p_value_types[[pvt]]]] < p_value_thresholds[[pvt]], ]
             return(sig[[label_col]])
         })
