@@ -9,8 +9,6 @@
 ----------------------------------------------------------------------------------------
 */
 
-nextflow.enable.dsl = 2
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
@@ -20,7 +18,6 @@ nextflow.enable.dsl = 2
 include { DIFFERENTIALABUNDANCE   } from './workflows/differentialabundance'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
-
 include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_differentialabundance_pipeline'
 
 /*
@@ -41,7 +38,18 @@ params.gtf = getGenomeAttribute('gtf')
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
 workflow NFCORE_DIFFERENTIALABUNDANCE {
-    DIFFERENTIALABUNDANCE ()
+
+    take:
+    paramsets
+
+    main:
+
+    //
+    // WORKFLOW: Run pipeline
+    //
+    DIFFERENTIALABUNDANCE (
+        paramsets
+    )
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,24 +59,42 @@ workflow NFCORE_DIFFERENTIALABUNDANCE {
 
 workflow {
 
+    main:
+
     //
     // SUBWORKFLOW: Run initialisation tasks
     //
     PIPELINE_INITIALISATION (
         params.version,
-        params.help,
         params.validate_params,
         params.monochrome_logs,
         args,
         params.outdir,
-        params.input
+        params.input,
+        params.help,
+        params.help_full,
+        params.show_hidden
     )
 
     //
     // WORKFLOW: Run main workflow
     //
-    NFCORE_DIFFERENTIALABUNDANCE ()
 
+    NFCORE_DIFFERENTIALABUNDANCE (
+        PIPELINE_INITIALISATION.out.paramsets
+    )
+
+    //
+    // SUBWORKFLOW: Run completion tasks
+    //
+    PIPELINE_COMPLETION (
+        params.email,
+        params.email_on_fail,
+        params.plaintext_email,
+        params.outdir,
+        params.monochrome_logs,
+        params.hook_url,
+    )
 }
 
 /*
